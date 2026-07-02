@@ -14,7 +14,7 @@ The rep has the control system for the 2-axis joystick used in [Mathis et al, 20
 
 - our custom LabView VIs
 
-The main file is "Pull Behavior...". The other vi's are for grabbing frames from another source, i.e. 2-photon. They need to be included for the code to run.  There are three output files (reward TTLs, a "trial start" TTL, and the full X and Y joystick trajectory + lick signal + frame count). You need to set up NIDAQ tasks, as shown in the media folder. 
+The main file is `Push Behaviour_MCHALABI.vi`. The other vi's are for grabbing frames from another source, i.e. 2-photon. They need to be included for the code to run.  There are three output files (reward TTLs, a "trial start" TTL, and the full X and Y joystick trajectory + lick signal + frame count). You need to set up NIDAQ tasks, as shown in the media folder. 
 
 # Experimental Settings File:
 

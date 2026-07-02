@@ -113,6 +113,7 @@ ENV/
 .spyderproject
 .spyproject
 .vscode/*
+.cursorrules
 
 # Rope project settings
 .ropeproject
