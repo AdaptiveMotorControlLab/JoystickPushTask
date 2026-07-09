@@ -1,41 +1,85 @@
-# Joystick Control System
-The rep has the control system for the 2-axis joystick used in [Mathis et al, 2017](https://www.sciencedirect.com/science/article/pii/S0896627317301575?via%3Dihub#abs0015) Somatosensory Cortex Plays an Essential Role in Forelimb Motor Adaptation in Mice. https://doi.org/10.1016/j.neuron.2017.02.049
+# Forelimb Object-Push Task
 
-# Essential Hardware:
+> ⚠️ **Work in progress.** This repository adapts the 2-axis joystick rig from
+> [Mathis et al., 2017](https://doi.org/10.1016/j.neuron.2017.02.049) into a **1D forelimb object-push task**.
+> Hardware has been ordered and the LabVIEW code is being modified — expect breaking changes.
 
-- Joystick base, Digi-Key, Cat #679-2501-ND
-- Joystick handle; replace d-pad (removed by screw) with any handle you prefer (the grip point was 2 mm in diameter)
-- Joystick spring; you may need to exchange the base spring with a lower stiffness spring (should be independently verified)
-   - Note, we modified the joystick base to reduce the force required to move the joystick (0.1-0.2 N from 4N)
-- NI-DAQ card, PCI-e6251 National Instruments, Cat # NI PCIe-6251 – 779512-01
-- LabView 2013 or newer, National Instruments  http://www.ni.com
+Forked and adapted from the original [JoystickControlSystem](https://github.com/AdaptiveMotorControlLab/JoystickControlSystem)
+(Mathis lab). The original rig trained head-fixed mice to *pull* a 2-axis joystick against a lateral
+magnetic perturbation. This fork keeps the same LabVIEW architecture and NI-DAQ backbone but reworks the
+task into a goal-directed forward *push*.
 
-# Essential Software:
+## Task overview
 
-- our custom LabView VIs
+Each trial:
 
-The main file is `Push Behaviour_MCHALABI.vi`. The other vi's are for grabbing frames from another source, i.e. 2-photon. They need to be included for the code to run.  There are three output files (reward TTLs, a "trial start" TTL, and the full X and Y joystick trajectory + lick signal + frame count). You need to set up NIDAQ tasks, as shown in the media folder. 
+```
+forepaw on rest pad  →  trial starts  →  reach to object  →  push forward
+  →  (axial resistance perturbation)  →  object held in target band
+  →  auditory success cue  →  short delay  →  lick spout extends  →  water reward  →  spout retracts
+```
 
-# Experimental Settings File:
+Key differences from the original task:
 
-The experimental parameters is a text file that you load, so you can customize this to your system/needs. You specify a resting home box, start "box - i.e. when it crosses a point in Y space it will trigger a trial start", end box, delay times, water value open times, magnet on time, and magnet force. It's easy to customize too, if you want to make changes. Each line in the text file is a trial. i.e.;
+- **1D push** instead of 2D pull — the task-relevant axis is set in the parameter file; the lateral axis
+  is physically constrained by a 3D-printed delimiter.
+- **Bounded target zone** — reward requires the object to *end and remain* within a target distance band
+  (overshoot fails), not merely cross a minimum distance.
+- **Rest-pad initiation** — a trial can only start when the object is home (spring-loaded) **and** the
+  forepaw is on the rest pad, giving a clean pre-contact trial-start state.
+- **Axial resistance** perturbation (opposing the push) instead of a lateral magnet kick.
+- **Delayed, retractable reward** with an immediate auditory success cue, separating push execution from
+  licking/reward for cleaner neural alignment.
+- **Session blocks** (via parameter files): Baseline → Random perturbation → Fixed perturbation → Washout.
 
-<p align="left">
-<img src="https://images.squarespace-cdn.com/content/v1/57f6d51c9f74566f55ecf271/1580332353354-LVVT5YLXTGMRPQBVZIXX/ke17ZwdGBToddI8pDm48kHzsiv5yD4n7p_B9esjyrWJZw-zPPgdn4jUwVcJE1ZvWQUxwkmyExglNqGp0IvTJZUJFbgE-7XRK3dMEBRBhUpy3Qf9vIQl4yoc5X6lDN1caHTGO4yrB4-uwOSTmPq_v1_QBLjygwGx4qYPs2cMZwac/joystick.png?format=750w" width="75%">
-</p>
+## Hardware
 
-# Getting Started:
+Inherited from the original rig:
 
-Build the joystick. Wire the joystick as specified by the manufacturer; i.e 5 V power, ground, and X, and Y go into analog inputs in the NIDAQ card. Be sure you have a clean 5V signal. Test output in NI-MAX.
+- NI-DAQ card, PCIe-6251 (NI 779512-01)
+- LabVIEW 2013 or newer
+- Joystick base (Digi-Key 679-2501-ND), modified into a spring-loaded **push object** with a larger
+  contact surface, placed close to the rest pad
+- 3D-printed lateral delimiter (constrains the task to 1D)
 
-Based on how you build the joystick, your resting voltage may differ. Each rig should be measured and calibrated  (i.e. what voltage delta = X mm distance). 
+New components for the push task (ordered):
 
-The above values (expt settings file) are a good starting point assuming the voltage rests at 2.55.  Set for your rig as needed. There is a exp array that is on the front screen of the vi so you can figure out which values are which, etc, but it doesn't match the order in the text file, thus I highlighted important variables. To note, this demo assumes the joystick rests at 2.55; and every .05 is 1 mm. 
+| Role | Component | DAQ channel |
+|------|-----------|-------------|
+| Rest-pad paw sensor | Interlink **FSR 402** (solder tabs, 30-81794) + 10 kΩ divider | spare **AI** |
+| Retractable lick spout | **Actuonix L12-30-50-12-I** linear actuator (0–5 V position mode, 12 V supply) | new **AO** |
+| Auditory success cue | **Adafruit 5 V active buzzer** (#1536) | new **DO** |
+| Axial resistance | existing magnet/coil, reoriented along the push axis | existing **AO** (`Magnets`) |
+| Water valve | existing solenoid | existing **DO** (`water`) |
 
-# Citation:
+> Note: the PCIe-6251 has only 2 AO channels. `Magnets` and the Actuonix spout use both, so the auditory
+> cue is driven from a digital (or counter) line, not a third analog output.
 
-If you use this code please cite: 
+## Software
 
-- [Mathis et al, 2017](https://www.sciencedirect.com/science/article/pii/S0896627317301575?via%3Dihub#abs0015) Somatosensory Cortex Plays an Essential Role in Forelimb Motor Adaptation in Mice. https://doi.org/10.1016/j.neuron.2017.02.049
+The main VI is `Push Behaviour_MCHALABI.vi`. The helper VIs (`avg joystick and frame trig lick3.vi`,
+`frame counter.vi`) grab frames from an external source (e.g. 2-photon) and must be present for the code
+to run. Outputs include reward TTLs, a trial-start TTL, and the full trajectory (push axis + lick signal +
+frame count). NI-DAQ tasks must be configured in NI-MAX (see the `media/` folder for the original task setup).
 
-We greatly thank Dr. Ed Soucy at the Harvard CBS Center for Neuroengineering with LabView code and expert advice throughout the development of this joystick system! 
+## Experimental settings file
+
+Experimental parameters are loaded from a text file, one line per trial. It defines the home/start/end
+positions (target band), hold and delay times, water valve open time, reward delay, spout timing, and
+perturbation magnitude/timing. New push-task fields (reward delay, spout position/settle, cue duration)
+are being added as the code is adapted.
+
+## Calibration
+
+Each rig must be calibrated for volts→mm on the push axis (the original demo assumes a 2.55 V rest with
+0.05 V ≈ 1 mm — remeasure for your build). Test all channels in NI-MAX before running.
+
+## Citation
+
+Please cite the original work this task is built on:
+
+- [Mathis et al., 2017](https://doi.org/10.1016/j.neuron.2017.02.049) — *Somatosensory Cortex Plays an
+  Essential Role in Forelimb Motor Adaptation in Mice.*
+
+We greatly thank Dr. Ed Soucy at the Harvard CBS Center for Neuroengineering for the original LabVIEW code
+and expert advice throughout the development of this joystick system.
