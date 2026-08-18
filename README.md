@@ -2,7 +2,8 @@
 
 > ⚠️ **Work in progress.** This repository adapts the 2-axis joystick rig from
 > [Mathis et al., 2017](https://doi.org/10.1016/j.neuron.2017.02.049) into a **1D forelimb object-push task**.
-> Hardware has been ordered and the LabVIEW code is being modified — expect breaking changes.
+> New hardware is installed and the core LabVIEW success path is bench-tested. The working rig VI
+> still needs to be imported into this repository — expect breaking changes.
 
 Forked and adapted from the original [JoystickControlSystem](https://github.com/AdaptiveMotorControlLab/JoystickControlSystem)
 (Mathis lab). The original rig trained head-fixed mice to *pull* a 2-axis joystick against a lateral
@@ -23,37 +24,45 @@ Key differences from the original task:
 
 - **1D push** instead of 2D pull — the task-relevant axis is set in the parameter file; the lateral axis
   is physically constrained by a 3D-printed delimiter.
-- **Bounded target zone** — reward requires the object to *end and remain* within a target distance band
-  (overshoot fails), not merely cross a minimum distance.
+- **Bounded target zone** — reward requires the object to *end and remain* within a target distance band (overshoot fails).
 - **Rest-pad initiation** — a trial can only start when the object is home (spring-loaded) **and** the
   forepaw is on the rest pad, giving a clean pre-contact trial-start state.
-- **Axial resistance** perturbation (opposing the push) instead of a lateral magnet kick.
+- **Axial resistance** perturbation (opposing the push) instead of a lateral kick.
 - **Delayed, retractable reward** with an immediate auditory success cue, separating push execution from
   licking/reward for cleaner neural alignment.
 - **Session blocks** (via parameter files): Baseline → Random perturbation → Fixed perturbation → Washout.
+
+
 
 ## Hardware
 
 Inherited from the original rig:
 
-- NI-DAQ card, PCIe-6251 (NI 779512-01)
+- NI-DAQ card, **PCIe-6321** (`Dev1` on the live rig)
 - LabVIEW 2013 or newer
 - Joystick base (Digi-Key 679-2501-ND), modified into a spring-loaded **push object** with a larger
   contact surface, placed close to the rest pad
 - 3D-printed lateral delimiter (constrains the task to 1D)
 
-New components for the push task (ordered):
+New components for the push task:
 
-| Role | Component | DAQ channel |
-|------|-----------|-------------|
-| Rest-pad paw sensor | Interlink **FSR 402** (solder tabs, 30-81794) + 10 kΩ divider | spare **AI** |
-| Retractable lick spout | **Actuonix L12-30-50-12-I** linear actuator (0–5 V position mode, 12 V supply) | new **AO** |
-| Auditory success cue | **Adafruit 5 V active buzzer** (#1536) | new **DO** |
-| Axial resistance | existing magnet/coil, reoriented along the push axis | existing **AO** (`Magnets`) |
-| Water valve | existing solenoid | existing **DO** (`water`) |
 
-> Note: the PCIe-6251 has only 2 AO channels. `Magnets` and the Actuonix spout use both, so the auditory
-> cue is driven from a digital (or counter) line, not a third analog output.
+| Role                   | Component                                                                      | DAQ channel          |
+| ---------------------- | ------------------------------------------------------------------------------ | -------------------- |
+| Rest-pad paw sensor    | Interlink **FSR 402** (solder tabs, 30-81794) + 10 kΩ divider                  | `Dev1/ai2`           |
+| Retractable lick spout | **Actuonix L12-30-50-12-I** linear actuator (0–5 V position mode, 12 V supply) | `Dev1/ao1`           |
+| Auditory success cue   | **Adafruit 5 V active buzzer** (#1536)                                         | `Dev1/port0/line1`   |
+| Axial resistance       | future axial magnet/coil; not installed on the training rig                    | reserved `Dev1/ao0`  |
+| Water valve            | existing solenoid                                                              | `Dev1/port0/line0`   |
+
+
+> The validated live NI-MAX configuration, SCB-68A wiring and bench-test history are documented in
+> [`RIG_INVENTORY.md`](RIG_INVENTORY.md).
+
+> The PCIe-6321 has two AO channels. The working design reserves AO0 for axial resistance and uses
+> AO1 for the lick-spout actuator; the auditory cue therefore uses a digital line.
+
+
 
 ## Software
 
