@@ -2,8 +2,9 @@
 
 > ⚠️ **Work in progress.** This repository adapts the 2-axis joystick rig from
 > [Mathis et al., 2017](https://doi.org/10.1016/j.neuron.2017.02.049) into a **1D forelimb object-push task**.
-> New hardware is installed and the core LabVIEW success path is bench-tested. The working rig VI
-> still needs to be imported into this repository — expect breaking changes.
+> The working rig VIs have been imported, and the rest-pad-to-reward success path is bench-tested.
+> Mechanical push-object development, animal-specific calibration, training presets and safety/edge-case
+> validation remain in progress.
 
 Forked and adapted from the original [JoystickControlSystem](https://github.com/AdaptiveMotorControlLab/JoystickControlSystem)
 (Mathis lab). The original rig trained head-fixed mice to *pull* a 2-axis joystick against a lateral
@@ -16,33 +17,48 @@ Each trial:
 
 ```
 forepaw on rest pad  →  trial starts  →  reach to object  →  push forward
-  →  (axial resistance perturbation)  →  object held in target band
+  →  (optional future axial resistance)  →  object held in target band
   →  auditory success cue  →  short delay  →  lick spout extends  →  water reward  →  spout retracts
 ```
 
 Key differences from the original task:
 
-- **1D push** instead of 2D pull — the task-relevant axis is set in the parameter file; the lateral axis
-  is physically constrained by a 3D-printed delimiter.
+- **1D push** instead of 2D pull — the task-relevant axis remains in the existing coordinate structure;
+  the lateral axis will be physically constrained by the existing 3D-printed delimiter.
 - **Bounded target zone** — reward requires the object to *end and remain* within a target distance band (overshoot fails).
 - **Rest-pad initiation** — a trial can only start when the object is home (spring-loaded) **and** the
   forepaw is on the rest pad, giving a clean pre-contact trial-start state.
-- **Axial resistance** perturbation (opposing the push) instead of a lateral kick.
+- **Planned axial resistance** perturbation (opposing the push) instead of a lateral kick. The training
+  rig currently has no magnet; `Dev1/ao0` and the LabVIEW control path are reserved for one.
 - **Delayed, retractable reward** with an immediate auditory success cue, separating push execution from
   licking/reward for cleaner neural alignment.
-- **Session blocks** (via parameter files): Baseline → Random perturbation → Fixed perturbation → Washout.
+- **Planned session blocks** (via parameter files): Baseline → Random perturbation → Fixed perturbation → Washout.
+
+## Current status
+
+- Canonical VIs imported from the behavioural rig and pushed on 18 August 2026.
+- Bench-validated path: object home + FSR paw gate → trial → success cue → adjustable delay → spout
+  extension → water → consumption wait → spout retraction.
+- The acquisition helper reads joystick X/Y, lick/frame signals and the new rest-pad channel.
+- Remaining validation includes repository-clone dependency resolution on the rig PC, fail/timeout/abort
+  behavior, safe output initialization/cleanup and repeated-cycle testing.
+- Remaining build work includes the final push object, animal-safe rest-pad cover, mouse-specific
+  calibration, training-stage controls/presets and NI-MAX configuration export.
 
 
 
 ## Hardware
 
-Inherited from the original rig:
+Existing rig hardware:
 
 - NI-DAQ card, **PCIe-6321** (`Dev1` on the live rig)
-- LabVIEW 2013 or newer
-- Joystick base (Digi-Key 679-2501-ND), modified into a spring-loaded **push object** with a larger
-  contact surface, placed close to the rest pad
+- Joystick base/readout (Digi-Key 679-2501-ND)
 - 3D-printed lateral delimiter (constrains the task to 1D)
+
+Mechanical adaptation still required:
+
+- Convert the joystick handle into a spring-return **push object** with a larger contact surface,
+  positioned close to the rest pad.
 
 New components for the push task:
 
@@ -67,16 +83,24 @@ New components for the push task:
 ## Software
 
 The main VI is `Push Behaviour_MCHALABI.vi`. The helper VIs (`avg joystick and frame trig lick3.vi`,
-`frame counter.vi`) grab frames from an external source (e.g. 2-photon) and must be present for the code
-to run. Outputs include reward TTLs, a trial-start TTL, and the full trajectory (push axis + lick signal +
-frame count). NI-DAQ tasks must be configured in NI-MAX (see the `media/` folder for the original task setup).
+`frame counter.vi`) must be present for the code to run. The imported main VI and acquisition helper
+contain the bench-tested push-task changes; `frame counter.vi` was not modified during that integration.
+
+The program retains the original occurrence-driven five-state architecture and trajectory logging while
+adding the FSR gate, digital success cue and retractable-spout reward sequence. It requires LabVIEW and
+NI-DAQmx. Saved NI-MAX tasks are machine-local and must currently be configured separately; the validated
+live task/channel map is documented in [`RIG_INVENTORY.md`](RIG_INVENTORY.md), and an NI-MAX export is
+still pending.
 
 ## Experimental settings file
 
-Experimental parameters are loaded from a text file, one line per trial. It defines the home/start/end
-positions (target band), hold and delay times, water valve open time, reward delay, spout timing, and
-perturbation magnitude/timing. New push-task fields (reward delay, spout position/settle, cue duration)
-are being added as the code is adapted.
+The original experimental parameters are loaded from a text file, one line per trial. They define the
+home/start/end regions, hold times, water-valve open time and perturbation command/timing.
+
+The imported VI currently exposes bench controls for the FSR threshold, cue duration, reward delay,
+spout extend/retract voltages, spout settling and consumption time. These new settings have **not yet**
+been added to the per-trial parameter-file loader or logged session metadata. Training-stage presets and
+Baseline → Random → Fixed → Washout files also remain to be created.
 
 ## Calibration
 
