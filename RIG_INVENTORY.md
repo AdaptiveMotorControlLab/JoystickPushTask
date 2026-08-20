@@ -26,6 +26,15 @@ NI-MAX device configuration:
 - Connector 0 accessory setting: None
 - `port0` power-up state: all eight lines tristated (high-impedance)
 
+Configuration backup:
+
+- Full NI-DAQmx 17.0 configuration exported from `My System` on 20/08/26 after the X/Y-order fix
+  and successful GitHub-copy bench test.
+- Repository file:
+  [`ni-max/JoystickPushTask_NIMAX_2026-08-20.nce`](ni-max/JoystickPushTask_NIMAX_2026-08-20.nce)
+- This is a disaster-recovery snapshot, not a substitute for reviewing physical channels before
+  import. Inline DAQmx channels created directly by LabVIEW may not appear as saved tasks.
+
 Official PCIe-6321 capacity:
 
 - 16 single-ended or 8 differential analog inputs
@@ -62,8 +71,8 @@ Other devices visible in NI-MAX:
 
 ## Live LabVIEW program audit — 12/08/26
 
-- Behavioural rig PC runs `Pull_Behaviour_march2020`, a separate source VI not yet imported into this
-repository.
+- The edited behavioural-rig hierarchy was imported into the repository as
+  `Push Behaviour_MCHALABI.vi`; untouched `Pull_Behaviour_march2020` remains the fallback.
 - Screenshots confirm the expected parameter loader, five-case trial state machine, occurrence-driven
 water loop, and lower occurrence-driven perturbation/laser loop.
 - The working push VI now performs:
@@ -87,6 +96,9 @@ original `LabView files` folder remains the untouched operational baseline.
 extension, primed water delivery, consumption wait and retraction all worked across three spaced
 successful trials. Fail/timeout behavior was also reported working. Abort-path output cleanup has
 not been specifically validated.
+- Fresh GitHub-copy validation passed on the rig PC 20/08/26 after correcting the NI-MAX X/Y channel
+  order and replacing the repository's unusable `frame counter.vi` with the compatible copy from the
+  working hierarchy. The main VI opened with a healthy Run arrow and completed the full bench sequence.
 
 
 
@@ -110,7 +122,9 @@ Do not assign `ai0` or `ai1` to the new FSR rest-pad sensor.
 
 - New independent AI task created for the working push-task hierarchy; original
 `joysticklickframe` remains unchanged.
-- Channel order currently confirmed as `Dev1/ai0`, `Dev1/ai1`, `Dev1/ai2`.
+- Corrected channel order confirmed 20/08/26 as `Dev1/ai1`, `Dev1/ai0`, `Dev1/ai2`
+  (`Y_POS`, `X_POS`, FSR). The first push-task configuration used `ai0`, `ai1`, `ai2`, which
+  swapped X/Y relative to the unchanged LabVIEW array-index convention inherited from the old task.
 - Final channel configuration: `ai0` and `ai1` differential ±10 V; `ai2` RSE, 0–5 V.
 - Final timing: Continuous Samples, 10 samples/read, 10 kHz.
 - Saved NI-MAX test passed 12/08/26: joystick X, joystick Y, and FSR signals were all visible
