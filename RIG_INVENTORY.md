@@ -99,6 +99,18 @@ not been specifically validated.
 - Fresh GitHub-copy validation passed on the rig PC 20/08/26 after correcting the NI-MAX X/Y channel
   order and replacing the repository's unusable `frame counter.vi` with the compatible copy from the
   working hierarchy. The main VI opened with a healthy Run arrow and completed the full bench sequence.
+- Safe startup/normal shutdown validated 20/08/26:
+  - one-shot startup sequence commands `Water_Dev1=False`, `SuccessCue_Dev1=False`,
+    `LickSpoutMotor_Dev1=0 V` and `MagnetPush_Dev1=0 V`;
+  - stale runtime task references `Magnets` and `frame counter` were corrected to
+    `MagnetPush_Dev1` and `frame counter_Dev1`;
+  - invalid UI-control references could not stop the asynchronous acquisition/frame-counter VIs, so
+    required helper `PushTask Globals.vi` now distributes one Boolean `stop all` signal;
+  - the canonical main Stop now ends all parallel loops and returns the Run arrow to idle without DAQ
+    errors. Idle, reward-delay and spout-extended Stop tests passed with water/cue OFF and final spout
+    retraction.
+- Toolbar **Abort Execution** remains emergency-only: it bypasses remaining LabVIEW sequence frames.
+  If used after a hang, first make outputs safe when possible and rerun the initializer afterward.
 
 
 

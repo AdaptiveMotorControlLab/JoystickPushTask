@@ -42,8 +42,10 @@ Key differences from the original task:
 - The acquisition helper reads joystick X/Y, lick/frame signals and the new rest-pad channel.
 - A fresh GitHub copy now opens and completes the full bench sequence on the rig PC using the
   compatible repository helper VIs.
-- Remaining validation includes fail/timeout/abort behavior, safe output initialization/cleanup and
-  repeated-cycle testing.
+- Safe startup now commands water/cue LOW, spout retract and magnet 0 V. One canonical Stop cleanly
+  ends every parallel loop; idle, reward-delay and spout-extended Stop tests passed.
+- Remaining validation includes repeated-cycle testing and explicit fail/timeout checks. LabVIEW's
+  toolbar Abort remains emergency-only because it bypasses normal cleanup.
 - Remaining build work includes the final push object, animal-safe rest-pad cover, mouse-specific
   calibration and training-stage controls/presets.
 
@@ -84,15 +86,14 @@ New components for the push task:
 
 ## Software
 
-The main VI is `Push Behaviour_MCHALABI.vi`. The helper VIs (`avg joystick and frame trig lick3.vi`,
-`frame counter.vi`) must be present for the code to run. The imported main VI and acquisition helper
-contain the bench-tested push-task changes; `frame counter.vi` was not modified during that integration.
+The main VI is `Push Behaviour_MCHALABI.vi`. Its required local dependencies are
+`avg joystick and frame trig lick3.vi`, `frame counter.vi` and `PushTask Globals.vi`.
 
 The program retains the original occurrence-driven five-state architecture and trajectory logging while
-adding the FSR gate, digital success cue and retractable-spout reward sequence. It requires LabVIEW and
-NI-DAQmx. Saved NI-MAX tasks are machine-local and must be imported or configured on each rig. The
-validated task/channel map is documented in [`RIG_INVENTORY.md`](RIG_INVENTORY.md), with the 20 August
-2026 NI-DAQmx configuration backup stored at
+adding the FSR gate, digital success cue, retractable-spout reward sequence and shared normal-stop
+signal for all asynchronous loops. It requires LabVIEW and NI-DAQmx. Saved NI-MAX tasks are
+machine-local and must be imported or configured on each rig. The validated task/channel map is
+documented in [`RIG_INVENTORY.md`](RIG_INVENTORY.md), with the 20 August 2026 NI-DAQmx backup stored at
 [`ni-max/JoystickPushTask_NIMAX_2026-08-20.nce`](ni-max/JoystickPushTask_NIMAX_2026-08-20.nce).
 
 ## Experimental settings file
