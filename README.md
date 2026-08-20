@@ -40,10 +40,12 @@ Key differences from the original task:
 - Bench-validated path: object home + FSR paw gate → trial → success cue → adjustable delay → spout
   extension → water → consumption wait → spout retraction.
 - The acquisition helper reads joystick X/Y, lick/frame signals and the new rest-pad channel.
-- Remaining validation includes repository-clone dependency resolution on the rig PC, fail/timeout/abort
-  behavior, safe output initialization/cleanup and repeated-cycle testing.
+- A fresh GitHub copy now opens and completes the full bench sequence on the rig PC using the
+  compatible repository helper VIs.
+- Remaining validation includes fail/timeout/abort behavior, safe output initialization/cleanup and
+  repeated-cycle testing.
 - Remaining build work includes the final push object, animal-safe rest-pad cover, mouse-specific
-  calibration, training-stage controls/presets and NI-MAX configuration export.
+  calibration and training-stage controls/presets.
 
 
 
@@ -88,9 +90,10 @@ contain the bench-tested push-task changes; `frame counter.vi` was not modified 
 
 The program retains the original occurrence-driven five-state architecture and trajectory logging while
 adding the FSR gate, digital success cue and retractable-spout reward sequence. It requires LabVIEW and
-NI-DAQmx. Saved NI-MAX tasks are machine-local and must currently be configured separately; the validated
-live task/channel map is documented in [`RIG_INVENTORY.md`](RIG_INVENTORY.md), and an NI-MAX export is
-still pending.
+NI-DAQmx. Saved NI-MAX tasks are machine-local and must be imported or configured on each rig. The
+validated task/channel map is documented in [`RIG_INVENTORY.md`](RIG_INVENTORY.md), with the 20 August
+2026 NI-DAQmx configuration backup stored at
+[`ni-max/JoystickPushTask_NIMAX_2026-08-20.nce`](ni-max/JoystickPushTask_NIMAX_2026-08-20.nce).
 
 ## Experimental settings file
 
