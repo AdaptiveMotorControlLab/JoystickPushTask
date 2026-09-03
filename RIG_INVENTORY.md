@@ -83,10 +83,8 @@ generation. Magnet support was preserved but converted to `MagnetPush_Dev1` on A
 branch was not removed.
 - `avg joystick and frame trig lick3.vi` uses `joysticklickframe` with DAQmx Analog 2D
 `NChan NSamp`, averages indexed channels 0–3, builds a four-value array, and enqueues it as
-`joystick pos`. A push-specific copy of the NI-MAX task can add `Dev1/ai2` as the third channel,
-making rest-pad voltage queue element index 2 without restructuring the acquisition loop.
-- Keep the original global `joysticklickframe` task unchanged; point the working-copy subVI to a new
-task named `joysticklickframe_push`.
+`joystick pos`. This 12/08 audit led to the installed `joysticklickframe_push` task, which adds
+`Dev1/ai2` as queue element index 2 while keeping the original global task unchanged.
 - The attempted LabVIEW **Duplicate hierarchy to new location** copy was deleted because the expected
 VI was not present in the selected folder. The entire containing folder was then copied manually
 and marked with the suffix `- PushVersion - working`. This is the push-task working hierarchy; the
@@ -94,8 +92,8 @@ original `LabView files` folder remains the untouched operational baseline.
 - Git cannot automatically merge independently changed `.vi` binaries.
 - Core working-VI bench validation passed 18/08/26: first-trial rest-pad gating, cue, spout
 extension, primed water delivery, consumption wait and retraction all worked across three spaced
-successful trials. Fail/timeout behavior was also reported working. Abort-path output cleanup has
-not been specifically validated.
+successful trials. Fail/timeout behavior was reported working but still needs an explicit,
+documented re-test. Abort-path output cleanup has not been specifically validated.
 - Fresh GitHub-copy validation passed on the rig PC 20/08/26 after correcting the NI-MAX X/Y channel
   order and replacing the repository's unusable `frame counter.vi` with the compatible copy from the
   working hierarchy. The main VI opened with a healthy Run arrow and completed the full bench sequence.
@@ -344,7 +342,7 @@ Digital port 0:
 
 ### Terminals confirmed physically empty
 
-- **22 (AO 0)** — reserved for a future axial-resistance magnet; currently no wire landed
+- **22 (AO 0)** — reserved for the axial-resistance magnet (EU/CH Ledex equivalent); currently no wire landed
 - 37 (PFI 8) and 40 (PFI 13) — not in the occupied list
 - AI10 terminal 31 remains unused because FSR AI2 uses RSE, not differential
 - Remaining unused P0 lines: P0.2–P0.7
@@ -354,18 +352,26 @@ Digital port 0:
 ### Analog-output split and current physical state
 
 AO1 terminal 21 is now physically wired to the Actuonix command input. AO0 terminal 22 remains
-physically empty because this training rig has no magnet. The old `Magnets_Dev1` task still contains
-both channels but is not used by the working push VI; `MagnetPush_Dev1` owns AO0 and
+physically empty until the received training-rig magnet is installed. The old `Magnets_Dev1` task still
+contains both channels but is not used by the working push VI; `MagnetPush_Dev1` owns AO0 and
 `LickSpout_Dev1` owns AO1.
 
 Consequences:
 
 - An AO channel **is** available for the Actuonix, so the lick spout is no longer blocked.
-- Confirmed 12/08/26: this behavioural training rig has **no perturbation magnet hardware**.
-- Perturbation magnet hardware exists only on the separate rig under the mesoscope.
-- Preserve training-rig magnet support for possible later installation, but `Magnets_Dev1` must no
-  longer reserve AO1. Target split: one-channel on-demand magnet task on AO0 and one-channel
-  on-demand Actuonix task on AO1.
+- Confirmed 12/08/26: this behavioural training rig had **no perturbation magnet hardware**.
+- Perturbation magnet hardware already exists on the mesoscope rig (original Mathis tubular solenoid).
+- Ordered 27/08/26 via Quartzy from Contact Evolution SA, Payerne and received 02/09/26:
+  **Ledex / Johnson Electric `195224-230`** (tubular STA 75L pull, 12 VDC, 7 W)
+  (https://shop.contact-evolution.ch/en/home/26325-195224-230.html).
+  McMaster `69905K25` was blocked by EPFL procurement. The Ledex is not yet mounted or wired.
+  Install **axially** (opposing the push), not laterally.
+  Copy the mesoscope-rig coil-drive electronics; AO0 is a command voltage, not the coil supply.
+  Include a steel ring / ferromagnetic target on the push object (Mathis 2017).
+  Force-calibrate on the bench; do not assume the paper 2.2 V / 100 ms pulse transfers.
+  Keep `mag = 0` until the unperturbed task is stable.
+- `Magnets_Dev1` must no longer reserve AO1. Target split: one-channel on-demand magnet task on AO0
+  and one-channel on-demand Actuonix task on AO1.
 - NI documentation permits one software-timed/on-demand AO task per physical AO channel. Both current
   outputs use on-demand writes, so magnet AO0 and spout AO1 can coexist; hardware-timed AO would
   require a combined task because the PCIe-6321 has one AO timing engine.
@@ -373,7 +379,7 @@ Consequences:
   `Magnets_Dev1`: one command write and one later reset write. Both can be converted to a new
   one-channel AO0 task without altering the separate counter/laser logic.
 - `MagnetPush_Dev1` created 18/08/26: `Dev1/ao0` only, ±10 V, 1 Sample (On Demand). Saved but not
-  physically exercised because no magnet is connected on this rig.
+  physically exercised because no magnet was connected on this rig at that time.
 - Working-copy LabVIEW magnet task constant changed to `MagnetPush_Dev1`; its two DAQmx Write nodes
   were converted to `Analog DBL 1Chan 1Samp`. Activation writes scalar `mag`; reset writes scalar
   zero; both retain auto-start=True. Magnet code now addresses AO0 only and cannot command AO1.
@@ -397,18 +403,9 @@ Consequences:
   time repeated trials to confirm all fine motion/noise stops within the 3000 ms settle window.
 - Bench controls later set to extend=3.0 V, settle=2000 ms, consumption=2000 ms, retract=0 V,
   reward delay=0 ms and cue=50 ms; settling sound/fine movement accepted provisionally.
-- Automated reward sequence currently produces cue and spout motion but no visible water delivery;
-  `watertime` is 200 ms but no solenoid click occurs. NI-MAX `Water_Dev1` False→True→False produces
-  clicks and water, and LabVIEW visibly writes True then False. Inspect Water HIGH DAQmx error; if
-  clear, verify the middle frame contains a real 200 ms Wait rather than only a sequence local.
-- Water HIGH returned no DAQmx error. A 200 ms Wait added inside the same frame as HIGH produced a
-  click but no water. User reports it was already placed in a dedicated frame, while the untouched
-  original VI delivers water without the added Wait. Exact timing-node/frame placement is unresolved;
-  compare readable close-ups before further modification.
-- A dedicated 1000 ms HIGH test then produced automated water successfully. This rules out the
-  task/channel/valve and shows either 200 ms is currently below the reliable delivery threshold or
-  the line needed priming. Retest short pulses after priming and calibrate delivered volume before
-  animal use; 1000 ms is diagnostic only.
+- Resolved water-delivery diagnostic (18/08/26): an initially dry 200 ms automated pulse failed
+  because the tubing contained air. A diagnostic 1000 ms pulse primed the line; the immediately
+  repeated 200 ms pulse then worked. The 1000 ms value was diagnostic only and must not be used for animals.
 - Immediate post-prime retest at 200 ms worked. Multiple air bubbles were observed in the tubing;
   failed short-pulse delivery was therefore caused by an unprimed/air-filled water path, not DAQ or
   LabVIEW. Inspect and prime until bubble-free before each session; calibrate 200 ms output in µL.
@@ -416,8 +413,8 @@ Consequences:
   The explicit 200 ms Wait is nominally the same intended duration as original `watertime=200`, but
   exact pulse equivalence has not been electrically measured; functional calibration should use
   delivered water mass/volume.
-- Random/Fixed perturbation blocks cannot be physically bench-tested on this training rig; their
-hardware mapping and sign must be validated separately on the mesoscope rig.
+- Random/Fixed perturbation blocks have not yet been physically bench-tested on this training rig;
+  install the Ledex drive and validate its hardware mapping, force and sign before enabling them.
 
 
 
@@ -436,8 +433,11 @@ add a small transistor/MOSFET driver if the tone is weak or the line is loaded.
 ## Still to inspect
 
 - [x] `Magnets_Dev1`: `Dev1/ao0` + `Dev1/ao1`, −10 V to +10 V, on-demand
-- [x] AO terminals 21 and 22 confirmed physically empty; magnet drive not currently wired
-- [x] Confirmed: no perturbation magnet on training rig; magnet exists on mesoscope rig only
+- [x] AO1 terminal 21 is occupied by the Actuonix command; AO0 terminal 22 remains empty for the magnet
+- [x] Confirmed 12/08/26: no perturbation magnet then on training rig; magnet existed on mesoscope rig only
+- [x] Ordered 27/08/26 via Quartzy: Ledex `195224-230` from Contact Evolution SA (Payerne); McMaster `69905K25` was blocked by EPFL procurement
+- [x] Ledex `195224-230` received 02/09/26; holder STEP model added 03/09/26
+- [ ] Print/fit holder, install coil driver, wire AO0 terminal 22 and force-calibrate the Ledex
 - [x] `Water_Dev1`: `Dev1/port0/line0`, digital line output, on-demand, not inverted in NI-MAX
 - [x] `frame counter_Dev1`: `Dev1/ctr0`, rising edges from `PFI8`
 - [x] `MyPulseOutputTask`: `Dev1/ctr1` output on `PFI13`, continuous 50 Hz pulse train
@@ -454,7 +454,7 @@ add a small transistor/MOSFET driver if the tone is weak or the line is loaded.
 
 
 
-## New channels — installed and bench-tested
+## New channels and planned magnet installation
 
 
 | Component             | Channel            | SCB-68A terminals                                                                           | Status                                                                                                  |
@@ -462,9 +462,10 @@ add a small transistor/MOSFET driver if the tone is weak or the line is loaded.
 | FSR 402 rest pad      | `Dev1/ai2`         | signal → 65, ground → AI GND (64), excitation → +5 V (**8**, not 14)                        | installed; NI-MAX and first-trial LabVIEW gating passed; animal-safe cap/calibration remain             |
 | Adafruit #1536 buzzer | `Dev1/port0/line1` | `+` → 17 (P0.1), `−` → 15 (D GND)                                                           | installed; NI-MAX and 50 ms LabVIEW success-cue tests passed                                            |
 | Actuonix lick spout   | `Dev1/ao1`         | signal → 21, reference → AO GND (54), motor power from separate 12 V PSU with shared ground | installed; `LickSpout_Dev1` and full extend/water/retract sequence passed across three spaced trials    |
+| Axial magnet Ledex `195224-230` | `Dev1/ao0` | command → 22, AO GND shared with drive electronics; coil power **not** from the DAQ pin | received 02/09/26; not mounted or wired. Copy mesoscope drive; mount axially; steel-ring target on push object |
 
 
-Leave `ao0` (terminal 22) reserved for the axial-resistance perturbation.
+Leave `ao0` (terminal 22) reserved for the Ledex until its drive is installed.
 
 ### Buzzer installation — 06/08/26
 
@@ -635,7 +636,9 @@ acquisition test passed.
 yellow/green/blue leads were reattached to SCB terminals 8/65/64 respectively.
 - On 06/08/26 the permanent harness passed its post-solder `rest_pad_test_Dev1` verification:
 released baseline near zero, graded pressure peaks, and no large artifacts during gentle cable
-movement. Electrical installation is complete; the FSR remains mechanically loose beside the rig.
+movement. Electrical installation was complete at this checkpoint; the FSR was subsequently placed
+in the temporary rail mount documented below. Its animal-safe cap and final cleanable mounting
+remain pending.
 
 
 

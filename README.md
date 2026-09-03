@@ -3,8 +3,8 @@
 > ⚠️ **Work in progress.** This repository adapts the 2-axis joystick rig from
 > [Mathis et al., 2017](https://doi.org/10.1016/j.neuron.2017.02.049) into a **1D forelimb object-push task**.
 > The working rig VIs have been imported, and the rest-pad-to-reward success path is bench-tested.
-> Mechanical push-object development, animal-specific calibration, training presets and safety/edge-case
-> validation remain in progress.
+> The first push-object contact plate and supporting mechanical CAD have been added. Final assembly,
+> animal-specific calibration, training presets and safety/edge-case validation remain in progress.
 
 Forked and adapted from the original [JoystickControlSystem](https://github.com/AdaptiveMotorControlLab/JoystickControlSystem)
 (Mathis lab). The original rig trained head-fixed mice to *pull* a 2-axis joystick against a lateral
@@ -17,19 +17,20 @@ Each trial:
 
 ```
 forepaw on rest pad  →  trial starts  →  reach to object  →  push forward
-  →  (optional future axial resistance)  →  object held in target band
+  →  (optional axial resistance; hardware not yet active)  →  object held in target band
   →  auditory success cue  →  short delay  →  lick spout extends  →  water reward  →  spout retracts
 ```
 
 Key differences from the original task:
 
 - **1D push** instead of 2D pull — the task-relevant axis remains in the existing coordinate structure;
-  the lateral axis will be physically constrained by the existing 3D-printed delimiter.
+  the lateral axis is physically limited by the existing **1D-axis constrainer**.
 - **Bounded target zone** — reward requires the object to *end and remain* within a target distance band (overshoot fails).
 - **Rest-pad initiation** — a trial can only start when the object is home (spring-loaded) **and** the
   forepaw is on the rest pad, giving a clean pre-contact trial-start state.
-- **Planned axial resistance** perturbation (opposing the push) instead of a lateral kick. The training
-  rig currently has no magnet; `Dev1/ao0` and the LabVIEW control path are reserved for one.
+- **Axial-resistance perturbation** (opposing the push) instead of a lateral kick. The mesoscope
+  rig uses the original Mathis solenoid (McMaster `69905K25`). The training-rig copy is Ledex
+  `195224-230`, received 02/09/26 but not yet installed; `Dev1/ao0` / `MagnetPush_Dev1` is reserved for it.
 - **Delayed, retractable reward** with an immediate auditory success cue, separating push execution from
   licking/reward for cleaner neural alignment.
 - **Planned session blocks** (via parameter files): Baseline → Random perturbation → Fixed perturbation → Washout.
@@ -46,8 +47,11 @@ Key differences from the original task:
   ends every parallel loop; idle, reward-delay and spout-extended Stop tests passed.
 - Remaining validation includes repeated-cycle testing and explicit fail/timeout checks. LabVIEW's
   toolbar Abort remains emergency-only because it bypasses normal cleanup.
-- Remaining build work includes the final push object, animal-safe rest-pad cover, mouse-specific
-  calibration and training-stage controls/presets.
+- A 36 × 36 mm laser-cut contact-plate prototype and STEP models for the joystick 1D-axis
+  constrainer and Ledex holder are documented in [`mechanical/README.md`](mechanical/README.md).
+- Remaining build work includes gluing and rig-fitting the contact plate, adding spring return and
+  a steel-ring target, completing the animal-safe rest-pad cover, installing/calibrating the Ledex magnet,
+  mouse-specific calibration and training-stage controls/presets.
 
 
 
@@ -57,12 +61,14 @@ Existing rig hardware:
 
 - NI-DAQ card, **PCIe-6321** (`Dev1` on the live rig)
 - Joystick base/readout (Digi-Key 679-2501-ND)
-- 3D-printed lateral delimiter (constrains the task to 1D)
+- 3D-printed **1D-axis constrainer** ([STEP model](mechanical/3d-print/joystick-1d-axis-constrainer/README.md))
 
-Mechanical adaptation still required:
+Mechanical adaptation in progress:
 
-- Convert the joystick handle into a spring-return **push object** with a larger contact surface,
-  positioned close to the rest pad.
+- The first larger contact surface has been laser-cut from a 3 mm transparent sheet using the
+  repository SVG. It is 36 × 36 mm with rounded paw-contact corners and a square glue edge.
+- Final glue-up and rig fit, spring return to home, and the steel-ring / washer target for the axial
+  solenoid remain.
 
 New components for the push task:
 
@@ -72,7 +78,7 @@ New components for the push task:
 | Rest-pad paw sensor    | Interlink **FSR 402** (solder tabs, 30-81794) + 10 kΩ divider                  | `Dev1/ai2`           |
 | Retractable lick spout | **Actuonix L12-30-50-12-I** linear actuator (0–5 V position mode, 12 V supply) | `Dev1/ao1`           |
 | Auditory success cue   | **Adafruit 5 V active buzzer** (#1536)                                         | `Dev1/port0/line1`   |
-| Axial resistance       | future axial magnet/coil; not installed on the training rig                    | reserved `Dev1/ao0`  |
+| Axial resistance       | Ledex **`195224-230`** tubular solenoid (received 02/09/26; not installed) | reserved `Dev1/ao0`  |
 | Water valve            | existing solenoid                                                              | `Dev1/port0/line0`   |
 
 
