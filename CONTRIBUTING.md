@@ -3,6 +3,10 @@
 Contributions are welcome, and they are greatly appreciated! Every little bit
 helps, and credit will always be given. You can contribute in the ways listed below.
 
+This repository primarily contains LabVIEW VIs, NI-MAX configuration and mechanical design files.
+Independently edited `.vi` binaries cannot be merged reliably; coordinate LabVIEW changes before
+editing and use the repository hierarchy as the canonical copy.
+
 ## Report Bugs
 
 Report bugs using GitHub issues.
@@ -25,9 +29,9 @@ and "help wanted" is open to whoever wants to implement it.
 
 ## Write Documentation
 
-Teensy Task could always use more documentation, whether as part of the
-official Teensy Task docs, in docstrings, or even on the web in blog posts,
-articles, and such.
+JoystickPushTask can use clearer rig inventory, calibration, validation and fabrication notes.
+Keep hardware claims tied to a dated bench test, and place mechanical source files under
+`mechanical/` with descriptive filenames and a short part README.
 
 ## Submit Feedback
 
@@ -42,15 +46,17 @@ If you are proposing a feature:
 
 ## Get Started
 
-Ready to contribute? Here's how to set up `Teensy Task` for local development.
+Ready to contribute? Clone `JoystickPushTask` locally. LabVIEW and a compatible NI-DAQmx version
+are required to open and run the VIs; they are not required for documentation-only changes.
 
 1. Fork the repo on GitHub.
 2. Clone your fork locally.
-3. Install your local copy into a virtualenv, e.g., using `conda`.
-4. Create a branch for local development and make changes locally.
-5. Commit your changes and push your branch to GitHub.
-6. Submit a pull request through the GitHub website.
+3. Create a branch and make the smallest coherent change.
+4. For VI changes, verify the full local hierarchy opens and run the relevant bench tests.
+5. Commit and push the branch.
+6. Submit a pull request describing hardware assumptions and validation performed.
 
 ## Code of Conduct
 
-Please note that the Teensy Task project is released with a [Contributor Code of Conduct](CONDUCT.md). By contributing to this project you agree to abide by its terms.
+Please note that JoystickPushTask is released with a [Contributor Code of Conduct](CONDUCT.md).
+By contributing to this project you agree to abide by its terms.

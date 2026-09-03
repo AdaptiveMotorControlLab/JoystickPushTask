@@ -1,11 +1,15 @@
 format: jb-book
 root: README
 parts:
-- caption: Documentation
+- caption: Rig documentation
   chapters:
-  - file: docs/UseOverviewGuide
-  - file: docs/installation
-- caption: Tutorials
+  - file: RIG_INVENTORY
+- caption: Mechanical designs
   chapters:
-  - file: docs/Tutorial_rig1
-  - file: docs/Tutorial_rig5
+  - file: mechanical/README
+    sections:
+    - file: mechanical/laser-cut/push-object/README
+    - file: mechanical/3d-print/README
+      sections:
+      - file: mechanical/3d-print/joystick-1d-axis-constrainer/README
+      - file: mechanical/3d-print/ledex-holder/README

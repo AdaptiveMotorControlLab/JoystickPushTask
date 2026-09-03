@@ -1,13 +1,7 @@
-title: Joystick Control System
-author: MWMathis Lab
+title: Forelimb Object-Push Task
+author: Adaptive Motor Control Lab
 logo: docs/images/logo.png
 only_build_toc_files: true
-
-sphinx:
-  config:
-    autodoc_mock_imports: "list"
-  extra_extensions:
-    - numpydoc
 
 execute:
   execute_notebooks: "off"
@@ -20,9 +14,6 @@ html:
     <div>Powered by <a href="https://jupyterbook.org/">Jupyter Book</a>.</div>
 
 repository:
-  url: https://github.com/AdaptiveMotorControlLab/JoystickControlSystem #change me
-  path_to_book: docs
+  url: https://github.com/AdaptiveMotorControlLab/JoystickPushTask
+  path_to_book: .
   branch: master
-
-launch_buttons:
-  colab_url: "https://colab.research.google.com/github/AdaptiveMotorControlLab/examples/yourdemo.ipynb"
