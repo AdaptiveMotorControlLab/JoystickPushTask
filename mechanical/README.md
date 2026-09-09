@@ -7,27 +7,39 @@ CAD and fabrication files for the forelimb push-task rig: laser-cut flat parts,
 
 | Folder | Use for |
 | ------ | ------- |
-| [Laser-cut push object](laser-cut/push-object/README.md) | 2D vector cut files (SVG, DXF) for laser or CNC flat stock |
+| [Superseded laser-cut push object](laser-cut/push-object/README.md) | Archived 2D prototype and design history |
 | [3D-printed parts](3d-print/README.md) | 3D-printable meshes and project files (STL, 3MF, STEP, Fusion, etc.) |
 
 Add new parts in a named subfolder (e.g. `laser-cut/push-object/`, `3d-print/fsr-mount/`) so
 revisions stay grouped. Prefer descriptive filenames with dimensions or revision when useful.
 
-## Push object — contact plate (prototype, 03 Sep 2026)
+## Push object — current redesign
 
-First prototype contact surface for the modified joystick handle:
+The 36 × 36 mm laser-cut contact plate made on 03 Sep 2026 is superseded. Testing the planned
+placement revealed that positioning the object in front of the mouse's nose would make it
+unnecessarily difficult to reach.
 
-- **Process:** laser cut
-- **Material:** 3 mm transparent sheet (plexiglass / acrylic)
-- **Footprint:** 36 × 36 mm square
-- **Profile:** rounded corners on the paw-contact (top) edge; square corners on the handle
-  (base) edge that is glued to the existing manipulandum handle
-- **Source file:** [`laser_cut_36mm_square_left_rounded.svg`](laser-cut/push-object/laser_cut_36mm_square_left_rounded.svg)
+CAD added 05 Sep 2026: an 89 mm joystick shaft plus two interchangeable tip-mounted handles.
+
+- [Joystick shaft](3d-print/joystick/README.md)
+- [Bar handle](3d-print/joystick-handle-bar/README.md) — 38 mm bar
+- [Rounded-cube handle](3d-print/joystick-handle-cube/README.md) — current push-object candidate.
+  Three holes set how close the front face sits to the mouse and rest pad, and they also shift
+  weight relative to the joystick beneath the object.
+
+The cube is meant to sit below the mouse in the natural forelimb workspace and present a
+push-biased surface that discourages grasping like the original pull handles. The old
+[SVG and prototype notes](laser-cut/push-object/README.md) remain only as design history.
 
 ## 3D models
 
+- [Joystick shaft](3d-print/joystick/README.md) — 89 mm STEP model
+- [Joystick bar handle](3d-print/joystick-handle-bar/README.md) — 38 mm STEP model
+- [Joystick rounded-cube handle](3d-print/joystick-handle-cube/README.md) — rounded-box STEP model
 - [Joystick 1D-axis constrainer](3d-print/joystick-1d-axis-constrainer/README.md) — 38 × 38 × 41 mm STEP model
 - [Ledex holder](3d-print/ledex-holder/README.md) — holder for the Ledex `195224-230`, 30 mm axis STEP model
 
-Still to integrate on the rig: spring return to home, steel-ring / washer target for the axial
-solenoid, and final glue-up + volts→mm calibration after geometry is frozen.
+One printed joystick, handle and 1D-axis constrainer are fitted for bench testing. Further
+prints wait until 21 September 2026. Still to integrate: spring return to home, the
+steel-ring / washer target, and final volts→mm calibration after the below-mouse geometry
+is frozen.

@@ -178,7 +178,14 @@ it. Its replacement is `MagnetPush_Dev1` on AO0 only, leaving AO1 exclusively av
 
 Physical active-high behavior is verified: NI-MAX False→True→False and the LabVIEW sequence both
 produce valve clicks and water. The line must be primed and bubble-free before short pulses are
-reliable. Bench duration is currently 200 ms, pending delivered-volume calibration.
+reliable. Delivered volume was measured gravimetrically on 8 September 2026
+(50 pulses per width; empty cup 2.94 ± 0.02 g):
+
+`µl / pulse = 0.0350 × t(ms) − 0.48` (R² = 0.998).
+
+Use **130 ms ≈ 4 µl**, **185 ms ≈ 6 µl**, **240 ms ≈ 8 µl**. The previous 200 ms
+bench pulse was 6.6 µl. Full table and figures:
+[`calibration/water-volume.md`](calibration/water-volume.md).
 
 ### `frame counter_Dev1`
 
@@ -407,8 +414,10 @@ Consequences:
   because the tubing contained air. A diagnostic 1000 ms pulse primed the line; the immediately
   repeated 200 ms pulse then worked. The 1000 ms value was diagnostic only and must not be used for animals.
 - Immediate post-prime retest at 200 ms worked. Multiple air bubbles were observed in the tubing;
-  failed short-pulse delivery was therefore caused by an unprimed/air-filled water path, not DAQ or
-  LabVIEW. Inspect and prime until bubble-free before each session; calibrate 200 ms output in µL.
+failed short-pulse delivery was therefore caused by an unprimed/air-filled water path, not DAQ or
+LabVIEW. Inspect and prime until bubble-free before each session. Volume vs pulse
+length was measured 08/09/26; see
+[`calibration/water-volume.md`](calibration/water-volume.md).
 - Three spaced complete trials then passed with cue, extension, water and retraction on every trial.
   The explicit 200 ms Wait is nominally the same intended duration as original `watertime=200`, but
   exact pulse equivalence has not been electrically measured; functional calibration should use
@@ -459,7 +468,7 @@ add a small transistor/MOSFET driver if the tone is weak or the line is loaded.
 
 | Component             | Channel            | SCB-68A terminals                                                                           | Status                                                                                                  |
 | --------------------- | ------------------ | ------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| FSR 402 rest pad      | `Dev1/ai2`         | signal → 65, ground → AI GND (64), excitation → +5 V (**8**, not 14)                        | installed; NI-MAX and first-trial LabVIEW gating passed; animal-safe cap/calibration remain             |
+| FSR 402 rest pad      | `Dev1/ai2`         | signal → 65, ground → AI GND (64), excitation → +5 V (**8**, not 14)                        | replaced 08/09/26 after 04/09 tail rip; fixed on rail with protective tape; working. Threshold/hysteresis still to calibrate |
 | Adafruit #1536 buzzer | `Dev1/port0/line1` | `+` → 17 (P0.1), `−` → 15 (D GND)                                                           | installed; NI-MAX and 50 ms LabVIEW success-cue tests passed                                            |
 | Actuonix lick spout   | `Dev1/ao1`         | signal → 21, reference → AO GND (54), motor power from separate 12 V PSU with shared ground | installed; `LickSpout_Dev1` and full extend/water/retract sequence passed across three spaced trials    |
 | Axial magnet Ledex `195224-230` | `Dev1/ao0` | command → 22, AO GND shared with drive electronics; coil power **not** from the DAQ pin | received 02/09/26; not mounted or wired. Copy mesoscope drive; mount axially; steel-ring target on push object |
@@ -672,6 +681,32 @@ beside the future push-object position.
 - Final animal-ready mounting requires a small protective paw-contact cap/puck, tail strain relief,
 and protection from claws/moisture; do not glue or preload the active sensing circle.
 
+### Push-object placement redesign — 04/09/26
+
+- Supersede the 36 × 36 mm laser-cut plate and its planned placement in front of the mouse's nose;
+that position is outside an easy natural reach.
+- 3D-model a replacement handle that connects directly to the joystick and places its contact
+surface below the mouse in the natural forelimb workspace.
+- Shape the interface to encourage a forward push and discourage grasping/holding as on the original
+pull handles.
+- Preserve the task sequence from the fixed rest pad, spring return to home, 1D constraint, and a
+steel washer target facing the home-side Ledex solenoid.
+- Freeze and test the rest-pad-to-object reach geometry on the rig before final fabrication or
+volts-to-mm and force calibration.
+
+### Joystick and handle CAD — 05/09/26
+
+- Imported STEP models: 89 mm [joystick shaft](mechanical/3d-print/joystick/README.md),
+  38 mm [bar handle](mechanical/3d-print/joystick-handle-bar/README.md), and
+  [rounded-cube handle](mechanical/3d-print/joystick-handle-cube/README.md).
+- Both handles attach to the shaft tip. The cube has three mounting holes so the front face can
+  be moved closer to or farther from the mouse and rest pad; the same holes also change how the
+  object's weight sits over the joystick.
+- One printed joystick, handle and 1D-axis constrainer were fitted by 08/09/26 for bench
+  testing; the exact imported handle variant was not recorded. Further prints wait until
+  21/09/26. Freeze one geometry after a rest-pad-to-object reach check, then add spring
+  return and the steel washer target.
+
 
 
 ### Temporary mechanical mount — 06/08/26
@@ -681,6 +716,13 @@ and protection from claws/moisture; do not glue or preload the active sensing ci
 - Mounted sensor retained a near-zero unloaded baseline and graded pressure response in
 `rest_pad_test_Dev1`.
 - Temporary mount passed bench testing.
-- **Not yet animal-ready:** active sensing face remains exposed and needs a centred protective
-paw-contact cap/puck plus final cleanable mounting.
+- Mount status reconfirmed 04/09/26: user reports the FSR is securely fixed in place with tape.
+  Recheck the unloaded baseline after taping to ensure the active circle is not mechanically preloaded.
+- Current status later on 04/09/26: the FSR tail/tongue ripped during testing. Do not splice a
+  damaged printed tail.
+- Replacement completed 08/09/26: new FSR 402 installed on the existing harness, fixed on the
+  rail, protective tape over the contact face, and reported working with no issues. Do not treat
+  the ripped 04/09 sensor as current. Recalibrate threshold/hysteresis on the taped surface;
+  confirm the unloaded baseline is not preloaded by the tape. A dedicated cleanable puck remains
+  optional if the taped cover stays stable.
 

@@ -4,6 +4,11 @@ parts:
 - caption: Rig documentation
   chapters:
   - file: RIG_INVENTORY
+  - file: calibration/README
+    sections:
+    - file: calibration/water-volume
+    - file: calibration/joystick-volts-mm
+  - file: parameters/README
 - caption: Mechanical designs
   chapters:
   - file: mechanical/README
@@ -11,5 +16,8 @@ parts:
     - file: mechanical/laser-cut/push-object/README
     - file: mechanical/3d-print/README
       sections:
+      - file: mechanical/3d-print/joystick/README
+      - file: mechanical/3d-print/joystick-handle-bar/README
+      - file: mechanical/3d-print/joystick-handle-cube/README
       - file: mechanical/3d-print/joystick-1d-axis-constrainer/README
       - file: mechanical/3d-print/ledex-holder/README
