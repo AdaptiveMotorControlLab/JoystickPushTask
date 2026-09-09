@@ -2,6 +2,9 @@
 
 Current STEP models:
 
+- [Joystick shaft](joystick/README.md) — 89 mm shaft that the interchangeable handles mount onto
+- [Joystick bar handle](joystick-handle-bar/README.md) — 38 mm bar that attaches at the shaft tip
+- [Joystick rounded-cube handle](joystick-handle-cube/README.md) — rounded box with three offset holes
 - [Joystick 1D-axis constrainer](joystick-1d-axis-constrainer/README.md) — constrains the joystick to one movement axis
 - [Ledex holder](ledex-holder/README.md) — holder for the Ledex `195224-230` axial-resistance solenoid
 

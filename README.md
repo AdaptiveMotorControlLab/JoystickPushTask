@@ -3,8 +3,9 @@
 > ⚠️ **Work in progress.** This repository adapts the 2-axis joystick rig from
 > [Mathis et al., 2017](https://doi.org/10.1016/j.neuron.2017.02.049) into a **1D forelimb object-push task**.
 > The working rig VIs have been imported, and the rest-pad-to-reward success path is bench-tested.
-> The first push-object contact plate and supporting mechanical CAD have been added. Final assembly,
-> animal-specific calibration, training presets and safety/edge-case validation remain in progress.
+> The push object is now a 3D-modeled joystick shaft with interchangeable tip-mounted handles
+> (bar or rounded cube) meant to sit below the mouse; the earlier laser-cut plate is superseded.
+> Animal-specific calibration, training presets and safety/edge-case validation remain in progress.
 
 Forked and adapted from the original [JoystickControlSystem](https://github.com/AdaptiveMotorControlLab/JoystickControlSystem)
 (Mathis lab). The original rig trained head-fixed mice to *pull* a 2-axis joystick against a lateral
@@ -47,11 +48,15 @@ Key differences from the original task:
   ends every parallel loop; idle, reward-delay and spout-extended Stop tests passed.
 - Remaining validation includes repeated-cycle testing and explicit fail/timeout checks. LabVIEW's
   toolbar Abort remains emergency-only because it bypasses normal cleanup.
-- A 36 × 36 mm laser-cut contact-plate prototype and STEP models for the joystick 1D-axis
-  constrainer and Ledex holder are documented in [`mechanical/README.md`](mechanical/README.md).
-- Remaining build work includes gluing and rig-fitting the contact plate, adding spring return and
-  a steel-ring target, completing the animal-safe rest-pad cover, installing/calibrating the Ledex magnet,
-  mouse-specific calibration and training-stage controls/presets.
+- The earlier 36 × 36 mm laser-cut contact plate is superseded after recognizing that its planned
+  position in front of the nose would be difficult to reach. STEP models now exist for an 89 mm
+  joystick shaft plus two tip-mounted handles: a 38 mm bar and a rounded cube with three offset
+  holes. See [`mechanical/README.md`](mechanical/README.md).
+- A printed joystick, handle and 1D-axis constrainer are already fitted on the rig. Further
+  CAD prints wait until 21 September 2026. The rest-pad FSR was replaced on 8 September 2026,
+  taped, and is working. Remaining build work includes spring return and a steel-ring target,
+  installing/calibrating the Ledex magnet, mouse-specific calibration and training-stage
+  controls/presets.
 
 
 
@@ -62,13 +67,17 @@ Existing rig hardware:
 - NI-DAQ card, **PCIe-6321** (`Dev1` on the live rig)
 - Joystick base/readout (Digi-Key 679-2501-ND)
 - 3D-printed **1D-axis constrainer** ([STEP model](mechanical/3d-print/joystick-1d-axis-constrainer/README.md))
+- 3D-modeled **joystick shaft** and interchangeable handles
+  ([cube](mechanical/3d-print/joystick-handle-cube/README.md),
+  [bar](mechanical/3d-print/joystick-handle-bar/README.md))
 
 Mechanical adaptation in progress:
 
-- The first larger contact surface has been laser-cut from a 3 mm transparent sheet using the
-  repository SVG. It is 36 × 36 mm with rounded paw-contact corners and a square glue edge.
-- Final glue-up and rig fit, spring return to home, and the steel-ring / washer target for the axial
-  solenoid remain.
+- One printed joystick, handle and 1D-axis constrainer are fitted for bench testing. Further
+  CAD prints wait until 21 September 2026; compare the rounded cube's three offset holes when
+  freezing the final mouse-relative reach and object weight.
+- Add spring return to home and the steel-ring / washer target for the axial solenoid. The old
+  laser-cut SVG is retained only as superseded design history.
 
 New components for the push task:
 
@@ -104,18 +113,35 @@ documented in [`RIG_INVENTORY.md`](RIG_INVENTORY.md), with the 20 August 2026 NI
 
 ## Experimental settings file
 
-The original experimental parameters are loaded from a text file, one line per trial. They define the
-home/start/end regions, hold times, water-valve open time and perturbation command/timing.
+The experimental parameters are loaded from a text file, one line per trial
+(**27 tab-separated columns**). Columns 1–21 were mapped on 8 September 2026;
+reward delay, cue duration and spout timing/voltages were added as columns
+22–27 and runtime-tested on the rig on 9 September:
+[`parameters/README.md`](parameters/README.md). Push = Y / `ai1`; lateral = X /
+`ai0`. Column 19 is Case 0 `timeout`; column 20 is Case 3 `move time`.
 
-The imported VI currently exposes bench controls for the FSR threshold, cue duration, reward delay,
-spout extend/retract voltages, spout settling and consumption time. These new settings have **not yet**
-been added to the per-trial parameter-file loader or logged session metadata. Training-stage presets and
-Baseline → Random → Fixed → Washout files also remain to be created.
+Push training files (stages 2–8, including reward-delay ramping) live in
+[`parameters/training/`](parameters/README.md). Habituation and perturbation
+experiment blocks are not yet file-only stages.
+
+The old front-panel controls remain temporarily as references/fallbacks, but
+the live rig water loop now reads those six settings from each trial row. The
+edited VI binary still needs transferring back from the rig PC into this
+repository.
 
 ## Calibration
 
-Each rig must be calibrated for volts→mm on the push axis (the original demo assumes a 2.55 V rest with
-0.05 V ≈ 1 mm — remeasure for your build). Test all channels in NI-MAX before running.
+Water-valve pulse length was measured on the training rig on 8 September 2026.
+Use **130 / 185 / 240 ms** for **4 / 6 / 8 µl**. The 200 ms bench default delivered
+6.6 µl. Full table, fit and figures:
+[`calibration/water-volume.md`](calibration/water-volume.md).
+
+Joystick map (8 September 2026): **push = Y = `Dev1/ai1`** (white), **lateral = X =
+`Dev1/ai0`** (red). Home is **2.50 V** / **2.525 V**. An eyeball 10 mm push was
+2.50 → 2.20 V (~0.030 V/mm at this handle, vs the old demo 0.05 V/mm). See
+[`calibration/joystick-volts-mm.md`](calibration/joystick-volts-mm.md).
+Remeasure with a ruler before writing training files. Test all channels in
+NI-MAX before running.
 
 ## Citation
 
