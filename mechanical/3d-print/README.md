@@ -1,6 +1,6 @@
 # 3D-printed parts
 
-Current STEP models:
+Current models are provided as editable STEP sources and slicer-ready STL exports:
 
 - [Joystick shaft](joystick/README.md) — 89 mm shaft that the interchangeable handles mount onto
 - [Joystick bar handle](joystick-handle-bar/README.md) — 38 mm bar that attaches at the shaft tip

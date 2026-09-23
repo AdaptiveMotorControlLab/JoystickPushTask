@@ -5,7 +5,8 @@ Interchangeable rounded-box / cube handle that slides onto the tip of the
 candidate: a compact contact surface meant to sit below the mouse and encourage
 a forward push rather than a grasp.
 
-- Model: [`joystick_handle_cube.step`](joystick_handle_cube.step)
+- STEP source: [`joystick_handle_cube.step`](joystick_handle_cube.step)
+- STL export: [`joystick_handle_cube.stl`](joystick_handle_cube.stl)
 - Approximate CAD extent: 20 × 11.5 × 10.1 mm rounded box
 - Three mounting holes let the cube sit at different offsets along the shaft.
   That changes how close the front face is to the mouse and rest pad, and it
