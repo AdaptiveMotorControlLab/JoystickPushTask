@@ -13,7 +13,6 @@ parts:
   chapters:
   - file: mechanical/README
     sections:
-    - file: mechanical/laser-cut/push-object/README
     - file: mechanical/3d-print/README
       sections:
       - file: mechanical/3d-print/joystick/README

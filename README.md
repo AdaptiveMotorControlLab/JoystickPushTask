@@ -4,7 +4,7 @@
 > [Mathis et al., 2017](https://doi.org/10.1016/j.neuron.2017.02.049) into a **1D forelimb object-push task**.
 > The working rig VIs have been imported, and the rest-pad-to-reward success path is bench-tested.
 > The push object is now a 3D-modeled joystick shaft with interchangeable tip-mounted handles
-> (bar or rounded cube) meant to sit below the mouse; the earlier laser-cut plate is superseded.
+> (bar or rounded cube) meant to sit below the mouse.
 > Animal-specific calibration, training presets and safety/edge-case validation remain in progress.
 
 Forked and adapted from the original [JoystickControlSystem](https://github.com/AdaptiveMotorControlLab/JoystickControlSystem)
@@ -50,10 +50,8 @@ Key differences from the original task:
   50 ms auditory cue followed by the front-panel-selected water pulse, with no joystick requirement.
 - Remaining validation includes repeated-cycle testing and explicit fail/timeout checks. LabVIEW's
   toolbar Abort remains emergency-only because it bypasses normal cleanup.
-- The earlier 36 × 36 mm laser-cut contact plate is superseded after recognizing that its planned
-  position in front of the nose would be difficult to reach. STEP models now exist for an 89 mm
-  joystick shaft plus two tip-mounted handles: a 38 mm bar and a rounded cube with three offset
-  holes. See [`mechanical/README.md`](mechanical/README.md).
+- STEP models exist for an 89 mm joystick shaft plus two tip-mounted handles: a 38 mm bar and a
+  rounded cube with three offset holes. See [`mechanical/README.md`](mechanical/README.md).
 - A printed joystick, handle and 1D-axis constrainer are already fitted on the rig. Further
   CAD prints wait until 21 September 2026. The rest-pad FSR was replaced on 8 September 2026,
   taped, and is working. Remaining build work includes spring return and a steel-ring target,
@@ -78,8 +76,7 @@ Mechanical adaptation in progress:
 - One printed joystick, handle and 1D-axis constrainer are fitted for bench testing. Further
   CAD prints wait until 21 September 2026; compare the rounded cube's three offset holes when
   freezing the final mouse-relative reach and object weight.
-- Add spring return to home and the steel-ring / washer target for the axial solenoid. The old
-  laser-cut SVG is retained only as superseded design history.
+- Add spring return to home and the steel-ring / washer target for the axial solenoid.
 
 New components for the push task:
 

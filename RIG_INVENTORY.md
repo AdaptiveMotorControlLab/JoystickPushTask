@@ -689,8 +689,6 @@ and protection from claws/moisture; do not glue or preload the active sensing ci
 
 ### Push-object placement redesign — 04/09/26
 
-- Supersede the 36 × 36 mm laser-cut plate and its planned placement in front of the mouse's nose;
-that position is outside an easy natural reach.
 - 3D-model a replacement handle that connects directly to the joystick and places its contact
 surface below the mouse in the natural forelimb workspace.
 - Shape the interface to encourage a forward push and discourage grasping/holding as on the original
