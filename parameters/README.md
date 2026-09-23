@@ -94,7 +94,7 @@ Do not load `Full_shoterPull_Training_Task_RIG1` for the push task.
 
 | Stage | Why | What to do instead |
 | --- | --- | --- |
-| 1 Habituation (cue → water, no push) | Water loop only wakes on Case 4 | LabVIEW habituation button/mode. Reward delay 0–250 ms on the **front panel**. |
+| 1 Habituation (cue → water, no push) | Water loop only wakes on Case 4 | Run `deliverWater_RIG1_cue.vi` once per manual reward. It gives a fixed 50 ms cue, then water for the front-panel `Water on time (ms)` value. |
 | Rest only (fallback) | Would reward pad contact without a push | LabVIEW if a mouse never touches the pad. Not a default. |
 | 6 Delay / retractable spout | Files exist (`06_delay_*`) | Load 0 → 250 → 500; use 1000 only if desired and tolerated. Do not change the zone in those sessions. |
 | 8 Shadow block labels | No column for block ID; magnet still absent | Run `08_shadow` as one 300-trial zero-force session. Split 50/75/100/75 later if needed. |

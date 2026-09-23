@@ -46,6 +46,8 @@ Key differences from the original task:
   compatible repository helper VIs.
 - Safe startup now commands water/cue LOW, spout retract and magnet 0 V. One canonical Stop cleanly
   ends every parallel loop; idle, reward-delay and spout-extended Stop tests passed.
+- `deliverWater_RIG1_cue.vi` provides manual day-1 habituation rewards: one Run gives a fixed
+  50 ms auditory cue followed by the front-panel-selected water pulse, with no joystick requirement.
 - Remaining validation includes repeated-cycle testing and explicit fail/timeout checks. LabVIEW's
   toolbar Abort remains emergency-only because it bypasses normal cleanup.
 - The earlier 36 × 36 mm laser-cut contact plate is superseded after recognizing that its planned

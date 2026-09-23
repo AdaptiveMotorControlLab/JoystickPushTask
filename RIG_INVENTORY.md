@@ -97,6 +97,12 @@ documented re-test. Abort-path output cleanup has not been specifically validate
 - Fresh GitHub-copy validation passed on the rig PC 20/08/26 after correcting the NI-MAX X/Y channel
   order and replacing the repository's unusable `frame counter.vi` with the compatible copy from the
   working hierarchy. The main VI opened with a healthy Run arrow and completed the full bench sequence.
+- Manual day-1 habituation VI `deliverWater_RIG1_cue.vi` was built and bench-tested on 23/09/26.
+  Each Run performs `Dev1/port0/line1 HIGH → 50 ms → LOW`, then the original
+  `Dev1/port0/line0 HIGH → Water on time (ms) → LOW` sequence. The cue task is cleared before the
+  water task is created, enforcing cue-before-water order. This VI has no joystick requirement and
+  does not move the lick spout. Do not run the push VI, `SuccessCue_Dev1`, or
+  `success_cue_test_Dev1` concurrently because they share the buzzer line.
 - Safe startup/normal shutdown validated 20/08/26:
   - one-shot startup sequence commands `Water_Dev1=False`, `SuccessCue_Dev1=False`,
     `LickSpoutMotor_Dev1=0 V` and `MagnetPush_Dev1=0 V`;
