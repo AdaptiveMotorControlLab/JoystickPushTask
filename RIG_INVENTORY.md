@@ -379,7 +379,11 @@ Consequences:
   (https://shop.contact-evolution.ch/en/home/26325-195224-230.html).
   McMaster `69905K25` was blocked by EPFL procurement. The Ledex is not yet mounted or wired.
   Install **axially** (opposing the push), not laterally.
-  Copy the mesoscope-rig coil-drive electronics; AO0 is a command voltage, not the coil supply.
+  Coil driver ordered 25/09/26 via Quartzy: Hydraulik-Kompetenz **PVA 1.6 0–10 V**
+  (CHF 260; not the 4–20 mA SKU). It is a current-regulated PWM amplifier. AO0 is the
+  0–10 V command, and coil power comes from the reserved 12 V supply, not the DAQ pin.
+  The Bürkert Type 8605 (`316532`) ordered earlier remains the ~2 December spare unless
+  that order is cancelled. Mesoscope-rig drive copying is not the plan.
   Include a steel ring / ferromagnetic target on the push object (Mathis 2017).
   Force-calibrate on the bench; do not assume the paper 2.2 V / 100 ms pulse transfers.
   Keep `mag = 0` until the unperturbed task is stable.
@@ -429,7 +433,7 @@ length was measured 08/09/26; see
   exact pulse equivalence has not been electrically measured; functional calibration should use
   delivered water mass/volume.
 - Random/Fixed perturbation blocks have not yet been physically bench-tested on this training rig;
-  install the Ledex drive and validate its hardware mapping, force and sign before enabling them.
+  install the ordered PVA 1.6 driver and validate its hardware mapping, force and sign before enabling them.
 
 
 
@@ -452,7 +456,8 @@ add a small transistor/MOSFET driver if the tone is weak or the line is loaded.
 - [x] Confirmed 12/08/26: no perturbation magnet then on training rig; magnet existed on mesoscope rig only
 - [x] Ordered 27/08/26 via Quartzy: Ledex `195224-230` from Contact Evolution SA (Payerne); McMaster `69905K25` was blocked by EPFL procurement
 - [x] Ledex `195224-230` received 02/09/26; holder STEP model added 03/09/26
-- [ ] Print/fit holder, install coil driver, wire AO0 terminal 22 and force-calibrate the Ledex
+- [x] Ordered 25/09/26 via Quartzy: Hydraulik-Kompetenz PVA 1.6 0–10 V (CHF 260) as the Ledex coil driver. Not the 4–20 mA SKU. Bürkert Type 8605 / `316532` stays the ~2 December spare unless cancelled
+- [ ] Print/fit holder, install the PVA driver, wire AO0 terminal 22 and force-calibrate the Ledex
 - [x] `Water_Dev1`: `Dev1/port0/line0`, digital line output, on-demand, not inverted in NI-MAX
 - [x] `frame counter_Dev1`: `Dev1/ctr0`, rising edges from `PFI8`
 - [x] `MyPulseOutputTask`: `Dev1/ctr1` output on `PFI13`, continuous 50 Hz pulse train
@@ -477,7 +482,7 @@ add a small transistor/MOSFET driver if the tone is weak or the line is loaded.
 | FSR 402 rest pad      | `Dev1/ai2`         | signal → 65, ground → AI GND (64), excitation → +5 V (**8**, not 14)                        | replaced 08/09/26 after 04/09 tail rip; fixed on rail with protective tape; working. Threshold/hysteresis still to calibrate |
 | Adafruit #1536 buzzer | `Dev1/port0/line1` | `+` → 17 (P0.1), `−` → 15 (D GND)                                                           | installed; NI-MAX and 50 ms LabVIEW success-cue tests passed                                            |
 | Actuonix lick spout   | `Dev1/ao1`         | signal → 21, reference → AO GND (54), motor power from separate 12 V PSU with shared ground | installed; `LickSpout_Dev1` and full extend/water/retract sequence passed across three spaced trials    |
-| Axial magnet Ledex `195224-230` | `Dev1/ao0` | command → 22, AO GND shared with drive electronics; coil power **not** from the DAQ pin | received 02/09/26; not mounted or wired. Copy mesoscope drive; mount axially; steel-ring target on push object |
+| Axial magnet Ledex `195224-230` | `Dev1/ao0` | command → 22, AO GND shared with drive electronics; coil power **not** from the DAQ pin | coil received 02/09/26; driver ordered 25/09/26 (Hydraulik-Kompetenz PVA 1.6 0–10 V). Not mounted or wired. Mount axially; steel-ring target on push object |
 
 
 Leave `ao0` (terminal 22) reserved for the Ledex until its drive is installed.
