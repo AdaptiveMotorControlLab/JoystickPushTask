@@ -31,7 +31,8 @@ Key differences from the original task:
   forepaw is on the rest pad, giving a clean pre-contact trial-start state.
 - **Axial-resistance perturbation** (opposing the push) instead of a lateral kick. The mesoscope
   rig uses the original Mathis solenoid (McMaster `69905K25`). The training-rig copy is Ledex
-  `195224-230`, received 02/09/26 but not yet installed; `Dev1/ao0` / `MagnetPush_Dev1` is reserved for it.
+  `195224-230`, received 02/09/26 but not yet installed. Its coil driver, Hydraulik-Kompetenz
+  PVA 1.6 0–10 V, was ordered 25/09/26. `Dev1/ao0` / `MagnetPush_Dev1` is reserved for the command.
 - **Delayed, retractable reward** with an immediate auditory success cue, separating push execution from
   licking/reward for cleaner neural alignment.
 - **Planned session blocks** (via parameter files): Baseline → Random perturbation → Fixed perturbation → Washout.
@@ -55,7 +56,7 @@ Key differences from the original task:
 - A printed joystick, handle and 1D-axis constrainer are already fitted on the rig. Further
   CAD prints wait until 21 September 2026. The rest-pad FSR was replaced on 8 September 2026,
   taped, and is working. Remaining build work includes spring return and a steel-ring target,
-  installing/calibrating the Ledex magnet, mouse-specific calibration and training-stage
+  installing the ordered PVA driver and force-calibrating the Ledex, mouse-specific calibration and training-stage
   controls/presets.
 
 
@@ -86,7 +87,7 @@ New components for the push task:
 | Rest-pad paw sensor    | Interlink **FSR 402** (solder tabs, 30-81794) + 10 kΩ divider                  | `Dev1/ai2`           |
 | Retractable lick spout | **Actuonix L12-30-50-12-I** linear actuator (0–5 V position mode, 12 V supply) | `Dev1/ao1`           |
 | Auditory success cue   | **Adafruit 5 V active buzzer** (#1536)                                         | `Dev1/port0/line1`   |
-| Axial resistance       | Ledex **`195224-230`** tubular solenoid (received 02/09/26; not installed) | reserved `Dev1/ao0`  |
+| Axial resistance       | Ledex **`195224-230`** (received 02/09/26; not installed). Driver ordered 25/09/26: Hydraulik-Kompetenz PVA 1.6 0–10 V | reserved `Dev1/ao0`  |
 | Water valve            | existing solenoid                                                              | `Dev1/port0/line0`   |
 
 
