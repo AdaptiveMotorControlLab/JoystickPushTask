@@ -73,6 +73,7 @@ one important thing at a time.
 | --- | --- | --- | --- | --- | --- | --- |
 | [push_bench_wide-zone.txt](push_bench_wide-zone.txt) | Hand test | 2.20–2.35 | 5–10 mm, wide | 50 | 80 | delay 0 |
 | [training/02_micro_push.txt](training/02_micro_push.txt) | 2 Discovery | 2.15–2.45 | past ~1.7 mm, no far wall | **0** | 200 | delay 0 |
+| [training/02_micro_push_day1_5s_8ul.txt](training/02_micro_push_day1_5s_8ul.txt) | 2 Day-1 pilot | 0.00–2.27 | permissive threshold from recalibrated 2.275–2.425 home | **0** | 250 | 100 ms home hold; 5 s move; 8 µl; fixed 3 V spout |
 | [training/03_proximal_zone.txt](training/03_proximal_zone.txt) | 3 Proximal | 2.35–2.45 | 1.7–5.0 mm | 50 | 400 | delay 0 |
 | [training/04_zone_translate_1.txt](training/04_zone_translate_1.txt) | 4 Shift 1 | 2.31–2.41 | 3.0–6.3 mm | 50 | 400 | delay 0 |
 | [training/04_zone_translate_2.txt](training/04_zone_translate_2.txt) | 4 Shift 2 | 2.26–2.36 | 4.7–8.0 mm | 50 | 400 | delay 0 |
@@ -107,6 +108,14 @@ The live rig loader and water loop were extended and runtime-tested on
 temporarily as visible references/fallbacks until the edited VI is transferred
 back to this repository and re-tested from a clean copy. Log the selected
 filename with the session.
+
+For `02_micro_push_day1_5s_8ul.txt`, set the front-panel
+`Session start spout (V)` control to **3.0 V** before Run. The file also writes
+3.0 V for both extend and retract, so the spout remains extended throughout
+the session; normal Stop still retracts it. Bench testing on 27/09/26 corrected
+the loader/water-loop cluster-order mismatch for `reward delay` and
+`spout retract`. The front-panel captions were corrected separately without
+changing the working underlying labels.
 
 ## LabVIEW: loader extension completed on rig 09/09/26
 
