@@ -72,8 +72,10 @@ one important thing at a time.
 | File | Stage | Push end box (X) | ~mm from rest | `end TO` | Rows | Extra |
 | --- | --- | --- | --- | --- | --- | --- |
 | [push_bench_wide-zone.txt](push_bench_wide-zone.txt) | Hand test | 2.20–2.35 | 5–10 mm, wide | 50 | 80 | delay 0 |
+| [training/01_fsr_contact_shaping.txt](training/01_fsr_contact_shaping.txt) | 1b supervised FSR shaping | 0.00–5.00 | Joystick ignored within 0–5 V | **0** | 125 | 1 ms FSR gate; 2 s ITI; 8 µl; fixed 3 V spout |
+| [training/01_fsr_contact_shaping_0ms.txt](training/01_fsr_contact_shaping_0ms.txt) | 1b supervised FSR shaping, zero hold | 0.00–5.00 | Joystick ignored within 0–5 V | **0** | 125 | 0 ms FSR gate; still requires one sampled/loop-visible contact; otherwise matches 1 ms file |
 | [training/02_micro_push.txt](training/02_micro_push.txt) | 2 Discovery | 2.15–2.45 | past ~1.7 mm, no far wall | **0** | 200 | delay 0 |
-| [training/02_micro_push_day1_5s_8ul.txt](training/02_micro_push_day1_5s_8ul.txt) | 2 Day-1 pilot | 0.00–2.27 | permissive threshold from recalibrated 2.275–2.425 home | **0** | 250 | 100 ms home hold; 5 s move; 8 µl; fixed 3 V spout |
+| [training/02_micro_push_day1_5s_8ul.txt](training/02_micro_push_day1_5s_8ul.txt) | 2 Day-1 pilot | 0.00–2.22 | permissive threshold from 28/09 live rest 2.25 V and 2.225–2.350 home | **0** | 250 | 1 ms home/FSR contact gate; 5 s move; 8 µl; fixed 3 V spout |
 | [training/03_proximal_zone.txt](training/03_proximal_zone.txt) | 3 Proximal | 2.35–2.45 | 1.7–5.0 mm | 50 | 400 | delay 0 |
 | [training/04_zone_translate_1.txt](training/04_zone_translate_1.txt) | 4 Shift 1 | 2.31–2.41 | 3.0–6.3 mm | 50 | 400 | delay 0 |
 | [training/04_zone_translate_2.txt](training/04_zone_translate_2.txt) | 4 Shift 2 | 2.26–2.36 | 4.7–8.0 mm | 50 | 400 | delay 0 |
@@ -96,7 +98,7 @@ Do not load `Full_shoterPull_Training_Task_RIG1` for the push task.
 | Stage | Why | What to do instead |
 | --- | --- | --- |
 | 1 Habituation (cue → water, no push) | Water loop only wakes on Case 4 | Run `deliverWater_RIG1_cue.vi` once per manual reward. It gives a fixed 50 ms cue, then water for the front-panel `Water on time (ms)` value. |
-| Rest only (fallback) | Would reward pad contact without a push | LabVIEW if a mouse never touches the pad. Not a default. |
+| FSR-contact shaping (supervised fallback) | Rewards pad contact without requiring joystick movement | Use `training/01_fsr_contact_shaping.txt` only after a hand-contact bench test. Its full-range home/end boxes make joystick position irrelevant within 0–5 V. It does not require release-to-rearm, so held contact can earn another reward after each 2 s ITI; supervise reward count and stop if this is not intended. |
 | 6 Delay / retractable spout | Files exist (`06_delay_*`) | Load 0 → 250 → 500; use 1000 only if desired and tolerated. Do not change the zone in those sessions. |
 | 8 Shadow block labels | No column for block ID; magnet still absent | Run `08_shadow` as one 300-trial zero-force session. Split 50/75/100/75 later if needed. |
 | 9 Experiment (Baseline / Random / Fixed / Washout) | Random/Fixed need a force-calibrated magnet | Baseline ≈ `07_expert`. Do not write `mag ≠ 0` files yet. |

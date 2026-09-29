@@ -1,0 +1,707 @@
+# Joystick push task — project plan
+
+## DAQ overrun on `joysticklickframe_push` (29 Sep 2026)
+
+- Live symptom: joystick/FSR indicators sometimes freeze during a run. Stopping
+  the push VI then shows NI-DAQmx **-200279**: "The application is not able to
+  keep up with the hardware acquisition," task `joysticklickframe_push`,
+  RelativeTo = Current Read Position, Offset = 0.
+- That RelativeTo/Offset pair is the normal DAQmx Read request for the next
+  unread samples. It means unread samples were overwritten. It is not a
+  separately configured read-position property.
+- After -200279 the task stays faulted, so acquisition does not resume until
+  the VI is stopped and started again. The dialog often appears only on Stop
+  because that is when the latched error cluster is displayed.
+- Task configuration: continuous analog input, 10 kHz, three channels
+  (`ai1` Y, `ai0` X, `ai2` FSR). At 10 kHz the default software buffer is about
+  10,000 samples, roughly 1 s. `avg joystick and frame trig lick3.vi` reads
+  with Analog 2D NChan NSamp, averages, and enqueues `joystick pos`.
+- NI-MAX "10 samples/read" applies to the MAX test panel. An unwired LabVIEW
+  DAQmx Read "number of samples per channel" is -1 (read all available) and is
+  the failure mode named in the error text. On a continuous task, the Timing
+  "samples per channel" input sets buffer size; a value of 10 there requests
+  about 1 ms of buffer and will overflow whenever the loop jitters.
+- Likely stall: the acquisition loop blocks on a finite `joystick pos` enqueue
+  while the main loop is inside a reward/consumption wait, a file write, or a
+  front-panel update. Highlight execution, probes, and an open helper front
+  panel produce the same overflow.
+- Plain procedure given 29 Sep, bench-only, no animal, and no second analog
+  task running (`rest_pad_test_Dev1` and `joysticklickframe` share the
+  PCIe-6321 analog timing engine). Edit `avg joystick and frame trig lick3.vi`:
+  1. Before DAQmx Start, insert DAQmx Configure Input Buffer with buffer size
+     100000 (~10 s at 10 kHz).
+  2. On the DAQmx Read inside the loop, wire number of samples per channel to
+     100 (a fixed 10 ms chunk, 100 loops/s). Leave it at 10 only if that loop
+     contains the Read, a mean, and a non-blocking enqueue.
+  3. Replace the blocking Enqueue in that loop with Lossy Enqueue Element, or
+     wire Enqueue timeout 0 and discard the timeout so a full `joystick pos`
+     queue cannot stall the Read. Keep charts and file writes out of this loop.
+  4. Run idle for several minutes, then through repeated reward cycles. Values
+     must keep updating, and Stop must return without -200279.
+- Diagram screenshot 29 Sep 15:10 (repo copy last saved 22 Sep; none of the
+  above changes applied). Actual cause: a DAQmx Timing property node READS
+  `SampQuant.SampPerChan` (10, from NI-MAX) and wires it into DAQmx Read, so
+  the loop must run 1000 times/s. Every iteration it also does 4 index/sum/
+  divide means, an Enqueue, a global read and two Write-to-Binary-File calls.
+  Any Windows/disk hiccup longer than the ~1 s default buffer overflows it.
+  The queue is unlimited, so Enqueue is not the blocker.
+- Specific fix given: remove that wire, wire constant 100 into Read
+  `number of samples per channel`; add DAQmx Configure Input Buffer = 100000
+  on the task wire before DAQmx Start. Consequence: joystick file logs one
+  averaged sample per 10 ms (100 Hz, same as camera) instead of 1 kHz.
+- User rejected the 100-sample read: the 1 kHz logged resolution must stay.
+  Revised fix keeps Read = 10 samples and the file format unchanged:
+  1. DAQmx Configure Input Buffer = 100000 before DAQmx Start (10 s slack).
+  2. Delete the `Bool (strict)` Value property node on `stop in` from the
+     acquisition loop. Value property nodes run in the LabVIEW UI thread, so
+     front-panel activity can stall a 1000-iteration/s loop; `stop all`
+     global alone must drive the loop Stop terminal.
+  3. Diagnostic: DAQmx Read property node `Status.AvailSampPerChan` to an
+     indicator in the loop. If it stays near 0–10, the loop keeps up. If it
+     climbs steadily, the loop is too slow per iteration and a buffer only
+     delays failure. If it jumps then recovers, stalls are occasional.
+  4. If it still climbs: move the two Write-to-Binary-File calls into a
+     separate consumer loop fed by a queue (producer/consumer). This keeps
+     one averaged 1 ms sample plus frame count per record.
+- User requested beginner steps for the buffer change (29 Sep 17:51). Given:
+  Quick Drop (Ctrl+Space) or palette Measurement I/O → DAQmx → DAQmx Advanced
+  Task Options → DAQmx Configure Input Buffer; insert it in the purple task
+  wire just before DAQmx Start Task (task in/out, error in/out), right-click
+  `buffer size` → Create → Constant → 100000, confirm Run arrow unbroken,
+  then save.
+- User reports the Configure Input Buffer (100000) change is done. Next given:
+  delete the in-loop `Bool (strict)` Value property node only (keep the
+  `stop in` terminal, which is on the caller's connector pane), Ctrl+B,
+  confirm `stop all` → loop Stop terminal, add `AvailSampPerChan` indicator,
+  save, then run 10 min idle plus rewards with no animal.
+- User reports (29 Sep 18:05) the property node was removed and the VI runs
+  normally. The AvailSampPerChan indicator was not added. Because the fault
+  was intermittent, treat as provisionally fixed. Before animal use, run a
+  no-animal session at least as long as a real session (~25–30 min) with
+  rewards, and Stop without error. `avg joystick and frame trig lick3.vi`
+  is now modified and uncommitted; commit only when the user asks.
+- Frame count is read from a global once per loop iteration, so it is
+  software-polled rather than hardware-timed to each AI sample. True per-sample
+  alignment would need a buffered counter task on `ai/SampleClock`.
+- End of 29 Sep: `avg joystick and frame trig lick3.vi` is modified in the
+ rig working tree (28229 → 28505 bytes), so the DAQ fix may have been applied.
+ Confirm on the diagram that Read uses constant 100 and Configure Input Buffer
+ is 100000, then run the idle/reward-cycle test before relying on it.
+- Repo sync 29 Sep: `.cursorrules` is listed in `.gitignore` but is now
+ force-tracked so these notes reach other machines via git. Commit it together
+ with rig changes; tracked files are unaffected by the ignore rule.
+- Row index 3 of the 2D read does not exist (task has 3 channels), so the 4th
+  queue/file value is an empty-array mean (NaN). Pre-existing; not the cause.
+- A 100-sample read makes the 1 ms home gate one 10 ms chunk. That is acceptable
+  while the goal is to stop the overrun. Restore a 10-sample read only after
+  the lean loop above has stayed up for several minutes.
+
+## First animal pilot (28 Sep 2026): FSR gate problem
+
+- The first mouse did not reliably activate the rest-pad FSR gate. The push
+  requirement was stopped; the session was finished with manual rewards, each
+  preceded by the established auditory cue.
+- Do not interpret this as demonstrated weakness. Earlier documentation listed
+  a provisional 0.10 V starting threshold; the value actually used during the
+  28 Sep pilot was 0.01 V and still requires animal-mounted calibration.
+- Before the next mouse, with the manual-reward VI stopped, put the push VI in
+  Case 0 and record stable FSR voltage ranges for no contact and gentle
+  finger/light contact. Confirm the Boolean responds and can remain true for
+  at least the pilot file's 100 ms home hold.
+- Choose a threshold only if the no-contact and light-contact ranges are
+  clearly separated: above baseline/noise and below reliable light contact.
+  If finger contact produces no response, troubleshoot sensor/wiring/DAQ. If
+  finger contact works but natural paw contact does not separate from baseline,
+  inspect pad position/contact mechanics and continue manual cue/reward
+  habituation rather than requiring forceful paw pressure.
+- For each next animal, observe no-paw and naturally resting-paw voltage before
+  allowing push trials. Never press the animal's paw down to satisfy the gate.
+- Empty-pad measurement: approximately 0–0.005 V with the live threshold at
+  0.01 V. Very light fingertip contact produces no apparent response; the
+  lightest manually achievable activation is about 0.1 V, while hard pressure
+  trends toward 5 V. This confirms useful electrical dynamic range but shows
+  that threshold reduction alone is unlikely to detect a naturally resting
+  paw reliably.
+- Do not use the FSR-gated push task for the next animal until contact
+  sensitivity is improved and validated. Immediate sessions should remain
+  manual cue followed by reward.
+- First mechanical check: inspect whether protective tape bridges the active
+  circle or prevents direct loading. Bench-test a small, rigid, centered
+  paw-contact puck/cap that transmits load into the active circle while tape
+  and strain relief remain on the inactive perimeter/tail; do not preload or
+  glue the sensing circle. Then characterize unloaded noise and light-load
+  response again with repeatable small test weights.
+- If the centered puck still has an unusable low-force dead zone, bench-test a
+  more sensitive divider value or a different sensing technology before
+  animal use. Any circuit change requires rechecking 0–5 V range, baseline
+  noise, saturation and a threshold with margin; do not improvise it during an
+  animal session.
+- Before the next pilot, the user repositioned the FSR and requested a minimal
+  1 ms home/FSR hold. The live white push-axis rest value is now approximately
+  2.25 V. The day-one pilot preset has therefore been revised on 28 Sep:
+  push-axis home box 2.225–2.350 V, disabled legacy start box mirrored to the
+  same bounds, `home TO = 1 ms`, and rewarded forward zone 0.00–2.22 V
+  (operational threshold at 2.22 V). This retains a 5 mV separation between
+  the home-box lower edge and reward boundary.
+- Treat the 1 ms gate as contact detection rather than a meaningful hold. It
+  still requires a stable FSR Boolean for at least one control-loop evaluation;
+  bench-test that the repositioned pad starts trials reliably without unloaded
+  false starts before using the preset with another mouse.
+- Parameter-file validation passed after editing: 250 rows, 27 columns per row,
+  and one consistent row definition. `parameters/README.md` now documents the
+  revised 28 Sep home bounds, 1 ms gate and 2.22 V reward boundary.
+- The next mouse activated the repositioned FSR twice, demonstrating that paw
+  activation is possible but currently too difficult for reliable joystick
+  training. Proposed intermediate stage: teach FSR contact before introducing
+  the joystick requirement.
+- Preferred long-term implementation: do not rely solely on a parameter-file
+  end box covering the entire joystick range. Although that can produce
+  immediate success after Case 0, a paw held on the pad can retrigger rewards
+  whenever the state machine returns to Case 0. A robust contact-only mode
+  should reward one false-to-true FSR transition and require confirmed release
+  below threshold before rearming.
+- Implement the intermediate stage in LabVIEW, either as an explicit
+  `FSR shaping mode` in the push VI or a dedicated VI that uses the same
+  cue-before-water sequence. Joystick position must not be part of its success
+  criterion. Include contact debounce/hold, release debounce, a minimum
+  inter-reward interval, one cue/water pulse per contact, and normal Stop
+  cleanup. Do not run it concurrently with the push VI, manual-reward VI or
+  standalone FSR test task.
+- User accepts the held-contact retrigger risk for a short, closely supervised
+  shaping pilot because FSR activation is currently rare. Added
+  `parameters/training/01_fsr_contact_shaping.txt`: 125 identical rows, all
+  home/start/end joystick boxes 0–5 V, `home TO = 1 ms`, `end TO = 0`,
+  240 ms water (~8 µl), 2 s Case-0 timeout/ITI, 5 s movement window, 50 ms cue,
+  fixed 3 V spout and 1500 ms consumption. Within the expected 0–5 V joystick
+  range, FSR contact is therefore the only meaningful initiation requirement
+  and success should follow without joystick movement.
+- This preset is an explicitly supervised fallback, not equivalent to a
+  release-to-rearm implementation. Bench-test with hand contact before animal
+  use: no contact must give no reward, a brief contact should give one reward,
+  arbitrary joystick position within 0–5 V must not matter, and held contact
+  may give another reward after each 2 s ITI. Monitor reward count and approved
+  water limits; 125 successful rows at ~8 µl cap file-delivered water near
+  1.0 ml. Use normal Stop if behavior differs.
+- File validation passed: 125 rows, 27 columns per row, one consistent row
+  definition and no whitespace errors. Git status also shows
+  `Push Behaviour_MCHALABI.vi` modified outside this parameter-file edit;
+  preserve that live LabVIEW change and do not overwrite it.
+- First live use of the FSR-contact shaping preset produced only two detected
+  activations in approximately 15 minutes. This event rate is too low for
+  effective contingency learning and confirms that the remaining limitation is
+  contact sensitivity/geometry, not the joystick boxes or parameter-file hold.
+- Current-session action: stop the FSR contingency with normal Stop rather than
+  extending the session, finish with manual cue-before-water rewards if needed,
+  and record the two detected contacts. Never press the animal's paw onto the
+  FSR.
+- Before another animal, observe voltage during an ordinary visible paw contact.
+  If it rises reproducibly above unloaded baseline but remains below 0.01 V,
+  recalibrate the threshold with measured noise margin. If it remains within
+  the 0–0.005 V unloaded range, lowering the threshold cannot separate contact
+  from noise; change the mechanical interface or sensing technology.
+- Bench priority: center a smooth rigid paw-contact puck smaller than the FSR
+  active circle, ensure tape is not bridging the active area, and position the
+  pad where the paw naturally bears downward load. Recharacterize unloaded
+  noise and light-force response. If naturalistic light loads still cannot be
+  distinguished, replace the force gate with a touch/contact method such as a
+  validated capacitive or optical sensor before resuming shaping.
+- FSR-retention options reviewed against the Interlink 400-series integration
+  guide. The FSR 402 has a mechanics-dependent break/activation force around
+  0.2 N in the current official guide (older sheets report as low as 0.1 N),
+  equivalent to approximately 20.4 g-force and 10.2 g-force respectively,
+  explaining why a passively resting paw may leave it open-circuit. The
+  manufacturer characterizes it with a centered silicone-rubber actuator; the
+  actuator geometry materially affects turn-on force.
+- Preferred rescue sequence, bench-only and one variable at a time:
+  1. Replace the tape-only contact face with a secured, smooth, centered
+     silicone/rubber dome or puck roughly 4–10 mm across, smaller than the
+     active circle, without gluing or preloading the active area.
+  2. If necessary, use a hinged/levered paw platform with the FSR near the
+     fulcrum to mechanically amplify a small paw load while preserving the FSR.
+  3. Only if light loading produces some finite resistance, increase the
+     divider measuring resistance from the current 10 kΩ under bench
+     measurement to improve low-force voltage separation. A larger source
+     impedance may require an op-amp voltage follower for reliable multiplexed
+     DAQ acquisition; validate baseline, settling/crosstalk and 0–5 V range.
+  Software threshold changes cannot detect a genuinely open-circuit sensor.
+- Controlled-preload option added after user review: a deliberately engineered,
+  adjustable spring-loaded paw platform may preload the centered actuator just
+  into the FSR's conductive region, allowing a small additional paw force to
+  cross a higher software threshold. This supersedes the blanket prohibition
+  only for a bench-characterized mechanism; tape tension, loose weights,
+  adhesive on the active circle and uncontrolled clamping remain prohibited.
+- Preload validation must be animal-free: increase preload gradually, record
+  unloaded output and drift/creep over at least 15–30 minutes, then measure
+  repeated very-light added loads. Set the contact threshold only between the
+  highest stable preloaded baseline and the lowest repeated added-load value.
+  Require clear margin, add a mechanical over-travel stop, and reject the
+  design if baseline drifts across threshold, added load does not separate
+  reliably, output approaches saturation, or the platform binds.
+- Recommended load path: mouse contacts a broad, smooth paw platform; a
+  centered 4–10 mm rounded silicone/rubber nub on the platform underside
+  contacts the middle of the FSR active circle; the FSR lies flat on a rigid
+  backing. The platform must not bottom out elsewhere, and guides/flexures must
+  prevent lateral shear. This improves force transfer but does not increase
+  total force.
+- For true mechanical amplification, hinge the paw platform and put the
+  FSR/nub closer to the pivot than the paw-contact region. Approximate gain is
+  paw distance from pivot divided by FSR distance from pivot; for example,
+  15 mm versus 3 mm gives about 5× FSR force. Combine only with measured,
+  adjustable preload and a hard stop, then validate drift and repeated
+  light-load separation before animal use.
+- Design choice after the failed passive-contact sessions: the levered broad
+  paw platform is the better likely final solution because the simple centered
+  nub improves force transfer but cannot multiply a paw force that is below the
+  FSR break force. Prototype the simple nub first only as a quick bench screen;
+  if light test loads still do not register, proceed directly to a low-friction
+  lever with a hard stop, adding controlled preload only if amplification alone
+  is insufficient.
+- Space-constrained lever concepts prepared for physical fit review:
+  1. Rail-clamped flexure cantilever: lowest profile and no hinge pin, but gain
+     and repeatability depend on strip stiffness.
+  2. Side-pivot rigid rocker: easiest lever-ratio adjustment and preferred when
+     there is room for a side bracket and long paw arm.
+  3. Side-mounted bell crank: moves the FSR off the crowded top surface onto a
+     rail side, but requires a precise low-friction pivot.
+  4. Remote-sensor pushrod: keeps only a small paw plate near the mouse and
+     locates the FSR elsewhere, but adds linkage friction/play and is a last
+     choice.
+- Final design requires measured available length along the rail, height above
+  and below the paw surface, clearance on both rail sides, usable attachment
+  faces/holes, and the desired paw-contact location. Use photos from top and
+  side with a ruler before fixing dimensions or fabricating.
+- Alternative under review: replace the analog FSR with a low-force momentary
+  switch beneath a broad paw paddle. This would eliminate FSR threshold,
+  nonlinearity and drift and provide a clean digital contact, but switch size
+  does not imply low force. Typical tactile and membrane buttons require about
+  30–100+ gf and may be substantially harder than the current FSR.
+- Suitable category is an ultra-low-force detector/basic switch, momentary
+  normally open, preferably micro-load rated. One documented reference is the
+  Omron D2MV-01-1C1 pin-plunger model at 0.10 N / 10 gf maximum operating
+  force. Ten gf may still be too high for passive paw rest, so mount the switch
+  close to the pivot under a broad hinged paddle; a 4:1 external lever would
+  reduce nominal paw force to roughly 2.5 gf while retaining a crisp digital
+  transition. Verify current availability and the exact datasheet suffix
+  before ordering.
+- Current DAQ inventory lists P0.2–P0.7 as unused candidates, but select and
+  continuity-check one line before wiring. A switch conversion requires a
+  defined pull-up/pull-down, digital-input configuration, software debounce,
+  replacement of the analog FSR comparison with the digital Boolean, and
+  confirmation that the chosen terminal is not driven by any existing task.
+  Do not connect or test it while the laser is enabled.
+- User clarified that a custom lever/paddle mechanism is not desired because it
+  is too difficult to fit and fabricate. Reassess direct replacements only.
+  A direct Omron D2MV 10 gf plunger is still approximately the lower published
+  FSR activation force and therefore may remain too hard for a passively
+  resting paw; common flat tactile buttons are much harder (typically
+  100–250 gf), and low-force basic switches commonly remain around 25 gf.
+- Preferred no-lever candidate is now a flat capacitive touch electrode/module:
+  no moving parts or actuation force, a thin insulated/cleanable paw surface,
+  and a digital output suitable for the same logical gate after validation.
+  Bench-test sensitivity to a mouse-sized contact area, release detection,
+  moisture/lick false triggers, cable movement, nearby grounded metal and
+  long-term baseline before animal use. A mechanical button remains acceptable
+  only if the intended behavior changes from passive paw rest to a deliberate
+  press and its specified operating force is demonstrated achievable.
+- Lower-force thin force-sensor search identified a stronger no-lever candidate:
+  SingleTact S8-1N / calibrated CS8-1N. It is an 8 mm, 0.30 mm-thick capacitive
+  force sensor with 1 N / approximately 100 gf full scale and <0.2% full-scale
+  resolution, corresponding to about 0.2 gf nominal resolution—far below the
+  current FSR 402's roughly 10–20 gf break force. It is not a resistive FSR,
+  but preserves force-based paw gating without a lever.
+- The calibrated CS8-1N bundle includes its matched electronics and exposes an
+  analog output with a valid 0.5–1.5 V range plus I²C. The analog output could
+  potentially replace the present FSR signal on `Dev1/ai2` while keeping an
+  analog threshold architecture, subject to a wiring/common-ground review and
+  bench validation. Supply specification is 3.7–5 V at about 2.7 mA. Current
+  EU reference price is approximately €124.50 direct or €149.54 from
+  RobotShop; the uncalibrated standard sensor is approximately €34.50 but still
+  requires compatible interface electronics.
+- Other conventional resistive FSRs found generally remain around 10–20 gf
+  actuation, so they offer little guaranteed improvement. Tekscan FlexiForce
+  can be configured for lighter forces but needs a suitable puck and more
+  sensitive analog front end. Prefer evaluating the calibrated SingleTact
+  bundle first if force—not mere touch—must remain the behavioral criterion.
+- Cost correction: the calibrated SingleTact bundle is likely unnecessary for
+  a binary paw gate. The uncalibrated S8-1N sensor is €34.50 and requires a
+  separate standard electronics board (US reference $43.95), putting a basic
+  working set around €75–80 rather than €125–150. Calibration is not needed if
+  the only goal is a stable per-animal threshold.
+- Cheapest next experiment should precede any sensor purchase: the present
+  divider uses 9.88 kΩ, while low-force FSR guidance recommends roughly
+  100 kΩ–1 MΩ reference resistance for light-touch applications. Animal-free,
+  substitute 100 kΩ first and remeasure unloaded versus very-light loads; this
+  should increase high-resistance-region voltage sensitivity by roughly an
+  order of magnitude. If trying still larger values, account for NI multiplexed
+  analog-input settling/source-impedance error and add a unity-gain buffer if
+  necessary. Validate joystick-channel crosstalk, baseline drift and saturation
+  before animal use.
+- Electrical clarification: changing 10 kΩ to 100 kΩ does not reduce the
+  FSR's physical membrane break/activation force. It can reduce the
+  *system-level detectable force* only if a light paw already changes the FSR
+  from open circuit to a finite but very high resistance. With a 5 V divider,
+  an example 5 MΩ FSR gives about 0.010 V through 10 kΩ but about 0.098 V
+  through 100 kΩ. A truly open-circuit sensor still produces no signal with
+  either resistor.
+- The larger resistor also raises leakage/unloaded voltage and makes the output
+  approach 5 V sooner at higher force, so the existing 0.01 V threshold cannot
+  be retained automatically. After the resistor change, remeasure unloaded
+  range, light-load range, drift and channel interaction, then choose a new
+  threshold only if those ranges separate cleanly.
+- User selected the 100 kΩ divider-resistor experiment as the next step. Perform
+  it animal-free with the rig powered down for rewiring. Replace only the
+  measured 9.88 kΩ FSR signal-to-ground resistor, verify the connections before
+  power-up, then record unloaded, barely-touching and firm-press voltage ranges.
+  Do not reuse the 0.01 V threshold. Also watch joystick X/Y while exercising
+  the FSR to screen for multiplexed-input settling/crosstalk before animal use.
+- Added `parameters/training/01_fsr_contact_shaping_0ms.txt` on 29 Sep at user
+  request. It copies the supervised 125-row contact-shaping preset but changes
+  column 5 `home TO` from 1 ms to 0 ms. All other values remain unchanged,
+  including full-range 0–5 V joystick boxes, 2 s ITI, 240 ms water, 50 ms cue
+  and fixed 3 V spout. Zero removes the explicit timed dwell but cannot bypass
+  the requirement that FSR contact be sampled/visible during a LabVIEW loop.
+  Validation passed: 125 rows, 27 columns per row and `home TO = 0` throughout.
+- If force magnitude is not required, a low-cost capacitive touch module is the
+  least expensive replacement path. Decision ladder: resistor sensitivity test
+  first; inexpensive capacitive touch if contact-only is acceptable; then
+  uncalibrated SingleTact plus board only if true low-force measurement remains
+  necessary.
+- Quartzy/expedited sourcing review on 29 Sep:
+  - Fastest publicly evidenced stock: RobotShop Europe lists manufacturer
+    `CS8-1N`, RobotShop SKU `RB-Pre-11`, calibrated 8 mm / 1 N sensor plus
+    matched I²C/analog board, at €149.54 including tax, with only one unit shown
+    in stock and Switzerland available as a shipping destination.
+  - Lower-cost official route: PPS/SingleTact EU store sells `S8-1N` for €34.50
+    plus the `Standard Electronics` I²C/analog board for €40.00, total €74.50
+    before shipping/import costs. Public pages do not state stock or delivery
+    time, so request same-day confirmation and express shipping from PPS UK.
+  - DigiKey, Mouser, Farnell and RS did not show this part in current searches.
+- For the likely Swiss/European lab, Quartzy Shop purchasing is not publicly
+  supported (Quartzy documents Shop purchasing as US-labs-only). Add an
+  external request in Quartzy using exact manufacturer/catalog numbers and
+  vendor URLs, mark “no substitutions,” and ask the lab admin to confirm stock,
+  use DHL/UPS express and record the external order in Quartzy. If a Quartzy
+  offer/quote appears, expedited shipping can be requested via
+  `orders@quartzy.com` before placement.
+- Delivery estimate clarification: RobotShop's European logistics location is
+  in Venlo, Netherlands and it states orders are generally handled within
+  24 hours; exact Swiss delivery is only shown by its cart estimator after a
+  postcode and carrier are entered. If the displayed one-unit stock is local
+  and express service is selected, use roughly 2–5 business days as a planning
+  estimate, subject to customs. Quartzy/lab approval can add unknown time, so
+  request immediate approval and explicit express service; do not promise an
+  arrival date until the vendor quote/cart confirms it.
+- Calibrated CS8-1N replacement scope:
+  - Remove the FSR and its 9.88 kΩ divider; do not leave the pulldown loading
+    the SingleTact board output.
+  - Power the matched board from verified 3.7–5 V and common ground; route its
+    0.5–1.5 V analog output to the existing `Dev1/ai2` terminal 65, with common
+    ground at AI GND terminal 64, only after a powered-off wiring review.
+  - Existing `ai2` RSE 0–5 V acquisition and analog-threshold LabVIEW path can
+    remain. Recalibrate baseline/contact threshold; do not reuse 0.01 V.
+  - Mechanically mount the 8 mm head flat with a smooth cleanable contact
+    surface, protect the 0.30 mm sensor and FFC tail from claws/shear, respect
+    the tail bend limit, and strain-relieve/mount the interface board.
+  - The board updates at >120 Hz, so DAQ sampling at 10 kHz oversamples it and
+    sub-millisecond events are not meaningful; passive paw contacts should be
+    long enough.
+- Expected effort for the calibrated bundle is moderate rather than a full VI
+  redesign: approximately 30–60 minutes electrical replacement, 1–3 hours
+  mechanical mounting, then threshold/crosstalk/drift and repeated-contact
+  bench validation. Reserve about half a day if connectors and mounting fit.
+  The uncalibrated sensor/board may require I²C scaling setup and is therefore
+  less suitable when fastest deployment matters.
+
+## Session-data synchronization audit (28 Sep 2026)
+
+Example output set from the 27 Sep test:
+`TRIAL_test76666`, `joystick_test76666`, and `REWARD_test76666`.
+- `TRIAL_test76666` and `REWARD_test76666` are empty.
+- Therefore this example reveals neither file's record format; it only shows
+  that no trial or reward records were written during this test.
+- `joystick_test76666` is 85,200 bytes, but every byte is zero.
+- None of these files contains an embedded start time, end time, elapsed-time
+  series, or usable frame-count records.
+- Their NTFS creation times are from 12 Aug, showing that creation time is not
+  a session-start marker when names are reused. Last-modified times span
+  27 Sep 17:51:43.461–17:51:46.210 and provide only a rough filesystem window,
+  not precise video synchronization. Each file has one creation timestamp and
+  one last-modified timestamp—not separate start- and end-modification times.
+  The three creation timestamps are within about 33 ms of one another, which
+  is consistent with LabVIEW creating the outputs sequentially at startup.
+- The rig already has `frame counter_Dev1` on `PFI8`. Before experimental
+  recording, verify that its value is written with each joystick sample and
+  map that counter to camera frame number; add explicit session/event timing
+  to the output if it is not.
+- At 100 Hz, one frame is 10 ms, so the observed 33 ms output-file creation
+  spread is already 3.3 frames and is unsuitable for frame-accurate alignment.
+  Preferred synchronization is one camera exposure/frame TTL pulse per frame
+  into `PFI8`, with the resulting counter value saved beside joystick,
+  trial, and reward records. If the camera cannot output TTL, use a DAQ-driven
+  LED visible in the video and log the same pulse in LabVIEW; filesystem or
+  software timestamps are only a coarse fallback.
+- Clarification: NTFS creation timestamps precisely date the OS file-creation
+  events, but those events are not proven to coincide with the first LabVIEW
+  sample. Camera file creation/frame timestamps likewise must be shown to use
+  the same synchronized clock and represent exposure time before absolute-time
+  alignment can be treated as frame-accurate. Validate metadata-only alignment
+  over repeated starts with an event visible in both streams before relying on
+  it.
+- Video timestamp example
+  `TIMESTAMPS_VIDEO_Rig_Anaconda_2026-09-25_1.npy` contains 6,639 absolute
+  Unix timestamps (`float64`), from local 14:52:09.288 to 14:53:15.863
+  (66.575 s). Median frame interval is 10 ms (~100 Hz), although several
+  irregular intervals occur, including an initial 160 ms gap. These per-frame
+  timestamps are suitable for absolute-time alignment if the LabVIEW timing
+  reference is tied to the same synchronized clock and the LabVIEW
+  file-creation-to-first-sample offset is measured. The `.npy` file itself was
+  created near video completion, so its filesystem creation time must not be
+  substituted for its first embedded frame timestamp.
+
+## Training decision (27 Sep 2026): first reach-to-push stage
+
+The 25 Sep Basecamp plan for the first mouse push session is:
+- object about 2 mm from the rest pad;
+- object home plus FSR contact held for 100 ms;
+- minimal forward displacement within 5 s;
+- immediate 50 ms success cue and 8 µl reward;
+- maximum 25 minutes per mouse.
+
+The repository's `parameters/training/02_micro_push.txt` does not implement
+that exact plan. It currently uses `home TO = 250 ms`, `move time = 30000 ms`,
+and `watertime = 185 ms` (~6 µl), with 200 trials. Its discovery target is
+otherwise suitable: X-slot push band 2.15–2.45 V, `end TO = 0`, no reward
+delay, no magnet and a 50 ms cue.
+
+Recommendation for tomorrow is a separate day-1 Stage 2 variant rather than
+silently changing the canonical file: retain the Stage 2 geometry and 200
+rows, but use `home TO = 100 ms`, `move time = 5000 ms`, and
+`watertime = 240 ms` (~8 µl). Keep the 5 s window for initial discovery unless
+pilot observations show many unrelated delayed movements are being rewarded;
+then shorten one variable at a time, initially to 2–3 s. Do not assume a
+shorter window will accelerate learning if it sharply reduces the number of
+reinforced trials. Final file choice remains conditional on the current pilot
+results, which were not included in the pasted Basecamp update.
+
+Interactive parameter review for the day-1 variant:
+- Columns 1–4 home box: confirmed push/white bounds 2.275–2.425 V after the
+  user checked the current live rig; the old ~2.50 V rest calibration is no
+  longer applicable to tomorrow's setup. Lateral/red bounds are 0.00–5.00 V.
+  Apply the same lateral bounds to the end box when columns 11–14 are reviewed.
+- Column 5 `home TO`: confirmed 100 ms. Object-home and FSR contact must both
+  remain valid continuously for 100 ms before trial onset.
+- Columns 6–10 legacy start box: confirmed to mirror the current home box,
+  `2.275, 0.00, 2.425, 5.00`, with `start TO = 0 ms`. Zero dwell keeps this
+  legacy stage disabled; the object-home plus FSR gate now initiates trials.
+- Columns 11–14 end box: confirmed as `0.00, 0.00, 2.27, 5.00`, a one-sided
+  forward threshold with no lateral constraint and no overshoot penalty.
+  The 5 mV gap below the 2.275 V home edge is intentionally permissive and
+  must be bench-tested for untouched/noise-triggered false successes before
+  any animal session.
+- Column 15 `end TO`: confirmed 0 ms for day-one discovery, so merely entering
+  the end box triggers success; no target hold is required.
+- Columns 16–17 magnet settings: confirmed `mag = 0` and `magtime = 25 ms`.
+  Resistance remains disabled; 25 ms is an inert placeholder while magnitude
+  is zero.
+- Column 18 `watertime`: confirmed 240 ms, calibrated to approximately 8 µl
+  on the training rig.
+- Column 19 `timeout` (Case 0 ITI): user selected 500 ms. With the 100 ms home
+  hold, a new trial may begin about 600 ms after success, while the reward loop
+  can still be inside its 1500 ms consumption wait. Treat 500 ms as conditional
+  on bench validation: force rapid successive successes and verify one cue and
+  one water pulse per success with no lost/coalesced occurrence. Do not use it
+  with animals if that test fails. Long-term, separate success and failure ITIs
+  or a reward-complete gate would be cleaner.
+- Column 20 `move time`: confirmed 5000 ms for initial discovery. The clock
+  begins after the home/FSR criterion completes, not at paw lift.
+- Column 21 `light`: confirmed 0; no light stimulus is used in this stage.
+- Column 22 `reward delay`: confirmed 0 ms; reward sequencing proceeds
+  immediately when the success cue ends.
+- Column 23 `cue duration`: confirmed 50 ms, matching the cue used during
+  head-fixation habituation.
+- Day-one spout mode: user confirms the spout must already be extended before
+  the first trial and remain extended throughout the session. For the trial
+  rows, provisionally set both column 24 `spout extend` and column 27 `spout
+  retract` to 3.00 V; column 25 settling can then be 0 ms. This alone may not
+  override the VI's safe-start retraction command, so bench-test startup and
+  establish how 3.00 V is applied before trial 1.
+- Proposed VI control for review: add a front-panel DBL such as `Session start
+  spout (V)`, default 0.00 V and constrained/clamped to the actuator's 0–5 V
+  range. The one-shot startup sequence should write this value instead of a
+  hardcoded 0 V and allow the actuator to settle before enabling trial 1.
+  Tomorrow's setting is 3.00 V. Water/cue remain LOW and magnet remains 0 V
+  during startup; normal Stop must still command a hardcoded 0 V/retract.
+- User reports the `Session start spout (V)` front-panel control is now
+  implemented. Tomorrow set the FP control to 3.00 V. Columns 24 and 27 are
+  confirmed at 3.00 V, so each reward write preserves the extended position.
+  Bench-test initial extension before trial 1 and normal-Stop retraction.
+- Startup FP-control test failed with NI-DAQmx error `-200561` on
+  `LickSpoutMotor_Dev1`: the startup analog write received `500.0`, outside its
+  configured 0–5 V range. Stop rather than Continue and do not rerun until the
+  startup write's data wire is traced. The value exactly matches tomorrow's
+  column-19 timeout (500 ms), strongly suggesting the timeout value/terminal
+  was wired or unbundled into the spout write instead of the new 3.00 V FP
+  control. Verify the FP value and direct wire at the DAQmx Write data input.
+- User observes apparent protraction followed by retraction and suspects file
+  column order. The generated row has been validated as 27 columns in the
+  documented order; column 19 is 500 and columns 24/27 are both 3.00. Diagnose
+  at the loaded `exp para array`: if its labelled fields show timeout=500,
+  spout extend=3, settle=0, consumption=1500, retract=3, the loader is correct
+  and the DAQ write is miswired. If a spout-labelled field shows 500, fix the
+  loader case/Bundle By Name mapping. Establish whether the error appears at
+  Run startup or only after a simulated success.
+- Correction after block-diagram screenshots: loader case 21 already bundles
+  `reward delay` and case 26 already bundles `spout retract`; do not change
+  them. The prior loader-swap diagnosis was incorrect. The mismatch between
+  the generated file tail (`light=0, delay=0, cue=50, extend=3, settle=0,
+  consumption=1500, retract=3`) and the displayed cluster (`delay=3,
+  retract=0`) now points to a wrong/stale selected file, manually changed
+  values, or a label/caption/cluster issue. Verify the exact loaded path and
+  exact last seven values before modifying loader code. The separate 500 V
+  error still indicates the startup DAQ write received timeout=500.
+- User confirms the exact file is correct and the 500 V error has not recurred,
+  but the displayed delay/retract values remain exchanged. Next diagnostic:
+  inspect both cluster numerics for underlying Label versus visible Caption.
+  Bundle/Unbundle By Name uses the Label; swapped captions or copied-control
+  labels can make case 21/26 wiring correct while the front panel appears
+  reversed. Also distinguish retraction during an active reward cycle from
+  expected 0 V retraction on Stop/error cleanup.
+- Root cause identified from Bundle/Unbundle dropdowns: the loader-side and
+  water-loop-side parameter clusters have different cluster element orders.
+  Their four middle new fields align, but `reward delay` and `spout retract`
+  occupy opposite endpoint positions. Because all elements are DBLs, LabVIEW
+  can transfer the clusters positionally even though names differ, swapping
+  these two values. Do not alter the text-file order or case mappings. Save a
+  backup, identify the boundary between the two cluster types, and make the
+  water-loop cluster order exactly match the loader cluster. Long-term, use
+  one shared typedef for the parameter cluster to prevent recurrence.
+- User reports the cluster-order mismatch has been fixed in LabVIEW. Before
+  animal use, save the VI and reload the pilot file; verify the loaded/reward
+  values are reward delay=0, cue=50, extend=3, settle=0, consumption=1500 and
+  retract=3, then trigger repeated successes and confirm the spout stays
+  extended, each success gives exactly one cue and one 240 ms water pulse, and
+  the 500 V error does not recur.
+- Rig test now behaves correctly (0 ms functional reward delay and 3 V
+  functional no-retract command), but the FP `exp para array` display still
+  shows reward delay=3 and spout retract=0 because its visual cluster layout
+  remains positional/old. Do not reorder the now-working functional cluster or
+  rename underlying Bundle/Unbundle labels. For a quick safe UI correction,
+  use captions only on those two FP numerics and swap the displayed captions;
+  long-term, replace duplicate clusters with one shared typedef.
+- User reports the two front-panel captions have been corrected without
+  changing the now-working underlying labels/cluster mapping.
+- Final bench status reported good: the 2.27 V target does not false-trigger
+  when the object is untouched, the corrected rig VI executes the intended
+  fixed-extended-spout reward path, and the FP captions are accurate. The
+  repository now contains the modified `Push Behaviour_MCHALABI.vi`, the
+  250-row pilot file and parameter documentation. User requested committing
+  and pushing all current tracked task changes to GitHub.
+- Commit `f347f72` (`Add the day-one push training preset.`) was pushed to
+  GitHub `master`. Immediately afterward, the still-open LabVIEW VI changed
+  again (binary size 251779 → 251771 bytes), leaving the working tree dirty.
+  Do not claim everything is pushed until the user saves/closes the VI and the
+  final binary is committed in a new commit and pushed.
+- User saved and closed the VI. Final binary commit `8c93c8c` (`Finalize the
+  day-one push VI controls.`) was pushed to GitHub `master`; the repository is
+  clean and synchronized with `origin/master`.
+- Git for Windows was upgraded at the user's request from 2.16.1.windows.4 to
+  2.55.0.windows.3 and verified.
+- Column 25 `spout settle`: confirmed 0 ms because the spout is pre-positioned
+  and remains stationary at 3.00 V throughout the session.
+- Column 26 `consumption`: confirmed 1500 ms. With no spout retraction this is
+  not an access-duration control, but it keeps the occurrence-driven reward
+  loop occupied for 1.5 s after water; coordinate column 19 so a new success
+  cannot arrive before that loop is ready.
+- File row count: revised to 250 trial rows so the user can monitor reward
+  count manually rather than letting file exhaustion end the session. At
+  approximately 8 µl per reward, 125 successes are ~1.0 ml and 250 successes
+  would be ~2.0 ml; rows are attempts, not rewards. The 25-minute and approved
+  animal-specific water limits still apply independently.
+- Created `parameters/training/02_micro_push_day1_5s_8ul.txt` with 250
+  identical 27-column trial rows using all confirmed values, including the
+  user-selected 500 ms timeout. Added it to `parameters/README.md`. The file
+  remains bench-test-only until rapid-success reward-loop behavior, untouched
+  false triggering, FP 3 V startup extension and normal-Stop retraction pass.
+
+## Current session (27 Sep 2026): Ledex / PVA 1.6 commissioning
+
+Goal: commission the Ledex `195224-230` and Hydraulik-Kompetenz PVA 1.6
+0–10 V driver one checkpoint at a time, following `MAGNET_COMMISSIONING.md`.
+Sunday's successful endpoint is a repeatable short, low-duty pull at a known
+measured current, with clean release. Do not claim force calibration today.
+
+Current checkpoint: **Checkpoint 1 — unpowered preflight**.
+- The commissioning plan and rig inventory have been reviewed.
+- No driver, coil or power wiring has yet been changed in this session.
+- User confirms a 12 V supply with male barrel plug, a female barrel-to-screw
+  adapter, and a multimeter with probes are available.
+- Ledex photos received and visually reviewed. Label confirms part number
+  `195224-230`; coil body, plunger, retaining nut and two white leads are
+  present and currently disconnected.
+- PVA photos received. Front identifies `PVA-1.6`; expected terminal lettering
+  `A–F` and `G–M` is present. No visible marking in the supplied photos confirms
+  whether the unit is the required 0–10 V rather than 4–20 mA variant. User
+  reports that the ordered article was the intended variant, but the shipped
+  unit remains physically unverified.
+- Manufacturer datasheet checked: PVA-1.6 is offered as 0–10 V differential,
+  0–20 mA and 4–20 mA configurations in the same enclosure. Use the unpowered
+  `H–G` resistance screen as additional identification evidence; stop if below
+  2 kohm.
+- Multimeter photo reviewed: Fluke 87V; black lead is correctly in `COM`, red
+  lead correctly in `VΩ`, and meter was off. User reports separated-probe `OL`
+  and shorted-probe near-zero resistance sanity checks behaved as expected;
+  exact shorted-probe value was not recorded.
+- Unpowered PVA `H–G` resistance measured about 105 kohm in both probe
+  polarities. This passes the 2 kohm AO-loading screen and strongly supports
+  the ordered 0–10 V differential-input configuration.
+- First Ledex coil attempt varied about 23–26 ohm due to poor alligator-clip
+  contact. Repeat with reliable direct contact was stable at about 21 ohm,
+  inside the 18–22 ohm acceptance band. Coil-resistance screen passed.
+- User reports both disconnected coil-lead-to-metal-case checks passed (`OL`);
+  no case short was detected.
+- Barrel-to-screw adapter polarity passed: user reports approximately +12 V
+  with red on marked `+` and black on marked `−`. Exact decimal value was not
+  recorded. Correction: `250 mA` is the adapter's 100–240 VAC mains-input
+  rating. Its selectable 12 VDC output is rated 1.0 A / 12.0 W. With 12 V
+  selected and positive polarity measured, the supply passes.
+- User did not recognize the inline fuse, so its availability is unconfirmed.
+  Online examples were supplied for a 5x20 mm inline cartridge-fuse holder and
+  an automotive blade-fuse holder. Preferred lab option is a 5x20 mm inline
+  holder with a separate 1 A fuse. A holder's higher maximum rating is
+  acceptable, but the installed fuse itself must be 1 A. Stop after unpowered
+  work if no suitable holder and fuse are available.
+- Keep all power disconnected until the unpowered checks are complete and
+  recorded.
+
+Session safety:
+- Keep the Class 3B laser keyed off.
+- No animal and no experimental parameter file.
+- Do not run the push VI or energise `MagnetPush_Dev1`.
+- Never power the coil from AO0; AO0 is only the 0–10 V command.
+- Install a 1 A inline fuse in the 12 V positive lead before powered testing.
+- Secure the driver and Ledex before power; keep fingers, steel tools and the
+  washer target away during first energisation.
+- Use only short pulses with long cool-downs.
+- Stop for failed/unstable measurements, blown fuse, heating, odour/smoke,
+  binding, unexpected LED state, incorrect force direction, or failure to
+  release at 0 V.
+
+Checkpoint 1 measurements still required:
+1. PVA identification provisionally passed: ordered as 0–10 V and `H–G`
+   measured about 105 kohm in both directions; casing itself is unmarked.
+2. Ledex coil resistance passed at about 21 ohm with reliable probe contact.
+3. Coil-to-case insulation screen passed: user reports `OL` from each lead to case.
+4. Supply passed: 12 V selected, output rated 1.0 A / 12.0 W, and adapter
+   polarity measured at about +12 V across marked `+`/`−`.
+5. Screen PVA `H–G` resistance; stop if below 2 kohm.
+6. Secure the PVA and Ledex mechanically.
+
+## Push-task status (do not change today)
+
+Working path already bench-tested:
+cue HIGH → cue wait → cue LOW → reward delay → spout extend → settle →
+water HIGH → watertime → water LOW → consumption → spout retract.
+
+Loader reads columns 21–26 (`reward delay`, `cue duration`, `spout extend`,
+`spout settle`, `consumption`, `spout retract`) on the rig copy. The repo
+`.vi` still needs to be replaced with that tested copy when the user uploads it.
