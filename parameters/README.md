@@ -1,9 +1,9 @@
 # Parameter files
 
-Tab-separated doubles, **27 columns**, one line = one trial. Columns 1–21 were
-mapped on the live VI on 8 September 2026. Columns 22–27 (reward delay, cue,
-spout) are in the files as of 9 September 2026; the loader still has to grow
-from 21 to 27 cases or those values are ignored.
+Tab-separated doubles, **27 columns**, one line = one trial. The loader in
+`Push Behaviour_MCHALABI.vi` reads all 27. Columns 22–27 are reward delay, cue
+duration, spout extend, spout settle, consumption, and spout retract. User
+confirmed on 29 Sep 2026 that this 27-column order is the correct one.
 
 ## Column map (confirmed)
 
@@ -38,9 +38,11 @@ from 21 to 27 cases or those values are ignored.
 | 26 | 27 | `spout retract` | V. Bench **0**. |
 
 Boxes are two corners `(X1, Y1, X2, Y2)`. Write the smaller voltage first in
-each pair. **Do not trust the words X and Y.** 09/09/26: a file with the
-forward band in the Y slots paid out only when **red** moved. The forward
-band now goes in the **X** slots so a white-line push is the target. Likely
+each pair. **Do not trust the words X and Y.** The names in the loader are not
+the NI-MAX channel names. White / push goes in the **X** columns (1, 3, 11, 13).
+Red / lateral goes in the **Y** columns (2, 4, 12, 14). A 09/09/26 file with
+the forward band in the Y slots paid out only when red moved. The 27-column
+files already use this order; user confirmed that on 29 Sep 2026. Likely
 cause: after `joysticklickframe_push` was reordered to `[Y, X, FSR]`, Case 3
 still compares index 0 to the X box and index 1 to the Y box.
 
@@ -116,11 +118,10 @@ Do not load `Full_shoterPull_Training_Task_RIG1` for the push task.
 
 ## Front panel during these files
 
-The live rig loader and water loop were extended and runtime-tested on
-09/09/26. The six values now come from the file. Keep the old FP controls
-temporarily as visible references/fallbacks until the edited VI is transferred
-back to this repository and re-tested from a clean copy. Log the selected
-filename with the session.
+The loader and water loop in the repository VI read columns 22–27 from the
+file. That extension was runtime-tested on the rig on 09/09/26 and imported
+on 21/09/26. The 27/09/26 cluster-order fix for `reward delay` and
+`spout retract` is in the same VI. Log the selected filename with the session.
 
 For `02_micro_push_day1_5s_8ul.txt`, set the front-panel
 `Session start spout (V)` control to **3.0 V** before Run. The file also writes
@@ -130,39 +131,18 @@ the loader/water-loop cluster-order mismatch for `reward delay` and
 `spout retract`. The front-panel captions were corrected separately without
 changing the working underlying labels.
 
-## LabVIEW: loader extension completed on rig 09/09/26
+## Loader
 
-The following implementation was completed and reported working on the rig PC.
-The repository `.vi` binary still needs to be replaced with that tested copy.
+`Push Behaviour_MCHALABI.vi` on `master` already loads 27 columns and the
+water loop already uses those fields. Cases 21–26 are `reward delay`,
+`cue duration`, `spout extend`, `spout settle`, `consumption`, and
+`spout retract`. Do not expand the cluster or add those cases again.
 
-1. Stop the VI. Save a backup.
-2. On the front panel, expand the cluster inside **`exp para array`** from
-   21 to 27 numeric fields. Copy six existing DBL fields inside the cluster
-   and rename their labels exactly: `reward delay`, `cue duration`,
-   `spout extend`, `spout settle`, `consumption`, `spout retract`. If the
-   cluster is a typedef, open and edit the typedef instead. The loader cases
-   cannot Bundle By Name into fields that do not exist in this cluster.
-3. Parameter-loader For Loop: change the **21** to **27** (loop count and any
-   “init array of 21 zeros”).
-4. Add cases **21–26** on that Case Structure (`i`), same pattern as `home X1`:
-   Scan From String `%f` → bundle into a new named field.
-   - 21 `reward delay`
-   - 22 `cue duration`
-   - 23 `spout extend`
-   - 24 `spout settle`
-   - 25 `consumption`
-   - 26 `spout retract`
-5. Water loop (the Flat Sequence that already uses `watertime`):
-   - Wait after cue LOW → **`reward delay`** from this trial (not the FP)
-   - Cue wait → **`cue duration`**
-   - Extend write → **`spout extend`**
-   - Settle wait → **`spout settle`**
-   - After water LOW → **`consumption`**
-   - Retract write → **`spout retract`**
-   Copy how `watertime` is already unbundled for the current trial.
-6. Save. Load `06_delay_250.txt`. Success should wait **250 ms** after the cue
-   before the spout moves. Then try `06_delay_0.txt` — spout should move
-   immediately after the cue.
+On 27/09/26 the loader cluster and the water-loop cluster had `reward delay`
+and `spout retract` swapped because the clusters were the same type of
+numbers in a different order. That mismatch was fixed on the rig and is in
+the repository VI. The front-panel captions were corrected without renaming
+the working labels.
 
 Habituation (cue→water with no push) is still a separate LabVIEW mode. These
 columns do not create that.
