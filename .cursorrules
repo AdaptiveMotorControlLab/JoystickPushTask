@@ -486,6 +486,27 @@
   test in the push VI with the shaping preset, then normal Stop. Expected
   paw signal is small (a few gf ≈ tens of mV above 0.5 V), so the threshold
   margin must come from measured noise/drift, not assumed.
+- Quartzy order links checked 29 Sep (fast delivery to Switzerland needed):
+  - Preferred single shipment, RobotShop Europe (Venlo NL):
+    CS8-1N calibrated 8 mm/1 N sensor + I²C board, SKU RB-Pre-11, €149.54
+    incl. EU VAT, "only 1 unit left":
+    https://eu.robotshop.com/products/calibrated-capacitive-force-sensor-8mm-1n-022lb
+    SingleTact Tail Extender, €30.25:
+    https://eu.robotshop.com/products/singletact-tail-extender
+    (RobotShop lists its length as 75 mm; the manufacturer's extender is
+    150 mm. Confirm length and EU stock before ordering.)
+  - Fallback from the manufacturer (PPS UK, Glasgow, EU store): CS8-1N
+    https://www.singletact.com/micro-force-sensors/calibrated-sensors/p/cs8-1n
+    or cheaper uncalibrated S8-1N €34.50
+    https://www.eu.singletact.com/micro-force-sensors/standard-sensors/p/s8-1n
+    + Standard Electronics €40.00
+    https://www.eu.singletact.com/micro-force-sensor/singletact-electronics/p/electronics-board
+    + Tail Extender 150 mm €25.00
+    https://www.eu.singletact.com/micro-force-sensor/singletact-electronics/p/singletact-tail-extender
+    Stock and delivery times are not shown publicly; request confirmation.
+  - Both vendors ship from outside Switzerland, so Swiss import VAT/customs
+    apply; the EU-VAT-inclusive prices should drop on export. Request
+    DHL/UPS express, "no substitutions".
 - Diagnostic decision for 1 MΩ: if ordinary paw contact still leaves ai2
   within the unloaded range at 1 MΩ, the FSR is effectively open-circuit
   under paw load and further resistor increases cannot help. Then the
