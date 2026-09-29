@@ -507,6 +507,41 @@
   - Both vendors ship from outside Switzerland, so Swiss import VAT/customs
     apply; the EU-VAT-inclusive prices should drop on export. Request
     DHL/UPS express, "no substitutions".
+- 29 Sep, SingleTact ORDER ON HOLD: user points out SingleTact is capacitive,
+  which Mackenzie rejected (reason unclear). Distinction to raise with
+  Mackenzie: capacitive TOUCH sensors sense the animal's own capacitance
+  (proximity, moisture, grounding, cable-movement false triggers);
+  SingleTact senses compression of its own internal plates, though the manual
+  still warns that touching the tail or nearby grounded metal affects it.
+  Clarify the actual objection before ordering either option.
+- User decision later 29 Sep: SingleTact is considered fine (it senses its
+  own plate compression, not the animal). It remains the preferred sensor;
+  the load-cell and other options below are kept only as documented
+  alternatives in case Mackenzie's objection turns out to cover it.
+- Non-capacitive alternative with equal or better precision: miniature
+  strain-gauge (resistive) single-point load cell under a small paw plate.
+  Candidates: Phidgets 3139_0 / CZL639HD, 100 g, about 35×12×4 mm, 3.2 g,
+  0.6 mV/V, repeatability ±50 mg, creep 100 mg/h, 3–10 V excitation,
+  single-point (shear) type so reading is largely independent of where the
+  paw sits on the plate; SparkFun TAL221 100 g, 47×12×6 mm, 0.6 mV/V,
+  M3 holes. Mount: bolt the cable end to the rail, small cleanable paw plate
+  on the free end, hard over-travel stop (150% safe overload for TAL221,
+  120 g max for Phidgets). It is a cantilevered platform, not a pivoting
+  lever, so no hinge or friction.
+- Load cell output is only ~3 mV full scale at 5 V excitation (~30 µV/g), so
+  it needs an analog amplifier to feed ai2 at 0–5 V. Checked options:
+  Mantracourt ICA2H (19.5 mm dia, 0.1–5.1 V out, 8.5–28 V supply, 1 kHz
+  bandwidth, bridge 0.5–150 mV/V) or Tacuna EMBSGB200-M (0–5 V out, 6–16 V
+  supply, selectable gain, ~60 Hz low-pass, 1.3×3.3 in). Both need a separate
+  DC supply; do not share the Ledex 12 V supply. With ~50 mV/g after gain, a
+  2 g resting paw is ~100 mV, easily thresholded. Reading the bare bridge
+  differentially on the DAQ's ±0.2 V range is possible but not recommended
+  (few LSB per gram, multiplexed range switching).
+- Rejected non-capacitive options: piezo film (detects only changing force,
+  not a resting paw); MEMS piezoresistive force sensors such as Honeywell
+  FMA (lowest range around 5 N, needs a point-load ball, marginal at a few
+  gf). IR reflective/break-beam remains the no-force, non-capacitive backup
+  if only paw presence is needed.
 - Diagnostic decision for 1 MΩ: if ordinary paw contact still leaves ai2
   within the unloaded range at 1 MΩ, the FSR is effectively open-circuit
   under paw load and further resistor increases cannot help. Then the
