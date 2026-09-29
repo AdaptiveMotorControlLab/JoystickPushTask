@@ -44,10 +44,21 @@ band now goes in the **X** slots so a white-line push is the target. Likely
 cause: after `joysticklickframe_push` was reordered to `[Y, X, FSR]`, Case 3
 still compares index 0 to the X box and index 1 to the Y box.
 
-## Shared settings (all written files)
+## Shared settings
 
-Scale is the 08/09/26 eyeball **0.030 V/mm**, push rest **2.50 V** (lower V =
-forward). Remeasure with a ruler before treating millimetres as final.
+Scale is the 08/09/26 eyeball **0.030 V/mm** (lower V = forward). Remeasure
+with a ruler before treating millimetres as final.
+
+Home voltage is not a fixed rig constant. It changes when the joystick shaft
+or the object is fitted or removed. Remeasure before loading a file from
+another mechanical setup.
+
+The table below is the **08–09 Sep** calibration (rest **2.50 V**). It still
+describes `02_micro_push.txt` and stages 03–08. It is not the current
+object-on setup. For that setup use
+`training/02_micro_push_day1_5s_8ul.txt` (rest about **2.25 V**, home
+2.225–2.350, `home TO` 1 ms, reward 0.00–2.22) or the two FSR shaping files.
+User confirmed those later files on 29 Sep 2026.
 
 | Field | Value | Why |
 | --- | --- | --- |

@@ -5,11 +5,26 @@ Merged 29 Sep 2026 so the Mac planning history and the rig-PC session notes live
 ## How to read this file
 - The sections from "DAQ overrun" through "Push-task status" came from the rig PC on 27–29 Sep 2026. They are the current operational record.
 - "Historical plan" is the Mac copy through 27 Sep 2026: hardware decisions, LabVIEW architecture, training progression, and driver procurement. Keep it. Where it disagrees with the rig notes, follow the rig notes for what is true on the rig today.
-- Current overrides:
-  - The FSR 402 rest pad is electrically installed and is not animal-ready. The 28 Sep pilot did not get reliable paw contact. The divider is now 1 MΩ and ghosts joystick X onto `ai2`. Revert to ~10 kΩ or add a unity-gain buffer before any further animal use. SingleTact S8-1N is the preferred replacement. Mackenzie vetoed a capacitive touch sensor; the user later judged SingleTact itself acceptable because it senses its own plate compression. Load-cell alternatives stay documented only as fallbacks.
-  - Day-one preset and VI controls are on `master` (`f347f72`, `8c93c8c`). The 29 Sep rig commits add the FSR shaping files and the acquisition-loop edit.
-  - PVA 1.6 unpowered preflight largely passed (`H–G` ~105 kΩ, coil ~21 Ω, supply +12 V). Powered testing still needs a 1 A inline fuse in the 12 V positive lead. Never power the Ledex coil from AO0.
-  - `avg joystick and frame trig lick3.vi` was edited on the rig after DAQmx -200279 (input buffer 100000; the in-loop `stop in` Value property node removed). Treat that as provisional until a ~25–30 min no-animal run stops clean, with no -200279.
+- Current overrides (user-confirmed 29 Sep 2026, evening — see the next section):
+  - Acquisition Read stays at **10 samples**. Buffer **100000** is installed. The in-loop `stop in` Value property node is deleted. Do not switch the Read to 100.
+  - Rest-pad hardware is the **29 Sep** state: tape, 3.15 mm puck, **1 MΩ** divider, threshold about **1 V**, joystick X ghosting onto `ai2`. The 8 Sep "working, ~10 kΩ, tape only" description is obsolete.
+  - The user will order the SingleTact. It is not on the rig yet.
+  - Home voltage depends on whether the joystick shaft and object are fitted. Current object-on files are the 28 Sep day-one file and the two FSR shaping files, not the 2.50 V set.
+  - At Run, `Session start spout (V)` is **3.0 V** and the day-one file holds extend and retract at **3.00 V**, so the spout stays extended. Normal Stop still retracts.
+  - PVA 1.6 unpowered preflight passed (`H–G` ~105 kΩ, coil ~21 Ω, supply +12 V). Powered testing is blocked: the lab has no 1 A inline fuse, and one must be ordered. Never power the Ledex coil from AO0.
+
+## Live status confirmed by user (29 Sep 2026, evening)
+
+- Acquisition loop in `avg joystick and frame trig lick3.vi`: the user rejected the 100-sample read. Logged resolution stays 1 kHz (Read = **10** samples). The sentence below that says to confirm a constant-100 Read was a mistake; ignore it. The input buffer **is** 100000. The in-loop `Bool (strict)` Value property node on `stop in` **is** deleted; `stop all` drives that loop. The `AvailSampPerChan` indicator was not added. A ~25–30 min no-animal run with rewards, stopped without -200279, is still not reported.
+- Rest pad: the 29 Sep description is the live one. Tape covers the FSR. A rigid puck, 2 mm tall and 3.15 mm diameter, is glued on the tape over the centre of the active circle. The divider is **1 MΩ** (the 100 kΩ step was skipped). Unloaded `ai2` reads about **0.6–0.825 V** and follows joystick X. Light finger contact does not cross the **1 V** threshold; a slightly stronger touch does. A resting mouse paw did not trigger. Pre-change baselines (0–0.005 V unloaded, ~0.1 V lightest touch, 0.01 V threshold) do not apply.
+- Next sensor: the user will order the SingleTact (own-plate compression; capacitive touch remains rejected). It is not installed. Leave the FSR circuit as it is until that sensor is in hand. Load-cell notes stay fallbacks only.
+- Joystick rest voltage changes if the shaft or the object is attached or removed. Remeasure home before loading an older file. For the current object-on setup, the later files are the ones to use:
+  `parameters/training/02_micro_push_day1_5s_8ul.txt` (rest about 2.25 V, home 2.225–2.350, `home TO` 1 ms, reward 0.00–2.22, move time 5000 ms, water 240 ms, spout held at 3 V),
+  `parameters/training/01_fsr_contact_shaping.txt`, and
+  `parameters/training/01_fsr_contact_shaping_0ms.txt`.
+  `02_micro_push.txt` and stages 03–08 still use the 2.50 V / `home TO` 250 ms calibration. Do not treat those voltages as the live rest.
+- Spout at Run: the later day-one notes are correct. Set `Session start spout (V)` to **3.0 V** before Run so the spout is already extended. In `02_micro_push_day1_5s_8ul.txt`, extend and retract are both **3.00 V**, settle is 0 ms, and consumption is 1500 ms. Normal Stop still commands retract to 0 V. The startup write of 500 (`-200561`) was the cluster-order bug and is treated as fixed.
+- Ledex / PVA: commissioning stopped at the fuse. The lab does not have a 1 A inline fuse; the user will order one (preferred: 5×20 mm inline holder plus a separate **1 A** fuse). Do not energise the coil, the PVA, or `MagnetPush_Dev1` until that fuse is in the 12 V positive lead. Unpowered checks already passed and do not need to be repeated for this reason.
 
 ## Sync note (29 Sep 2026)
 This Mac fast-forwarded `8c93c8c`..`fc9ce7e` (`7ff5f9f` FSR shaping presets and DAQ loop, `79156cd` 1 MΩ / SingleTact plan, `9fba141` SingleTact order links, `fc9ce7e` non-capacitive alternatives). Both `.cursorrules` copies were merged into this file afterward.
@@ -92,23 +107,23 @@ This Mac fast-forwarded `8c93c8c`..`fc9ce7e` (`7ff5f9f` FSR shaping presets and 
   normally. The AvailSampPerChan indicator was not added. Because the fault
   was intermittent, treat as provisionally fixed. Before animal use, run a
   no-animal session at least as long as a real session (~25–30 min) with
-  rewards, and Stop without error. `avg joystick and frame trig lick3.vi`
-  is now modified and uncommitted; commit only when the user asks.
+  rewards, and Stop without error.
 - Frame count is read from a global once per loop iteration, so it is
   software-polled rather than hardware-timed to each AI sample. True per-sample
   alignment would need a buffered counter task on `ai/SampleClock`.
-- End of 29 Sep: `avg joystick and frame trig lick3.vi` is modified in the
- rig working tree (28229 → 28505 bytes), so the DAQ fix may have been applied.
- Confirm on the diagram that Read uses constant 100 and Configure Input Buffer
- is 100000, then run the idle/reward-cycle test before relying on it.
+- CORRECTED 29 Sep evening by the user: Read stays at **10** samples. Do not
+  wire constant 100. Buffer 100000 and deletion of the in-loop `stop in`
+  Value property node are both done. The helper binary on `master`
+  (`7ff5f9f`, 28229 → 28505 bytes) is that edit. Ignore any instruction in
+  this section to confirm or restore a 100-sample Read.
 - Repo sync 29 Sep: `.cursorrules` is listed in `.gitignore` but is now
  force-tracked so these notes reach other machines via git. Commit it together
  with rig changes; tracked files are unaffected by the ignore rule.
 - Row index 3 of the 2D read does not exist (task has 3 channels), so the 4th
   queue/file value is an empty-array mean (NaN). Pre-existing; not the cause.
-- A 100-sample read makes the 1 ms home gate one 10 ms chunk. That is acceptable
-  while the goal is to stop the overrun. Restore a 10-sample read only after
-  the lean loop above has stayed up for several minutes.
+- The 100-sample-read idea is withdrawn. It would have turned the 1 ms home
+  gate into one 10 ms chunk and dropped the joystick log from 1 kHz to 100 Hz.
+  The user kept Read = 10.
 
 ## First animal pilot (28 Sep 2026): FSR gate problem
 
@@ -532,6 +547,8 @@ This Mac fast-forwarded `8c93c8c`..`fc9ce7e` (`7ff5f9f` FSR shaping presets and 
   own plate compression, not the animal). It remains the preferred sensor;
   the load-cell and other options below are kept only as documented
   alternatives in case Mackenzie's objection turns out to cover it.
+- User confirmed 29 Sep evening: they will order the SingleTact. It is not
+  installed. The live pad remains the 29 Sep FSR (tape, 3.15 mm puck, 1 MΩ).
 - Non-capacitive alternative with equal or better precision: miniature
   strain-gauge (resistive) single-point load cell under a small paw plate.
   Candidates: Phidgets 3139_0 / CZL639HD, 100 g, about 35×12×4 mm, 3.2 g,
@@ -620,6 +637,13 @@ Example output set from the 27 Sep test:
   substituted for its first embedded frame timestamp.
 
 ## Training decision (27 Sep 2026): first reach-to-push stage
+
+User confirmed 29 Sep evening: rest voltage depends on whether the shaft and
+object are fitted. The 2.275–2.425 V / `home TO` 100 ms figures in this
+section were an intermediate review. The files to use for the current
+object-on setup are the later ones (`02_micro_push_day1_5s_8ul.txt` at about
+2.25 V rest, plus the two FSR shaping files). Do not revive the 2.50 V files
+for that setup.
 
 The 25 Sep Basecamp plan for the first mouse push session is:
 - object about 2 mm from the rest pad;
@@ -831,6 +855,9 @@ Current checkpoint: **Checkpoint 1 — unpowered preflight**.
   holder with a separate 1 A fuse. A holder's higher maximum rating is
   acceptable, but the installed fuse itself must be 1 A. Stop after unpowered
   work if no suitable holder and fuse are available.
+- CONFIRMED 29 Sep evening: the lab has no 1 A fuse. That is why powered
+  commissioning stopped. Order a 1 A fuse (and a holder if needed) before any
+  powered PVA/Ledex test. Do not improvise an unfused connection.
 - Keep all power disconnected until the unpowered checks are complete and
   recorded.
 
