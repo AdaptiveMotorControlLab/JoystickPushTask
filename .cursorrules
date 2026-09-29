@@ -1,4 +1,18 @@
-# Joystick push task — project plan
+# JoystickPushTask — Project Plan
+
+Merged 29 Sep 2026 so the Mac planning history and the rig-PC session notes live in one force-tracked `.cursorrules`. The path stays listed in `.gitignore`; because the file is already tracked, later edits still commit and reach the other machine. Do not keep a second untracked copy.
+
+## How to read this file
+- The sections from "DAQ overrun" through "Push-task status" came from the rig PC on 27–29 Sep 2026. They are the current operational record.
+- "Historical plan" is the Mac copy through 27 Sep 2026: hardware decisions, LabVIEW architecture, training progression, and driver procurement. Keep it. Where it disagrees with the rig notes, follow the rig notes for what is true on the rig today.
+- Current overrides:
+  - The FSR 402 rest pad is electrically installed and is not animal-ready. The 28 Sep pilot did not get reliable paw contact. The divider is now 1 MΩ and ghosts joystick X onto `ai2`. Revert to ~10 kΩ or add a unity-gain buffer before any further animal use. SingleTact S8-1N is the preferred replacement. Mackenzie vetoed a capacitive touch sensor; the user later judged SingleTact itself acceptable because it senses its own plate compression. Load-cell alternatives stay documented only as fallbacks.
+  - Day-one preset and VI controls are on `master` (`f347f72`, `8c93c8c`). The 29 Sep rig commits add the FSR shaping files and the acquisition-loop edit.
+  - PVA 1.6 unpowered preflight largely passed (`H–G` ~105 kΩ, coil ~21 Ω, supply +12 V). Powered testing still needs a 1 A inline fuse in the 12 V positive lead. Never power the Ledex coil from AO0.
+  - `avg joystick and frame trig lick3.vi` was edited on the rig after DAQmx -200279 (input buffer 100000; the in-loop `stop in` Value property node removed). Treat that as provisional until a ~25–30 min no-animal run stops clean, with no -200279.
+
+## Sync note (29 Sep 2026)
+This Mac fast-forwarded `8c93c8c`..`fc9ce7e` (`7ff5f9f` FSR shaping presets and DAQ loop, `79156cd` 1 MΩ / SingleTact plan, `9fba141` SingleTact order links, `fc9ce7e` non-capacitive alternatives). Both `.cursorrules` copies were merged into this file afterward.
 
 ## DAQ overrun on `joysticklickframe_push` (29 Sep 2026)
 
@@ -852,3 +866,708 @@ water HIGH → watertime → water LOW → consumption → spout retract.
 Loader reads columns 21–26 (`reward delay`, `cue duration`, `spout extend`,
 `spout settle`, `consumption`, `spout retract`) on the rig copy. The repo
 `.vi` still needs to be replaced with that tested copy when the user uploads it.
+
+- Correction at the 29 Sep 2026 Mac merge: that upload already happened.
+  `master` includes `ff68c15`, `f347f72`, `8c93c8c`, and the 29 Sep rig
+  commits that update `Push Behaviour_MCHALABI.vi`,
+  `avg joystick and frame trig lick3.vi`, and the FSR shaping presets.
+  Do not treat the sentence above as a pending upload.
+
+## Historical plan (Mac copy through 27 Sep 2026)
+
+The checklist below was written on the Mac before the 28–29 Sep animal and DAQ notes above. Items marked done describe bench status at that time. The overrides at the top of this file supersede them.
+
+## Current task: Adapt fork into 1D forelimb object-push task
+- [x] Absorb prior planning chat + LabVIEW walkthrough into `.cursorrules`
+- [x] Absorb Weekly Update 29/06/26 design evolution (PI-approved)
+- [x] Fork Mathis `JoystickControlSystem` → this working repo (`JoystickPushTask`)
+- [x] Rename main VI filesystem name → `Push Behaviour_MCHALABI.vi` (internal name corrected via LabVIEW Save As)
+- [x] Recover VI after binary-edit load failure; avoid direct `.vi` binary edits going forward
+- [x] Install local commit-message hook to strip `Co-authored-by: Cursor <cursoragent@cursor.com>` from future commits in this clone
+- [ ] Learn LabVIEW basics (front panel / block diagram, state machines, occurrences, DAQmx)
+- [x] Deep-read current VI architecture against notes below (Cases 0–4, magnet/water loops)
+- [x] Order missing hardware — DONE 09/07/26: FSR 402 solder tabs (30-81794), Actuonix L12-30-50-12-I, Adafruit #1536 buzzer
+- [x] Rewrite README for forelimb push task; refreshed 20/08/26 after VI import to distinguish
+  bench-validated features from planned mechanics, parameter plumbing, perturbations and safety tests;
+  pushed to `master` as `3e163ac`
+- [ ] Complete live-rig inventory — SUBSTANTIALLY MAPPED; actual card is PCIe-6321 and breakout is **SCB-68A** (`rig1`). Current AO split: Actuonix occupies AO1/terminal 21; AO0/terminal 22 remains unwired for the received Ledex magnet. Remaining checks are inline DAQmx channels, PFI8/PFI13 attachment state, `testing1blox_2labviews` references, and S1/S2 switch positions. Full terminal map in `RIG_INVENTORY.md`
+- [x] Install FSR rest pad — REPLACED 08/09/26: new FSR 402 soldered/installed on the existing
+  inline harness (`+5V` 8, `ai2` 65, AI GND 64), fixed on the rail, protective tape over the
+  contact face, and working with no reported issues (no splice of the 04/09/26 ripped tail).
+  Prior electrical/LabVIEW gating remains: `joysticklickframe_push`, threshold UI and first-trial
+  Case 0 gate. Still calibrate threshold/hysteresis on the taped surface; a dedicated cleanable
+  puck can wait if tape stays stable and does not preload the baseline.
+  SUPERSEDED 28–29 Sep 2026 by the animal-pilot notes at the top of this file:
+  paw contact was not reliable, the divider is now 1 MΩ and ghosts joystick X
+  onto ai2, and SingleTact S8-1N is the preferred replacement.
+- [x] Correct `joysticklickframe_push` channel order — DONE 20/08/26: reordered the task from
+  `[ai0, ai1, ai2]` to `[ai1, ai0, ai2]` (`Y_POS`, `X_POS`, `rest_pad`) to match the inherited
+  LabVIEW array-index convention; live X/Y test confirmed the swap is fixed.
+- [ ] Install auditory cue — ELECTRICAL + LABVIEW PULSE COMPLETE; Adafruit #1536 on `P0.1` terminal 17/D GND 15, `SuccessCue_Dev1`, 50 ms HIGH/LOW sequence runtime-tested. Direct drive remains provisional near possible P0 current limit; fixed mount and event logging remain
+- [ ] Install Actuonix spout — ELECTRICAL + MECHANICAL + LABVIEW SUCCESS PATH COMPLETE: AO1 split from magnet AO0, `LickSpout_Dev1`, extend/settle/water/consume/retract sequence and three spaced full trials passed 18/08/26. Water volume vs `watertime` measured 08/09/26 (`calibration/water-volume.md`; 130/185/240 ms → 4/6/8 µl). Still calibrate mouse-relative extend voltage, exact settle time, cable cleanup and repeated-cycle reliability within 20% duty
+- [ ] **SAFETY**: terminal 42 (`PFI3`/`P1.3`) drives a Class 3B 635 nm 200 mW laser (`MDL-III-635L-200mW`) via no saved NI-MAX task — keep laser keyed off during bench work and never toggle PFI3 blind
+- [x] **RIG TOPOLOGY CONFIRMED 12/08/26**: split on-demand AO ownership: magnet=`ao0`, Actuonix=`ao1`; `Magnets_Dev1` must no longer include AO1. Mesoscope rig already has the original Mathis tubular solenoid (`69905K25`). Training-rig magnet is the Swiss/EU equivalent **Ledex `195224-230`** (pull-type), ordered 27/08/26 via Quartzy from Contact Evolution SA (Payerne) and arrived 02/09/26. AO0 LabVIEW path (`MagnetPush_Dev1`) is ready; terminal 22 is still unwired
+- [ ] Install training-rig perturbation magnet — ARRIVED 02/09/26: **Ledex `195224-230`** STA 75L **pull**, 12 VDC, 7 W. Use as an electromagnet attracting a ferromagnetic target (Mathis: “small steel ring” on an aluminum handle base; no catalog SKU). Mesoscope-ring measurements obtained 03/09/26: ~4.1 mm thick, ~9.48 mm OD, ~4.12 mm ID; a ~3.1 mm ID variant would also suit the prototype. **Target washers ORDERED from SFS Switzerland on 04/09/26:** M4 article `111952`, DIN 125-1-A / ~ISO 7089, 140 HV zinc-plated-blue steel, 4.3 × 9 × 0.8 mm, 200 pieces at CHF 2.86 per 100 pieces incl. VAT (CHF 5.72 before shipping); M3 article `132845`, DIN 9021 / ~ISO 7093-1, 140 HV zinc-plated-blue steel, 3.2 × 9 × 0.8 mm, 200 pieces at CHF 2.70 per 100 pieces incl. VAT (CHF 5.40 before shipping). These replace the unfulfilled Würth requests, whose Swiss account pricing was hidden. On arrival, stack five matching washers for a 4.0 mm target; build and force-calibrate both bore options. Explicitly avoid substitution with stainless steel A2/A4, aluminium, brass, plastic or neodymium magnets. Mount the solenoid on the **home side** of the object so attraction pulls backward and **opposes** the push. Land on `Dev1/ao0` / terminal 22 using a coil driver (AO is a command, not the coil supply). Keep `mag = 0` until the unperturbed task is stable. **INSTALL KICKOFF 04/09/26:** holder/positioning is already designed; focus only on the electrical chain. The PCIe-6321 AO limit is ±5 mA, while the 12 V / 20.7 Ω Ledex draws ~0.58 A—over 100× more—so direct connection is prohibited. A driver is the power switch/current stage between AO0 and the coil and must include inductive flyback suppression. Mesoscope-driver copying was ruled out on 04/09/26 because its termination box is physically inaccessible and the user was explicitly instructed not to touch or move the mesoscope rig; do not revisit that route. A second Goobay-type 12 V / 1 A supply identical to the Actuonix supply is available and reserved exclusively for the magnet; user multimeter-verified its 12 V output on 04/09/26, so supply voltage is no longer a blocker. Keep it unplugged and labelled for magnet use. The remaining procurement blocker is an independent proportional/current-regulated driver accepting 0–10 V AO input and supporting at least 0.58 A output. Keep the Class 3B laser keyed off and all rig power off during installation.
+  - DRIVER PROCUREMENT CORRECTED 04/09/26: user confirmed random perturbation sessions require
+    genuinely variable magnetic-force magnitudes, not merely random on/off presence. Therefore
+    **do not order/use the Adafruit 5648** for this requirement; it is only a binary MOSFET switch,
+    and intermediate AO gate voltages are not calibrated proportional force. Conrad's suitable
+    current-regulated Bürkert `316532` showed delivery only on 28/09/26. Faster Swiss candidate:
+    Proportional-Verstärker `LCA 1.6`, Hydraulik-Kompetenz AG article `15103`, 12–36 V supply,
+    differential 0–10 V input, adjustable minimum/maximum current, current output up to 3 A and
+    listed as available from remaining stock within one week:
+    `https://www.hydraulikshop.ch/proportional-verst%C3%A4rker-lca-16`.
+    Before Mioara orders, obtain written vendor confirmation that it is compatible with the Ledex
+    `195224-230` (12 V, 20.7 Ω, nominal 0.58 A), can regulate 0–0.58 A from the available 12 V
+    supply, and includes the required inductive freewheel/flyback path; ask price and actual ship
+    date. Also ask Bürkert Switzerland (`info.ch@burkert.com`, article `316532`) for local stock in
+    parallel. The common-vendor H-Tronic/Kemo motor PWM modules are open-loop rather than
+    temperature-stable current regulators and are not preferred for calibrated experimental force.
+  - MINIMUM BENCH-TEST BOM remains: one confirmed proportional/current-regulated 0–10 V driver,
+    ordinary insulated wire for supply, AO command/ground and coil, wire stripper and small
+    screwdriver. DIN rail is never electrically required; it is only needed if the selected
+    driver's housing uses it. Final enclosure, fuse/switch, heat-shrink, labels and strain relief
+    remain later permanent-rig items.
+  - DRIVER DECISION PENDING 04/09/26: choose between the Swiss `LCA 1.6` article `15103` and
+    Bürkert Type 8605 article `316532` after receiving confirmed Ledex compatibility, integrated
+    flyback/freewheel behavior, price and actual delivery date. Do not order either until those
+    answers are compared; prioritize current regulation and compatibility over mounting format.
+  - DRIVER TECHNICAL REVIEW 07/09/26: Bürkert `316532` is the better-documented/lowest-risk match.
+    Its verified specifications are 12–24 V supply, 200–1000 mA current-regulated PWM output,
+    selectable 0–10 V input with >20 kΩ impedance (≤0.5 mA load on the PCIe-6321 AO), adjustable
+    80 Hz–6 kHz PWM, 0–10 s ramp including disabled/0 s, zero-current cutoff, and directly wired
+    coil output. Set cutoff active, LO to the lowest allowed current, HI near 580 mA, ramp 0, then
+    force-calibrate; nonzero commands may be limited to ≥200 mA. Downsides: Conrad delivery quoted
+    28/09/26, higher cost, DIN-rail form, and its presets target Bürkert valves so PWM frequency must
+    be tuned for the Ledex.
+    The `LCA 1.6` is a plausible faster Swiss option and explicitly supports generic electromagnetic
+    components: regulated temperature-/coil-independent PWM current, 12–36 V supply, differential
+    0–10 V input, 70–500 Hz PWM, adjustable Imin/Imax/ramp, separate enable input and direct coil
+    terminals; remaining stock was listed within one week. However its datasheet does not state
+    input impedance, flyback/freewheel implementation or regulator voltage headroom, and gives
+    ambiguous current scaling (`≤3 A` table, `up to 4 A` text, Imax adjustable only 50–100% of
+    nominal). Do not select it unless Hydraulik-Kompetenz confirms a configuration mapping 0–10 V
+    to 0–0.58 A for the 20.7 Ω Ledex without loading AO0 above 5 mA. Conditional recommendation:
+    choose LCA only with those written confirmations; otherwise choose Bürkert and accept the delay.
+  - LCA ONLINE FOLLOW-UP 07/09/26: exhaustive searches found only the same manufacturer
+    `LCA_1.6.pdf`; no second manual or circuit specification publishes input impedance, output-stage
+    voltage drop/headroom, explicit freewheel/flyback protection, or the article `15103` nominal
+    current (`INom`). The PDF does confirm a regulated PWM current output for generic electromagnetic
+    loads, direct coil terminals A/B, power C/D, enable E, +10 V reference F, signal ground G and
+    0–10 V command H; PWM 70–500 Hz; mapping
+    `Iout = Imin + Uin*(Imax-Imin)/10`; and that enable bypasses the ramp. The unresolved scaling is
+    material: P2 only adjusts Imax over 50–100% of unspecified `INom`, so it is not yet proven that
+    10 V can be calibrated to 0.58 A rather than saturating the 20.7 Ω coil early. Online evidence
+    therefore narrows but does not eliminate the need for one vendor confirmation; do not infer
+    missing safety/electrical values from the block diagram.
+  - DRIVER ORDER + DECEMBER SLIP 22/09/26: Bürkert Type 8605 / `316532` was ordered (Quartzy /
+    Tameson path). Vendor now quotes arrival **2 December 2026**, which is too late for the
+    mid-October need. This is a factory-wide 8605 lead time, not a single-shop delay: Tameson
+    still shows ~65-day ship, and other `8605` variants (`316531`/`316533`) are similarly
+    backordered. Do **not** wait for another Bürkert 316532 listing; Best4Automation's 2–3 day
+    placeholder is not real stock. Keep the December unit if already paid (spare / later
+    calibration), and order a Swiss in-stock current-regulated 0–10 V driver now.
+    Fastest confirmed listings on Hydraulikshop.ch (Hydraulik-Kompetenz AG, Rufi; call
+    `+41 55 619 52 00` / `info@hydraulik.ch` immediately — all stock is
+    Zwischenverkauf-vorbehalten):
+    1. **Preferred drop-in:** `PVA 1.6` 0–10 V, CHF 260, **2 pcs ab Lager**, DIN-rail screw
+       terminals, 12–36 V, differential 0–10 V, PWM current to 3 A, adjustable Imin/Imax/ramps/
+       dither, enable pin. Same shop/family as LCA.
+       `https://www.hydraulikshop.ch/proportional-verst%C3%A4rker-pva-16-0-10v`
+    - PVA ELECTRICAL FIT 22/09/26: the two unpublished items are **not blockers** if the
+      **0–10 V SKU** is ordered (not the 4–20 mA SKU). Voltage-input Z is unpublished, but
+      that SKU is a differential voltage front-end (wired from a 10 kΩ pot or a PLC 0–10 V
+      AO in the datasheet). NI 6321 AO0 is safe above ~2 kΩ (10 V / 5 mA); typical voltage
+      inputs in this class are 10–200 kΩ (~0.05–1 mA). The dangerous case is a current-loop
+      shunt (~200–250 Ω → ~40 mA). Measure H–G with a DMM before connecting AO0. PWM
+      current regulation of a solenoid **requires** an internal freewheel path or the output
+      FET dies on the first off-edge; the datasheet’s low-loss PWM claim implies that path
+      exists even though no diode is drawn. If paranoid, add an external flyback diode across
+      the Ledex (cathode to coil +, ≥1 A). Wire Enable (J) to +12 V or the module will stay
+      off. Set Imin=0, Imax≈580 mA, ramps fastest / bypass via Enable, dither as low as it
+      will go (this is a static electromagnet, not a valve spool). 12 V into 20.7 Ω has
+      almost no regulator headroom, so max current may land a bit under 0.58 A — same
+      12 V-supply limit as Bürkert, not a PVA-specific defect.
+    - BUY CLEARED 22/09/26: user may order the **0–10 V** `PVA 1.6` now (not 4–20 mA).
+      Call Hydraulik-Kompetenz to reserve remaining stock. Keep the December Bürkert as
+      spare if cancellation has a fee; cancel it if Tameson waives the fee. Do **not**
+      switch the late Bürkert to Conrad — same 316532, same factory 65-day lead. Mioara
+      asked 22/09/26 what to do; tell her: ask cancellation policy, do not reorder
+      Conrad, place PVA 1.6 0–10 V with Hydraulik-Kompetenz.
+    - QUARTZY SUBMITTED 22/09/26: user filed the Hydraulik-Kompetenz `PVA 1.6` 0–10 V
+      request (CHF 260, urgent, needed mid-October). Waiting on Mioara to order/reserve
+      the 2 remaining shelf units and on the Tameson Bürkert cancellation answer.
+    - PVA ARRIVED / COMMISSIONING HANDOFF 27/09/26: the Hydraulik-Kompetenz `PVA 1.6`
+      **0–10 V** (CHF 260, Quartzy) is physically at the training rig. This is the selected
+      Ledex coil driver; not the 4–20 mA SKU. Do not also order XMD-01, LCA 1.6 or
+      Murrelektronik. A tracked step-by-step rig-PC handoff is now
+      `MAGNET_COMMISSIONING.md`. Critical pre-power blocker: install a 1 A inline fuse in
+      the reserved 12 V Goobay positive lead. Terminal map from the manufacturer datasheet:
+      D=+12 V, F=power ground, J=Enable, H/G=0–10 V differential command, C/A=coil,
+      K/M unused for the DAQ command. Keep J open until AO0 is initialized/measured at 0 V.
+      Measure cold Ledex resistance (~20.7 Ω), screen H–G input impedance, set Imin=0 and
+      measured current ceiling ≤0.58 A using short pulses. Do not guess bonds among F/G/M,
+      improvise E/mains earth or add an unconfirmed external flyback diode. Sunday endpoint
+      is electrical/functional low-duty validation only; force calibration still requires a
+      force gauge/load cell and thermal characterization. The December Bürkert `316532`
+      remains the spare unless cancellation is free.
+    2. **Better-documented regulation:** SUN Hydraulics `XMD-01`, CHF 215, **ab Lager**.
+       9–32 V, 0–10 V command, current-regulated PWM 35–3000 mA ±1 mA, integrated flyback,
+       ramp can be 0, phone-app setup. Voltage-mode input Z is unpublished; do **not** leave
+       the input in 4–20 mA mode (~200 Ω, would overload AO0). Needs a Deutsch DT06-12SA
+       harness (shop lists 3 m XMD-02 cable `991-712-300` at CHF 146; XMD-01 cable is
+       `991-711-300`). `https://www.hydraulikshop.ch/elektrohydrverst%C3%A4rker-f-1-spule-xmd-01`
+    3. `LCA 1.6` article `15103` still listed as remaining stock within 1 week.
+    Common-vendor fallback: Murrelektronik `7000-31261-0000000` (RS 137-0320), 0–10 V /
+    200 kΩ / current-regulated 0.02–2.5 A, DIN rail — but **18–32 V only**, so it cannot use
+    the reserved 12 V Goobay; would need a 24 V PSU. Do not substitute Adafruit 5648 / Kemo /
+    H-Tronic.
+- [ ] Audit the VI for inline DAQmx channels (saved NI-MAX tasks are demonstrably incomplete)
+- [ ] **NEXT MAJOR MILESTONE:** load `parameters/push_bench_wide-zone.txt` on the
+  rig and hand-test (push-only success; miss Y; overshoot Y past 2.20 and come
+  back). Loader Case 2 is **no ×2** (09/09/26: only the `home X2` label).
+  09/09/26: X slots = white/push confirmed — Tests 1–3 passed. User dropped
+  the Case 5 / FSR lift-off LabVIEW edit. Use a long file `move time` instead
+  (column 20; bench file **30000 ms**). `home TO` **250 ms** (was 500). Do not
+  change the Case 2 constant 3 (next state, not seconds). Stage files are in
+  `parameters/training/` (27-col). Next: extend the loader to cases 21–26 and
+  wire the water loop; then delay files work. Habituation still needs LabVIEW.
+  Keep
+  21 columns; cue/delay/spout stay on the FP. Remeasure volts-to-mm with a
+  ruler before freezing training numbers.
+  New CAD prints wait until **Monday 21/09/26**. FSR is replaced and taped. Water
+  volume vs pulse is recorded in `calibration/water-volume.md` (130/185/240 ms →
+  4/6/8 µl). Still add spring return (if missing) and a steel-ring target;
+  Success sequences and some miss-fails passed 08/09/26. Loaded file was
+  `Full_shoterPull_Training_Task_RIG1.txt` (shorter-pull, identical rows):
+  home (2.39,2)–(2.8,3), home TO 500, start TO 0, end (1.8,2.45)–(2.34,2.55),
+  end TO 50, mag 0, watertime 200, clocks 1000 and 400. End box is ~5–23 mm
+  forward at 0.030 V/mm with a 0.10 V lateral sliver; a 2.20 V push is still
+  inside the long axis, so “overshoot” was not past the far edge. Miss →
+  Case 0 is the designed fail. Axis map CONFIRMED 08/09/26: push = white =
+  `Dev1/ai1` = **Y** (queue index 0); lateral = red = `Dev1/ai0` = **X**
+  (queue index 1). Home 2.50 / 2.525 V. The shorter-pull `end` box is therefore
+  X 1.80–2.34 (lateral; rest 2.525 is outside) and Y 2.45–2.55 (push; a 2.20 V
+  push is outside). That file rewards an old sideways pull, not a forward push.
+  See `calibration/joystick-volts-mm.md`.
+  - CAD added 05/09/26: imported `joystick_89mm.step` plus two interchangeable tip-mounted handles
+    (`mechanical/3d-print/joystick/`, `joystick-handle-bar/`, `joystick-handle-cube/`). The bar is
+    a 38 mm contact bar. The rounded cube is the current push-object candidate and has three holes
+    to set front-face distance to the mouse/rest pad and to shift object weight relative to the
+    joystick beneath it. User already has one printed joystick, one handle and the 1D-axis
+    constrainer fitted on the rig (confirmed 08/09/26); further prints wait until 21/09/26.
+  - CAD added 03/09/26: STEP models for the joystick 1D-axis constrainer
+    (`mechanical/3d-print/joystick-1d-axis-constrainer/`) and Ledex `195224-230`
+    holder (`mechanical/3d-print/ledex-holder/`). The Ledex holder/positioning design is complete;
+    immediate magnet work is electrical connection and functional validation, not holder redesign.
+    Mechanical files are organized one folder per part.
+  - Repository documentation synchronized 03/09/26: README and rig inventory record the
+    received-but-uninstalled Ledex; Jupyter Book metadata/TOC now target
+    this fork and its live rig/mechanical docs. Removed obsolete Python-package setup inherited from
+    Teensy Task and updated the documentation workflow to install `requirements.txt` directly.
+    Local Jupyter Book 1.x HTML build passed without warnings after validating all mechanical links.
+  - Mechanical cleanup 23/09/26: removed the obsolete 2D prototype and its documentation/TOC
+    references. The five active 3D-print designs are the only mechanical CAD sources retained.
+  - STL exports added 23/09/26 for all five active STEP models: joystick shaft, bar handle,
+    rounded-cube handle, 1D-axis constrainer and Ledex holder. STEP remains the editable source;
+    matching STL files are the slicer-ready derivatives documented in each part README. All five
+    STLs were read back with OpenCascade and match their STEP bounding boxes within 0.003 mm.
+    Jupyter Book 1.0.4 rebuilt successfully with all STEP/STL download links and no warnings.
+    Committed and pushed to `master` as `edb32af`.
+  - Follow-up audit 03/09/26: corrected AO occupancy (AO1 Actuonix occupied; AO0 magnet empty),
+    standardized “1D-axis constrainer” terminology, marked old water/FSR notes as historical, and
+    promoted the Würth washer-target specifications into tracked mechanical documentation.
+- [x] Begin LabVIEW mods — CORE SUCCESS PATH BENCH-FUNCTIONAL 18/08/26: rest-pad gate, cue, spout sequence and water delivery integrated
+- [x] Absorb 07/09/26 training-protocol planning (work-AI chat + old pull-task parameter files from the rig PC). Shaft/handle/constrainer are now fitted; still do **not** write numerical push files until home voltage, volts-to-mm, push-axis index and ROM are measured. Keep the 21-wide format; session-constant cue/delay/spout/FSR controls stay on the front panel until the live unbundle map is confirmed. Split FSR vs joystick **log files** later if needed; do **not** split them into two simultaneous NI-MAX AI tasks (PCIe-6321 has one AI timing engine).
+- [x] Live parameter unbundle mapped 08/09/26 (indices 0–20; `timeout`=18, `move time`=19, `light`=20)
+- [x] First push bench file drafted: `parameters/push_bench_wide-zone.txt` (wide X, Y end 2.20–2.35, move time 3000, watertime 185). Not a training stage; load and hand-test.
+- [x] Training-stage files written 09/09/26 under `parameters/training/` (micro →
+  proximal → 3 translates → refine → delay 0/250/500/1000 → expert → shadow).
+  Widened to 27 columns (reward delay, cue, spout). Loader/water-loop 27-wide
+  on rig PC 09/09/26 and imported into repository 21/09/26. Habituation and
+  mag≠0 experiment are still not file-only. See `parameters/README.md`.
+- [x] Import rig-tested VI hierarchy into repository — DONE 21/09/26: four binaries
+  from rig transfer; SHA-256 verified; main VI carries 27-column loader + water loop;
+  pushed `ff68c15`; rig PC `git pull` + dependency smoke test passed same day
+- [ ] Generate Baseline → Random → Fixed → Washout session parameter files
+- [ ] Decide sensible defaults (trial counts, perturbation magnitudes, reward delay, etc.) — draft list absorbed 07/09/26; numerical values remain TBD until calibration
+- [ ] Adapt LabVIEW UI branding/controls for push task
+- [x] Configure/export NI-MAX tasks for new channels — full NI-DAQmx 17.0 `.nce` backup exported
+  after X/Y-order correction on 20/08/26 and imported at
+  `ni-max/JoystickPushTask_NIMAX_2026-08-20.nce`
+- [ ] Bench-test full success/fail/stop-abort sequences — success path and normal Stop from
+  idle/reward-delay/spout-extended phases passed 20/08/26; 08/09/26 success sequences and
+  some 2D miss-fails passed on the fitted handle. Miss → Case 0 rest-pad re-gate is the
+  designed fail path. Overshoot-and-correct not validated (wrong/unknown param file;
+  possible 400 ms `move time`). Repeated-cycle tests remain. Toolbar Abort remains
+  emergency-only by design.
+- [x] **SAFE STARTUP + NORMAL STOP COMPLETE 20/08/26:** startup commands cue LOW, water LOW,
+  magnet 0 V and spout retract; shared `PushTask Globals.vi` Boolean stops every asynchronous loop.
+  Idle, reward-delay and spout-extended Stop tests returned the Run arrow to idle without DAQ errors.
+- Stop-path screenshot audit 20/08/26: normal Stop is evaluated at the While Loop boundary, so an
+  active water iteration must finish its sequence through cue LOW, water LOW and spout retract before
+  exit; the magnet sequence likewise reaches its reset write. Therefore implement a one-shot startup
+  initializer and verify normal Stop empirically rather than adding redundant post-loop writes.
+- [x] One-shot safe startup initializer added and runtime-tested 20/08/26: Water LOW,
+  SuccessCue LOW, LickSpoutMotor 0 V and MagnetPush 0 V. User used toolbar Abort once; no fault was
+  reported, but Abort bypasses all remaining sequence/reset frames and remains emergency-only.
+  Normal Stop tests during idle/reward-delay/spout-extended phases subsequently passed.
+- Normal Stop test 20/08/26 exposed runtime DAQmx error `-200428`: stale task names remain in
+  non-success paths. `DAQmx Stop Task.vi` receives `Magnets` instead of `MagnetPush_Dev1`, and
+  `DAQmx Start Task.vi` receives `frame counter` instead of saved task `frame counter_Dev1`.
+  Correct those task constants/references and repeat Stop tests before declaring cleanup complete.
+- Stale task references were corrected and Stop now produces no DAQ errors, but one front-panel STOP
+  leaves the main Run arrow in the running state. The two similarly named STOP controls likely govern
+  different parallel loop groups. Map both controls and consolidate all loop conditional terminals
+  onto one canonical normal-stop control before cleanup is considered complete.
+- Stop mapping 20/08/26: Find results items 21, 27 and 29 confirm the water, magnet and main
+  state-machine loop conditionals all read the same lowercase `stop` control. Do not alter them.
+  The remaining live execution must be in the acquisition/helper hierarchy; inspect the two main-VI
+  control-reference objects (Find items 19 and 22) and ensure helper `stop in` references the same
+  canonical `stop`, not the ineffective `stop 2`.
+- Control-reference mapping confirmed 20/08/26: `avg joystick and frame trig lick3.vi` receives the
+  canonical `stop` reference, while `frame counter.vi` receives `stop 2`. Replace only the
+  frame-counter call's `stop 2` reference with a copy of the existing `stop` reference, then test
+  that one Stop ends all loops and returns the Run arrow to idle.
+- Replacing the frame-counter input with a newly created canonical Stop reference did not end the
+  remaining execution. Live helper front panels show red-X `Not a Refnum` values for acquisition
+  `stop in` and frame-counter `stop ref`; both helper stop-reference inputs are invalid at runtime.
+  Do not continue changing button mechanical actions. Safe output loops stop correctly; graceful
+  helper shutdown needs the fragile UI-reference mechanism replaced or repaired separately.
+- Chosen graceful-shutdown fix: add repository-local LabVIEW global `PushTask Globals.vi` containing
+  Boolean `stop all`. Reset it False in the one-shot startup sequence; write the canonical main
+  `stop` value to it from the main task loop; read it at the acquisition-helper and frame-counter
+  loop conditionals instead of their invalid UI-ref Property Nodes. Retain old ref inputs until the
+  shared-global path passes testing, then mark them obsolete.
+- [x] Shared-global idle Stop test PASSED 20/08/26: one canonical main Stop now terminates the main,
+  water, magnet, acquisition-helper and frame-counter loops, returns the Run arrow to idle and
+  produces no DAQ errors. Reward-delay and spout-extended Stop tests also passed; normal shutdown is
+  fully validated. Updated main/helper/global VIs and documentation were imported, SHA-256 verified
+  and pushed to `master` as commit `b43b003`.
+- [x] Rig-PC GitHub-copy smoke test — PASSED 20/08/26: repository main VI opened with a healthy
+  Run arrow after installing the compatible frame-counter dependency and completed the full
+  non-animal bench sequence
+- [x] Fresh GitHub-copy dependency fix 20/08/26: Error List confirmed
+  `avg joystick and frame trig lick3.vi` is non-executable because its `frame counter.vi` subVI is
+  missing. Replacing the repository's retained binary with the working-hierarchy copy fixed the
+  load and passed bench testing. The exact compatible copy was imported from the transferred
+  Downloads hierarchy into the Mac repository and SHA-256 verified; pushed with the NI-MAX backup
+  and 20/08/26 validation documentation as commit `ff13cb6`.
+
+## Source context (do not re-derive from scratch)
+- Planning export: `/Users/maxchalabiprat/Documents/GitHub/JoystickControlSystem/exports/forelimb-push-chat-export/`
+  - Prefer `chat-export.md` + `attachments/` for LLM context
+  - `02_full_bundle.pdf` = chat PDF + ChatGPT `LabVIEW-Code-Review.pdf`
+  - Key LabVIEW screenshots live in `attachments/image-*.png` (Cases 0–4, magnet/water loops, task schematic)
+- Design authority: Weekly Update 29/06/26 (Max Chalabi) — Mackenzie Mathis approved (“let’s go for it”)
+- Upstream paper/rig: Mathis et al. 2017 (2D joystick pull / lateral magnet perturbation)
+- This fork’s main VI: `Push Behaviour_MCHALABI.vi` (+ `avg joystick and frame trig lick3.vi`,
+  `frame counter.vi`, `PushTask Globals.vi`)
+- The behavioural rig's edited hierarchy was imported into this repository on 18/08/26; the
+  untouched `Pull Behavior_march2020.vi` remains the operational fallback on the rig PC.
+- Do not attempt to Git-merge independently edited `.vi` binaries. After the rig-PC clone smoke test,
+  treat the repository `Push Behaviour_MCHALABI.vi` hierarchy as the only canonical editable copy.
+- Do not delete `LabView files - PushVersion - working` yet. Rename/archive it read-only first, then
+  validate a brand-new clone of commit `ff13cb6` while the old working path is unavailable and audit
+  parameter/data-file dependencies. Keep both the untouched original hierarchy and dated working
+  archive at least through the first successful animal pilot.
+- Clean-clone load on 20/08/26 resolves all three relocated dependencies into the clone root
+  (`avg joystick and frame trig lick3.vi` and `frame counter.vi`) and shows only
+  "Dependency loaded from new path" warnings, not missing/broken dependencies. LabVIEW Save All
+  rewrote all three VIs; the resulting clean-clone copies were transferred to Mac, imported into
+  the repository and SHA-256 verified on 20/08/26. Pushed as commit `45f8e8a`.
+- Live screenshots 12/08/26 confirm the rig VI retains the expected occurrence-driven water loop,
+  five-case trial state machine, parameter loader, and a lower occurrence loop that combines
+  `Magnets_Dev1` AO writes with `Dev1/ctr1` laser-pulse generation. Preserve both code paths. Adapt
+  the magnet path from its original two-channel task to an AO0-only on-demand task; leave the laser
+  counter path unchanged.
+- Initial LabVIEW **Duplicate hierarchy** attempt was deleted because the expected VI was absent from
+  the destination. The complete containing folder was then manually copied with suffix
+  `- PushVersion - working`; edit that hierarchy and preserve the original `LabView files` hierarchy
+  containing `Pull Behavior_march2020.vi` as the untouched operational baseline.
+- Working hierarchy transferred to Mac at
+  `/Users/maxchalabiprat/Downloads/LabView files - PushVersion - working` on 18/08/26. Imported only
+  `Push Behaviour_MCHALABI.vi` and the modified nested `avg joystick and frame trig lick3.vi`;
+  SHA-256 verification confirmed both repository copies are byte-identical to the transferred files.
+  Committed and pushed these two binaries to `master` as `182c498` on 18/08/26; commit identity is
+  `maxchalabi` and the message contains no Cursor co-author trailer.
+  Transferred `frame counter.vi` also differs from the repository binary but was not edited during
+  this work, so leave the repository copy untouched. After import, reopen in LabVIEW and verify the
+  main VI resolves the repository-local helper rather than an old/nested absolute Windows path.
+
+## Guiding principle
+Keep existing LabVIEW architecture largely intact; only change what is necessary for a clean push paradigm. Task should stay simple for the animal but structured enough that behavioural and neural events are interpretable.
+
+## Locked trial structure (v1)
+```text
+forepaw on rest pad
+  ↓
+trial starts
+  ↓
+reach to object
+  ↓
+push object forward
+  ↓
+(perturbation / axial resistance)
+  ↓
+success distance reached (and held in target band)
+  ↓
+success cue (auditory, immediate)
+  ↓
+short fixed delay
+  ↓
+lick spout extends
+  ↓
+water reward → spout retracts
+```
+
+Clean behavioural epochs for neural alignment:
+`rest → movement initiation → object contact → push → perturbation → success cue → post-success delay → spout/lick/reward`
+
+Without the rest pad, the animal could keep the paw on the object between trials (pre-load, continuous tactile feedback) so trial onset would not be a clean event. Rest pad does **not** claim identical posture every trial — it defines a **pre-contact trial start state**. Precedent: Estebanez et al., Voigt et al., Galiñanes et al., Mangin et al. (rest/hold before reach).
+
+Delayed retractable spout separates push completion from licking/reward so those don’t collapse into the same window as movement/perturbation (Guo et al. motorized lickport + delay; Wagner et al. ~1 s delay on robotic manipulandum; licking can dominate cortex — Kondo & Matsuzaki, Murphy et al.; delayed water waiting is learnable — Gao et al.). Training: pair the buzzer with water from the first head-fix session, keep that interval short while the push is being discovered, then lengthen cue-to-spout only after the movement is reliable so the cue remains a discrete CS.
+
+## Behavioural / session design
+- 1D forelimb **object-push**: reward only if object **ends and remains** in a target distance band (Case 3 `end` ROI + `end TO` — not merely past a minimum). Overshoot past the far edge is **not** an immediate abort: Case 3 already keeps the trial open until `move time`, so the mouse can release/correct back into the zone. Leaving the band only resets the dwell timer. Immediate-fail-on-overshoot would fight the later SPE/perturbation design.
+- Session blocks via parameter file:
+  1. Baseline (`mag = 0`)
+  2. Random perturbations (unpredictable axial resistance)
+  3. Fixed perturbations (learnable axial resistance)
+  4. Washout (`mag = 0`) — overshoot / velocity / corrective sub-movements as internal-model readouts
+- Perturbation = **axial resistance along push axis** (not lateral force as in original Mathis task)
+
+## Locked training progression (revised 07/09/26; supersedes 14/08/26 threshold-crossing-heavy plan)
+Criterion-based, ~3–6 weeks. Teach one component at a time, but chain rest-pad contact into pushing
+early. Keep `mag = 0` until the final unperturbed task is stable. Advance after the criterion on
+**two consecutive days**, not one lucky session. Change only one important parameter at a time.
+Formal table starts at head-fix (no separate “handling / reward familiarisation” stage — Mathis also
+did not report one). Handling still happens off-protocol.
+
+Revised stages:
+1. **Head-fix habituation + cue–reward association** — ramp ~5 → 10 → 15–20 → 25–30 min; spout
+   available; buzzer then free water. Do **not** install the final 500–1000 ms delay on day 1 of
+   head-fix if the next stage will reward immediately; keep the cue–reward interval short (0–250 ms)
+   until the push is solid, then lengthen in stage 6. Stop free pairings once voluntary pushing starts.
+2. **Micro-push discovery** — 20–50 genuine designated-paw forward pushes (~0.5–1 mm, above noise);
+   ~1–2 sessions max; no zone/hold. Do not reward rest-pad contact alone, nose/wrong-paw/body hits,
+   grasp/pull, or spring-return motion.
+3. **Proximal broad target zone** — immediately after discovery. Broad ~3–4 mm zone near the paw,
+   inside-zone + ~30–50 ms dwell (dwell already anti-ballistic: 4 mm / 50 ms ⇒ must be slower than
+   ~80 mm/s through the zone). Correction allowed until the movement-window timeout.
+4. **Progressive zone translation** — shift the same broad zone farther forward (~0.5–1 mm after a
+   strong block, not after every trial) to the final ~6–7 mm distance (confirm after measuring
+   comfortable ROM with the printed paddle).
+5. **Final target-zone refinement** — narrow to ~2–3 mm; dwell 50 ms, 100 ms only if needed.
+6. **Spout retraction + final reward sequence** — cue stays at target acquisition; then 0 → 250 →
+   500 → possibly 1000 ms cue-to-spout; do not change distance/zone in the same sessions.
+7. **Expert stabilisation** — freeze geometry and timing; ≥80% success, ≥90% designated paw, little
+   first-to-last-third decline, enough trials for the future session.
+8. **Zero-force shadow sessions** — exact 50 / 75 / 100 / 75 block labels with magnet commands
+   running at force 0. Tests fatigue, satiety, magnet noise/heating, 300-trial feasibility.
+9. **Resistance pilot (separate mice)** then **main experiment**. Do not “calibrate” force on the
+   imaging cohort. Random-block definition still TBD (presence vs magnitude vs both). Project already
+   requires a proportional driver because random sessions are intended to vary force magnitude.
+
+Optional `Rest only` remains a **fallback** for mice that never touch the pad (50–100 ms contact,
+release-to-rearm, leave after ~30 contacts or 1–2 sessions). Not a default stage.
+
+Mathis 2017 closest precedent: random water while first head-fixed ≤15 min → 3–5 days any
+touch/pull → >1 s start-box + ~3 mm broad box / 100 ms hold → after >60% for 2 days, ~7 mm target
+→ train to >80%, typically 4–5 weeks. Wagner 2020 for daily manipulandum troubleshooting and
+animal-specific geometry. Roth lever-push and Linares-García 2025 for “push is less natural than
+pull.” Mosberger: early reinforcement biases strategy, so do not linger on ballistic threshold
+crossing.
+
+### Parameter-file column map (CONFIRMED on the live VI 08/09/26)
+Twenty-one tab-separated doubles, one line = one trial. Loader Case Structure
+`i` = 0…20. Front-panel `exp para array` order still may not match. Peek Case 2
+(`home X2`) for a leftover ×2 before trusting that column. Do not add columns.
+
+| Index | Field | Axis / role |
+|------|--------|----------------|
+| 0, 2 | `home X1`, `home X2` | Lateral (`ai0` / red) |
+| 1, 3 | `home Y1`, `home Y2` | Push (`ai1` / white) |
+| 4 | `home TO` | ms; AND FSR |
+| 5–8 | `start` X/Y | unused while start TO = 0 |
+| 9 | `start TO` | keep 0 |
+| 10, 12 | `end X1`, `end X2` | Lateral — keep wide |
+| 11, 13 | `end Y1`, `end Y2` | Push target (lower V = forward) |
+| 14 | `end TO` | ms dwell |
+| 15, 16 | `mag`, `magtime` | 0 / 25 until resistance |
+| 17 | `watertime` | 130/185/240 → 4/6/8 µl |
+| 18 | `timeout` | Case 0 ITI (ms) |
+| 19 | `move time` | Case 3 window (ms). The shorter-pull file used **400** |
+| 20 | `light` | keep 0 |
+
+Old pull files (typical values): home `2.39 2 2.8 3`, home TO `500`, start TO `0`,
+end shaped per filename, end TO `50`, mag `0` or `2.2`, watertime `100`/`200`,
+timeout `1000`, move time `400`. **Do not copy those end voltages or `magtime=100`.**
+
+How they actually trained: one **identical-row** file per stage (500–612 lines; one 2964-line
+baseline), then swapped files when the mouse was ready. Target “center/bound” lived in the
+filename (`2.55center`, `2.3bound`, `.05bound` = ±0.05 V ≈ ±1 mm on the original 0.05 V/mm
+assumption). “UNBOXED” files widened the end box so overshoot still counted. Experimental
+sessions were concatenated blocks in one file (e.g. Task1 ≈ 157 zero-force + 100 × `mag=2.2` /
+`magtime=100`). **Do not copy those voltages or `magtime=100`.** Original perturbation was a
+brief lateral kick at trial start, not sustained axial resistance 100 ms after movement onset.
+Confirm the live unbundle map on the rig before writing any push file.
+
+### Practical LabVIEW / rig implications from this plan (07/09/26)
+Already enough for stages 2–5 once geometry and volts-to-mm exist: `end` box + `end TO` is the
+zone+dwell; Case 3 already allows correction until `move time`; `home TO` is the rest-pad hold
+(FSR is ANDed into that same timer); `start TO=0` is fine because rest-pad + object-home replaces
+Mathis’ start-box wait; `mag=0` throughout training.
+- **Need before first mouse, not a new state machine:** shaft+handle+constrainer are fitted and
+  the ripped FSR was replaced 08/09/26 with protective tape (working). Water µl/pulse is done
+  (`calibration/water-volume.md`; 130/185/240 ms → 4/6/8 µl). Still: spring return without
+  bounce into the micro-push threshold, freeze rest-to-object geometry, volts-to-mm, joystick
+  noise, actuator settle time, FSR hysteresis on the taped surface, and which logged axis
+  actually moves (`Y_POS` index 0 vs `X_POS` index 1).
+- **Need for stage 1 (small LabVIEW):** a habituation control that runs `cue → delay → water`
+  without a successful push. Manual water exists; the automated pair does not, because the water
+  loop only wakes on Case 4.
+- **Early-training movement window:** user declined the FSR lift-off Case 5
+  edit (09/09/26). Case 3 still does `(now − trail start) > move time` with
+  `trail start` written in Case 2. Lengthen column 20 (`move time`) instead;
+  bench file is 30000 ms. Do not edit the Case 2 output constant 3.
+- **Need before useful training data:** event logging + session metadata (stage, file, every
+  front-panel value). Trajectory logging already exists.
+- **Nice before animals, not blocking shaping:** FSR hysteresis/debounce; optional paw-release
+  before rearm so a planted paw cannot auto-retrigger; session summary of success / wrong-paw
+  (wrong-paw is video, not DAQ).
+- **Defer until resistance:** movement-onset detector, 100 ms delayed magnet onset, hold `mag`
+  until trial end instead of a 100 ms pulse. Do not reuse old `magtime=100`. Velocity-settling
+  gate is optional if 50 ms dwell in a 2–4 mm zone already rejects ballistic crossings.
+- **Parameter files are 27 columns (09/09/26).** Indices 21–26: `reward delay`,
+  `cue duration`, `spout extend`, `spout settle`, `consumption`, `spout retract`.
+  Files are updated. Loader 21→27, both FP cluster copies (`exp values` and
+  `exp para array`), cases 21–26, and water-loop field wiring were completed
+  and reported runtime-working on the rig PC 09/09/26. Keep old FP controls
+  temporarily as references/fallbacks. **Repository import DONE 21/09/26:** all
+  four rig-tested binaries copied into repo root (`Push Behaviour_MCHALABI.vi`,
+  `avg joystick and frame trig lick3.vi`, `PushTask Globals.vi`, `frame counter.vi`);
+  SHA-256 verified against Downloads transfer; main VI updated (251539 B, 27-col
+  loader + water-loop wiring); three helpers byte-identical to prior repo copies.
+  Stage 6 files: `parameters/training/06_delay_{0,250,500,1000}.txt`.
+
+### Training controls to add to the canonical main VI
+- Use one main VI with a `Training stage` enum: `Habituation`, `Rest only` (fallback),
+  `Micro push`, `Proximal zone`, `Zone translation`, `Zone refine`, `Delay`, `Expert`,
+  `Shadow`, `Experiment`. Do not maintain separate stage-specific VIs.
+- Adjustable/logged controls: FSR on/off thresholds + hysteresis, rest hold, push threshold, target
+  bounds/hold, cue enable/duration, reward delay, spout extend/retract voltages, settle time,
+  consumption time.
+- Safe manual controls: water, cue test, spout extend/retract, hardware output enable, plus a
+  habituation button/mode that runs the full `cue → delay → water` sequence without Case 4.
+- Live indicators: task state, FSR voltage/paw state, joystick position, success criterion, cue state,
+  commanded spout position.
+- Keep hardware calibration values on the VI; use stage-specific parameter files for behavioural
+  criteria. Log the selected stage and every adjustable value with each session.
+
+## Current VI architecture (original Mathis code — still the base)
+Five-state machine in middle While loop (state in shift register) + async helper loops via occurrences/queues:
+
+| Case | Role |
+|------|------|
+| 0 | Inter-trial gate: object in `home` ROI held for `home TO` **AND** `timeout` elapsed → Case 1 |
+| 1 | Wait for object in `start` ROI held for `start TO` → Case 2 |
+| 2 | Stamp trial start; **Set Occurrence** (wakes magnet loop) → Case 3 |
+| 3 | Movement window: timeout → fail to Case 0; enter `end` ROI + hold `end TO` → Case 4 |
+| 4 | Success: **Set reward occurrence** (wakes water loop); stamp inter-trial clock → Case 0 |
+
+- **Magnet loop:** Wait on Occurrence → AO `Magnets` = `mag` for `magtime`, then 0; increments `Trial #`
+- **Water loop:** Wait on Occurrence → DO `water` True for `watertime`, then False (Flat Sequence in occurrence-received / `False` timeout case)
+- ROI checks AND X-in-range with Y-in-range; per-trial params from `exp para array` (text file → loader For-loop → cluster array)
+- Live rig NI-MAX tasks (04/08/26): `joysticklickframe`, `Magnets_Dev1`, `Water_Dev1`, `frame counter_Dev1`, `MyPulseOutputTask`, `testing1blox_2labviews`
+- Confirmed `joysticklickframe`: X=`Dev1/ai0`, Y=`Dev1/ai1`, differential ±10 V, continuous 10 kHz; device is **NI PCIe-6321**
+
+### Already supported (configure via params / minimal code)
+1. **Bounded target zone** — Case 3 `end` ROI + `end TO`
+2. **Block structure** — one parameter-file line per trial
+3. **Washout kinematics** — full trajectory already logged; analyze offline
+4. **1D via params + physical constraint** — keep LabVIEW 2D coordinate structure; redefine task-relevant axis in parameter file; **physically constrain lateral axis with the existing 3D-printed 1D-axis constrainer** (no need to delete Y logic for v1)
+
+### Real work remaining
+(a) print and fit the joystick shaft plus a chosen handle, then add spring return and the steel
+target, (b) finalize the animal-safe FSR cap and hysteresis, (c) calibrate volts-to-mm, joystick
+noise, water µl/pulse and spout settle, then write stage parameter files in the existing 21-column
+format, (d) add habituation cue–reward triggering, event logging and session metadata, (e) later:
+movement-onset-triggered axial resistance and force-calibrate the Ledex, (f) only then Baseline /
+Random / Fixed / Washout files.
+
+## Locked hardware & design decisions (Weekly Update 29/06/26)
+
+| Role | Choice | DAQ | Notes |
+|------|--------|-----|-------|
+| 1D constraint | Existing **3D-printed 1D-axis constrainer** | — | Lateral axis may remain in code; physically constrained |
+| Push object | 3D-modeled **89 mm joystick shaft** + interchangeable tip-mounted handle (rounded cube or 38 mm bar) | reuse push-axis AI | Position contact surface **below the mouse** in its natural forelimb workspace and close to the rest pad; use a short forgiving reach and push-biased geometry that discourages grasping like the original pull handles. The cube has three holes to set reach and object weight over the joystick. Animal leaves rest → contacts → pushes (not continuous grip across ITI). Spring-loaded return to home. Shape push distance gradually in training. |
+| Rest-pad gate | **Both** required: object in home (spring-loaded) **AND** forepaw on rest pad | — | Binary trial-gating, not posture standardization |
+| Rest-pad sensor | **FSR** (binary on/off via threshold + hold duration) | spare **AI** → LabVIEW | Not a precision force meter. **Not** real-time DLC for v1 (slower to stand up); revisit vision trigger only if FSR false pos/neg during piloting |
+| Retractable lick spout | **Actuonix linear actuator** | new **AO** position command (0–5 V); separate motor PSU, shared GND | Simple reliable in/out; keep existing `water` DO for valve |
+| Success cue | **Brief auditory cue** at trial success | new **DO** (or AO) to clicker/speaker driver | **Supersedes** earlier ERM vibration plan (Mackenzie: vibe adds mass, changes object mechanics, imaging movement artefacts). Cue is discrete, timestamped, separated from perturbation onset and reward |
+| Axial resistance | Ledex `195224-230` (EU/CH equivalent of Mathis `69905K25`), mounted **axially** | `Dev1/ao0` (`MagnetPush_Dev1`) | Received 02/09/26; not mounted or wired. Copy mesoscope drive electronics. Force-calibrate; do not assume 2.2 V / 100 ms transfers |
+
+### Superseded (do not implement for v1)
+- ERM vibration motor on the manipulandum (Adafruit 1201 + MOSFET 5648) — rejected after Mackenzie discussion
+- Real-time DLC as primary rest-pad trigger — deferred fallback only
+
+### Hardware selections and status — picks finalized 09/07/26
+- **Rest-pad FSR:** Interlink **FSR 402** solder-tab (PN 30-81794), ~$3 — buyinterlinkelectronics.com / Mouser-Digikey (search 30-81794). Backup: FSR 402 Short Tail (34-00015) if pad is tiny; FSR X 402 for durability. + one **10 kΩ** divider resistor + shielded wire → spare **AI** (channel TBD after live inventory; `ai0` and `ai1` are occupied). `paw_on = V > threshold`.
+- **Lick spout:** **Actuonix L12-30-50-12-I** (30 mm, 50:1, 12 V, integrated controller, **0–5 V** position mode). EU: noDNA (~€173) / RS stock 202-0768 (~£146). Ships with brackets + clevis/threaded rod ends. Backup MB1 clevis (Firgelli). Avoid -R/-P (PWM / external LAC). + **12 V ≥1 A PSU, shared GND** + 3D-print carriage + blunt lick tube + tubing. Keep existing `water` DO valve.
+- **Auditory cue:** start with **Adafruit 5 V active buzzer (#1536, ~$1)** on a **DO** line (fixed ~2 kHz beep, trivial LabVIEW). Upgrade for chosen frequency: passive piezo (TDK PS1240) or small speaker + **Adafruit PAM8302 amp (#2130)** driven by a **6321 counter output** (LabVIEW-native square wave, ~50–100 ms). Teensy+audio only if calibrated tones later needed.
+- **Push object:** CAD imported 05/09/26 — 89 mm shaft plus tip-mounted bar or rounded-cube handle. Print/fit still pending. Add a light return spring (auto-return to home) and reuse the push-axis readout. Ferromagnetic target: Mathis used a small steel ring on an aluminum handle base with **no catalog number**. Make one from a **mild-steel DIN 125 washer** (zinc-plated carbon steel OK; not A2/A4 stainless). Solenoid face is ~20 mm; a washer OD of ~12–20 mm (M6–M10) is a starting size. Embed/glue it on the object facing the solenoid. Mount the pull solenoid on the home side so attraction resists the push.
+- **Perturbation magnet (ARRIVED 02/09/26):** Ledex / Johnson Electric **`195224-230`**, STA 75L **60° pull**, 12 VDC 7 W 20.7 Ω, Contact Evolution SA (Payerne). ~20 mm × 40 mm tubular body. Used like Mathis: coil as electromagnet attracting a steel target, not as a plunger mechanically linked to the object. Drive via `MagnetPush_Dev1` on `Dev1/ao0`; do not power the coil from the DAQ AO pin.
+
+### RIG CONSTRAINT — AO channels are the bottleneck
+Live rig uses **NI PCIe-6321** (not the previously assumed 6251). Actuonix is installed on `Dev1/ao1`. The received training-rig magnet (Ledex `195224-230`) is intended for `Dev1/ao0` but not yet wired. Both outputs are software-timed/on-demand; NI documents support for one such AO task per physical AO channel. Therefore keep magnet support as a one-channel AO0 task and the spout as an independent one-channel AO1 task. Hardware-timed AO would instead require a combined task.
+
+### Target DAQ channel map (post-additions)
+Training rig target: AI X=`Dev1/ai0` + AI Y=`Dev1/ai1` + AI rest pad=`Dev1/ai2` · AO magnet=`Dev1/ao0` (`MagnetPush_Dev1`; Ledex `195224-230` received, not yet wired) · AO lick-spout position=`Dev1/ao1` · DO water=`Dev1/port0/line0` · DO success cue=`Dev1/port0/line1` · frame sync=`Dev1/ctr0` input on `PFI8`; pulse output=`Dev1/ctr1` on `PFI13` at 50 Hz. Mesoscope-rig magnet mapping remains to be audited separately.
+
+## LabVIEW edit plan (concrete)
+
+### 1. Collapse to 1D (Cases 0, 1, 3) — mostly params + hardware
+- Keep existing coordinate structure; set task-relevant axis bounds in parameter file
+- Lateral axis: leave in code; rely on the 3D-printed 1D-axis constrainer
+- Optional later cleanup: delete Y comparators
+
+### 2. Rest-pad gate (Cases 0 / optionally 1) — locked: both conditions
+- Read FSR; `paw_on = voltage > threshold` (+ minimum hold, reuse existing hold-time pattern)
+- Trial start only when: **object in home** AND **forepaw on rest pad**
+- AND into home-hold path: `inside_home_ROI AND paw_on_pad`
+- Live Case 0 audit 12/08/26 confirms the exact insertion: AND `paw_on_pad` with the existing X/Y
+  `inside_home_ROI` Boolean **before** its existing `home TO` hold-timer Case Structure. The held result
+  then continues into the existing final AND with the inter-trial timeout condition.
+- Live acquisition-subVI audit 12/08/26: `avg joystick and frame trig lick3.vi` reads saved task
+  `joysticklickframe` as Analog 2D `NChan NSamp`, averages indexed channels 0–3, builds a four-value
+  array, and enqueues it as `joystick pos`. Preserve the original global task; create
+  `joysticklickframe_push` with X=`ai0`, Y=`ai1`, rest pad=`ai2` in that order, then select it in the
+  working-copy subVI. Rest-pad voltage will be queue element index 2.
+- `joysticklickframe_push` created/configured/tested 12/08/26: ordered `ai0`, `ai1`, `ai2`;
+  `ai0`/`ai1` differential ±10 V, `ai2` RSE 0–5 V; Continuous Samples, 10 samples/read, 10 kHz.
+  NI-MAX simultaneously displayed working joystick X/Y and pressure-responsive FSR signals.
+- Working-copy `avg joystick and frame trig lick3.vi` task constant changed from
+  `joysticklickframe` to `joysticklickframe_push` and saved 12/08/26.
+- Working-copy main VI Case 0 now indexes `element[2]` into a `rest pad voltage` indicator; existing
+  state logic now uses it. A `rest pad threshold (V)` control (initial default 0.10 V) and
+  `paw on rest pad = rest pad voltage > threshold` indicator feed a new second-stage AND after the
+  original X/Y home-ROI AND and before the existing `home TO` hold Case Structure. Timeout logic is
+  unchanged. Runtime test passed: FSR voltage and Boolean behaved correctly once the state machine
+  returned to Case 0 after reward. The apparent initial failure occurred because indicators inside a
+  Case Structure update only while that case executes. Index 2 and its wiring are correct.
+- Original state shift-register initializer changed from `1` to `0` in the working VI. Fresh-run
+  validation passed 12/08/26: the first trial remains gated until paw contact.
+
+### 3. Axial resistance (Magnet loop)
+- Preserve the occurrence-driven magnet logic; change its AO task/write from the original two-channel
+  configuration to a one-channel, software-timed/on-demand AO0 task so AO1 remains exclusive to the
+  spout. Do not delete magnet support while the received hardware awaits installation
+- Live loop audit 18/08/26 confirms two `Analog 1D DBL NChan 1Samp` writes using `Magnets_Dev1`:
+  an activation write and a later reset-to-zero write. Convert both to single-channel AO0 writes
+  using a new `MagnetPush_Dev1` task; leave the separate counter/laser path unchanged
+- `MagnetPush_Dev1` created and saved 18/08/26: `Dev1/ao0` only, ±10 V, 1 Sample (On Demand);
+  not physically run because no magnet was connected at that time
+- Working-copy magnet-loop task constant changed from `Magnets_Dev1` to `MagnetPush_Dev1` on
+  18/08/26. Both writes converted to `Analog DBL 1Chan 1Samp`: activation receives scalar `mag`,
+  reset receives scalar `0`, and both retain auto-start=True. AO1 is no longer touched by the
+  magnet path; Run arrow remained solid after saving. Physical magnet validation remains until
+  the received Ledex is installed and force-calibrated
+- Training-rig magnet RECEIVED 02/09/26: Ledex `195224-230` from Contact Evolution SA
+  (Payerne). Mount axially, opposing the push. Copy the mesoscope-rig coil-drive electronics;
+  never wire the solenoid coil directly to the PCIe-6321 AO pin
+- Mesoscope rig: audit its DAQ/magnet wiring before enabling imaging perturbation trials
+- Prefer **constant load** for adaptation/aftereffect science
+- Minimal: `magtime ≈ move time` in param file; sign opposes push
+- Cleaner: hold `mag` until trial-end occurrence from Case 4 and Case 3 timeout
+- Random block: **pre-script** `mag` in parameter file
+
+### 4. Auditory success cue + delayed spout reward (Water loop)
+Insert into water loop **occurrence-received (`False`) case**, inside the existing Flat Sequence:
+
+- Live audit 18/08/26 confirms the current functional frames are exactly:
+  `Water_Dev1 HIGH → wait watertime → Water_Dev1 LOW`. Preserve these and add frames around them.
+- Final saved tasks created 18/08/26: `SuccessCue_Dev1`=`Dev1/port0/line1`, digital one-sample
+  on-demand; `LickSpout_Dev1`=`Dev1/ao1`, 0–5 V, one-sample on-demand
+- Three empty cue frames inserted before the original water-HIGH frame on 18/08/26; existing
+  water HIGH/wait/LOW sequence remains intact
+- Cue frames wired 18/08/26 as `SuccessCue_Dev1 HIGH → Wait cue duration → SuccessCue_Dev1 LOW`;
+  front-panel `cue duration (ms)` control added with default 50 ms. Runtime test passed: one brief
+  cue occurred per successful trial and stopped cleanly
+- Five empty reward/spout frames inserted 18/08/26 in the correct order: three between cue LOW and
+  water HIGH (reward delay, extend, settle), two after water LOW (consumption, retract)
+- Reward/spout frames wired 18/08/26 with front-panel defaults: reward delay=0 ms;
+  `LickSpout_Dev1` extend initially 1.0 V with auto-start; settle initially 3000 ms;
+  consumption=2000 ms; retract=0 V with auto-start. First runtime test produced expected coarse extension but also slight
+  continued fine extension during the familiar audible post-arrival settling period. Determine
+  whether motion/sound consistently stops within the 3000 ms window before classifying as normal
+  closed-loop settling versus persistent hunting
+- User-selected bench controls updated 18/08/26: cue=50 ms, reward delay=0 ms, spout extend=3.0 V,
+  settle=2000 ms, consumption=2000 ms, retract=0 V, rest-pad threshold=0.01 V. Actuator settling
+  sound/fine movement accepted provisionally. Automated sequence moves spout but currently delivers
+  no water, while manual water delivery still works. `watertime` confirmed nonzero at 200 ms and no
+  solenoid click is audible. NI-MAX `Water_Dev1` False→True→False test produces clicks and water;
+  LabVIEW close-up confirms HIGH data=True and LOW data=False. Next inspect Water HIGH DAQmx error;
+  Water HIGH error indicator remained clear during a failed automated reward. This proves the HIGH
+  write executes and strongly indicates LOW follows immediately because the middle duration frame
+  lacks an effective wait. Adding Wait(ms)=200 produced a click but no water. Do not assume placement:
+  user reports the Wait was already put in a dedicated frame and the original VI delivers water
+  without this added node. Obtain readable close-ups of the modified and original
+  `HIGH → timing mechanism → LOW` regions and identify the original blue timing object/wiring before
+  further edits
+- Diagnostic dedicated 1000 ms HIGH duration succeeded 18/08/26: automated valve produced water.
+  Therefore task/channel/write sequencing is functional; 200 ms was below the currently reliable
+  effective delivery duration or the line required priming. Retest 200 ms immediately after priming,
+  then find and volumetrically calibrate the shortest reliable pulse—do not use 1000 ms for animals
+- Retest after the 1000 ms prime confirmed automated 200 ms delivery works. User observed multiple
+  air bubbles in the tubing; root cause was an unprimed/air-filled water path, not LabVIEW or DAQ.
+  Add tubing inspection + manual prime until bubble-free to every pre-session checklist; retain
+  200 ms only as a bench value pending gravimetric µL calibration
+- Three spaced full-sequence trials passed 18/08/26: one cue, spout extension, one water delivery,
+  and retraction each time, without reported persistent motion or missed rewards. Core v1 hardware
+  integration is bench-functional. New explicit 200 ms Wait is nominally equivalent to original
+  `watertime=200`, but physical pulse equivalence remains unmeasured; compare delivered volume or
+  measure P0.0 HIGH duration before claiming exact equivalence
+
+```text
+Frame 0: auditory success cue pulse (immediate on reward occurrence)
+Frame 1: Wait reward delay (fixed; introduce gradually in training)
+Frame 2: AO lick_spout_position = extend
+Frame 3: Wait spout settle
+Frame 4–5: water ON / OFF (existing)
+Frame 6: optional consumption Wait
+Frame 7: AO lick_spout_position = retract
+```
+
+Training note: early stages may set delay ≈ 0 and/or deliver cue concurrent with water; later stages lengthen delay so cue precedes spout/reward.
+
+### 5. Success cue placement
+- Immediate at success: first frame of water-loop False-case sequence (same occurrence as reward) **or** pulse in Case 4 for tightest time-lock
+- Must be logged/timestamped for alignment
+
+### 6. Parameter / cluster plumbing
+- Extend for: reward delay, spout settle, consumption window, cue duration/params, training-stage values
+- Re-check loader ×2 scaling index after column changes
+- Build param files for training stages + full Baseline/Random/Fixed/Washout sessions
+- Decide defaults (trial N, `mag` magnitudes, delay, etc.)
+
+### 7. Audit `Trial #` off-by-one
+- Magnet loop increments at trial **start**; water loop indexes at **success** — verify alignment; schedule length ≥ trial count
+
+## Open decisions (narrowed)
+1. Resistance type: constant axial load (preferred) vs velocity-dependent viscous field
+2. Exact final reward-delay target within the locked 500–1000 ms range; acquisition ramp is locked at
+   0 extra delay initially, then +50–100 ms/session after stable performance
+3. Success cue LabVIEW site: Case 4 vs water-loop frame 0
+4. Random-block `mag`: pre-scripted file (preferred) vs live RNG
+
+## LabVIEW safety rules (from recovery work)
+- Never hand-edit `.vi` binary / internal names in a hex editor
+- Rename/internal-name changes only via LabVIEW Save As / File » VI Properties
+- Main public filename: `Push Behaviour_MCHALABI.vi`
+- `.cursorrules` is gitignored — keep plan local; update after every step
+
+## Notes (recovery history)
+- Direct binary/internal-name edit caused Hex 0x2A load failure; restored from good commit; user re-saved in LabVIEW
+- Internal name is now `Push Behaviour_MCHALABI` (was historically `Pull Behavior_mwaV10wLICK_2.vi` in recovered binary)
+- Expected VI set: `Push Behaviour_MCHALABI.vi`, `avg joystick and frame trig lick3.vi`, `frame counter.vi`
