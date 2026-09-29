@@ -411,6 +411,97 @@
   bench validation. Reserve about half a day if connectors and mounting fit.
   The uncalibrated sensor/board may require I²C scaling setup and is therefore
   less suitable when fastest deployment matters.
+- Mechanical change reported 29 Sep (corrected): the FSR is covered with tape
+  and a rigid puck, 2 mm tall and 3.15 mm diameter, is glued onto the tape
+  over the centre of the active circle. Glue does not touch the sensor
+  directly. Remaining risks: tape tension can preload the membrane or carry
+  load to the inactive rim; a 3.15 mm target is small relative to a mouse
+  paw, so the paw may rest on the tape around the puck instead of on it.
+- Electrical change reported 29 Sep: the FSR divider resistor was already
+  changed from 9.88 kΩ to 1 MΩ (the planned 100 kΩ step was skipped). Mice
+  still struggle to activate the gate. Pre-change baselines (0–0.005 V
+  unloaded, ~0.1 V lightest manual activation) no longer apply; unloaded,
+  light-touch and paw readings with 1 MΩ have not been recorded yet, and the
+  threshold currently used with 1 MΩ is unconfirmed.
+- 1 MΩ DAQ concern: the PCIe-6321 multiplexes one ADC; NI recommends low
+  source impedance (roughly ≤1 kΩ) for full-rate multiplexed scans. The scan
+  order is ai1 (Y), ai0 (X), ai2 (FSR) at 10 kHz, and a 1 MΩ source cannot
+  settle the ADC sampling capacitor, so ai2 may show ghosting/crosstalk from
+  ai0 (a false offset tracking joystick X) and slowed response. Animal-free
+  check: with the FSR untouched, sweep the joystick across its range and see
+  whether ai2 follows; also compare ai2 with a DMM at the terminal. If it
+  does, add a unity-gain op-amp buffer (rail-to-rail, low input bias, e.g.
+  0–5 V single-supply) between divider and ai2, or reduce aggregate rate.
+- 1 MΩ results, 29 Sep: joystick movement CONFIRMED to change ai2 (ghosting
+  from ai0). Unloaded ai2 reads 0.6–0.825 V, mostly carried-over joystick X
+  voltage rather than real FSR signal. Light finger touch never triggers;
+  slightly stronger touch does. A resting mouse paw did not trigger. Live
+  threshold set to 1 V. Output appears to jump straight from baseline to
+  above 1 V, with no reachable in-between value: the FSR switches abruptly
+  from open circuit to conducting at its break force, so the divider value no
+  longer limits sensitivity.
+- Conclusion: the resistor route is exhausted. The paw's resting force is
+  below the FSR break force even with the tape+puck; no resistor or threshold
+  change can detect it. Remaining paths: mechanical (broad plate on puck,
+  lever) or a sensor that needs no force (capacitive touch) or much less
+  (SingleTact).
+- 1 MΩ side effect is a live hazard: because baseline tracks joystick X
+  (~30% carry-over), a large X excursion could push ai2 over 1 V and give a
+  false FSR contact. Before any further animal use either revert to the
+  original ~10 kΩ divider (1 MΩ gives no detection benefit, see above) or add
+  a unity-gain op-amp buffer before ai2. Slowing the convert clock cannot fix
+  it: 1 MΩ needs roughly millisecond settling. After the change, sweep the
+  joystick with the FSR untouched and confirm ai2 stays near 0 V.
+- Decision 29 Sep: simple contact is the criterion; Mackenzie vetoed a
+  capacitive touch sensor, so the SingleTact S8-1N (8 mm, 1 N) is the chosen
+  FSR replacement. Note SingleTact measures force via internal capacitance;
+  make sure Mackenzie's objection does not also apply to it.
+- SingleTact facts verified from the official manual/quick start: interface
+  board pin 1 = Vcc 3.7–5 V, pin 2 = analog out, pin 8 = GND (pins 3/6 = I²C,
+  unused for analog). Analog out swings 0–2 V; 0.5 V = no force, 1.5 V =
+  rated force, saturates at 2 V; below 0.5 V means tension on the sensor
+  (avoid; can damage it). Load on analog out must be >5 kΩ. Update rate up to
+  120 Hz, 10-bit (~2 mV steps). Baseline is registered at power-on, so the
+  sensor must be unloaded when the board powers up; re-tare = power-cycle the
+  board. Overload limit <3× full scale. FFC tail is 50 mm (150 mm extender
+  available); insert with contact pads facing up; do not kink the tail, do
+  not touch it during operation, and keep grounded metal shields away from it.
+  Uncalibrated sensor + standard board works on analog without Arduino; the
+  I²C demo app is only needed to change scaling/tare. Force estimate
+  ≈ V × rated force / 1.5 (uncalibrated: estimate only).
+- Planned wiring (reuses FSR terminals from RIG_INVENTORY): +5 V terminal 8 →
+  board pin 1; board pin 8 → AI GND terminal 64; board pin 2 → ai2 terminal
+  65. Remove the FSR and the 1 MΩ resistor completely. Add an inline
+  connector/switch on the 5 V lead so the board can be power-cycled
+  (re-tared) without rebooting the PC. No VI code change expected: only a new
+  absolute ai2 threshold. Existing ai2 0–5 V/RSE range already covers 0–2 V.
+- Morning procedure (about 3.5 h): 1) bench check on the loose sensor
+  (0.5 V unloaded, rises with press); 2) rig powered down: remove FSR and
+  1 MΩ, wire board; 3) mount sensor flat on rigid backing with untensioned
+  thin cover, tail routed away from paw, board secured, insulated and away
+  from water; 4) validate in NI MAX with the push VI stopped: baseline and
+  noise, 15–30 min drift, joystick sweep (ai2 must not follow), repeatable
+  light weights, finger near/touching tail, wet finger; 5) set threshold
+  between highest baseline+noise and lowest light-weight reading; 6) hand
+  test in the push VI with the shaping preset, then normal Stop. Expected
+  paw signal is small (a few gf ≈ tens of mV above 0.5 V), so the threshold
+  margin must come from measured noise/drift, not assumed.
+- Diagnostic decision for 1 MΩ: if ordinary paw contact still leaves ai2
+  within the unloaded range at 1 MΩ, the FSR is effectively open-circuit
+  under paw load and further resistor increases cannot help. Then the
+  remaining options are mechanical (broad plate on puck, lever) or a
+  different sensor (capacitive touch, SingleTact).
+- Low-profile, no-lever extension of the puck: a thin, broad, rigid paw plate
+  resting only on the puck (guided against tilt/shear, not touching anything
+  else) routes all paw load through the puck regardless of where the paw sits.
+  It improves force capture but does not multiply force.
+- 29 Sep: user now plans to also try the lever idea despite the earlier
+  spatial objection; the difficulty is fitting it around the rig. The
+  rail-clamped flexure cantilever remains the lowest-profile concept. Design
+  still needs measured available length, height above/below the paw surface,
+  side clearances, attachment points and paw-contact location (top and side
+  photos with a ruler). Test lever gain only after the puck-alone result is
+  recorded, one variable at a time.
 
 ## Session-data synchronization audit (28 Sep 2026)
 
