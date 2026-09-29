@@ -1,0 +1,84 @@
+# JoystickPushTask — Project Plan (condensed 9 Oct 2026)
+
+Head-fixed mouse 1D forelimb object-push task, forked from the Mathis joystick-pull LabVIEW rig. This file is force-tracked (path is in `.gitignore`, but edits still commit). Keep one copy only. Older detailed notes live in git history. Where this file disagrees with older notes, this file wins.
+
+## Safety rules (always)
+- Class 3B 635 nm laser on `PFI3` / terminal 42: keep keyed OFF. Never toggle PFI3 blind. Do not touch the laser pulse nodes in the magnet loop.
+- Never power the Ledex coil from AO0 (AO0 is only the 0–10 V command; PCIe-6321 AO limit ±5 mA).
+- 1 A inline fuse must stay in the 12 V positive lead of the PVA/Ledex supply. Do not use the magnet's reserved 12 V Goobay supply for anything else.
+- Normal Stop only; toolbar Abort is emergency-only (skips cleanup frames and the auto timing file).
+- Never press an animal's paw onto the pad. Keep `mag = 0` until the unperturbed task is stable.
+- Never hand-edit `.vi` binaries or internal names. Do not Git-merge independently edited `.vi` files; the repo copy is the canonical hierarchy.
+
+## Working conventions
+- Two machines share this repo through GitHub `master`: the rig PC (Windows, LabVIEW, hardware, data) and a Mac (planning, docs, parameter files, Python scripts, CAD). Pull before editing; commit and push after each finished step. Commits use the `maxchalabi` identity and imperative sentence messages ending in a period; no Cursor co-author trailer (a local commit-msg hook strips it).
+- The VIs are edited by hand in LabVIEW on the rig PC, so guide changes one small step at a time (which node, which wire, how to check it) and have the user confirm before moving on. Agents never edit `.vi` binaries. Prefer parameter files, front-panel controls and Python/scripts over diagram changes where possible.
+- After every step, update this file with the new status (and keep it short: replace stale items, do not append logs). The repo is public: keep this file free of private chat, people's names and purchasing/admin details.
+- Bench-test everything animal-free first; one variable at a time; no improvising circuit changes during an animal session.
+- Parameter files must be validated after editing: exact row count, 27 tab-separated columns per row, consistent row definition.
+
+## Rig and DAQ
+- NI PCIe-6321, SCB-68A breakout (terminal map in `RIG_INVENTORY.md`). Saved NI-MAX tasks are incomplete; audit inline channels. NI-MAX backup: `ni-max/JoystickPushTask_NIMAX_2026-08-20.nce`.
+- Channels:
+  - AI task `joysticklickframe_push`, continuous 10 kHz, order `ai1` (Y = push, white, queue idx 0), `ai0` (X = lateral, red, idx 1), `ai2` (rest pad, RSE 0–5 V). `joystick pos` = Y, X, 0, FSR (idx 3, matches the lab DataJoint layout).
+  - AO0 `MagnetPush_Dev1` (Ledex via PVA); AO1 `LickSpout_Dev1` (Actuonix L12-30-50-12-I, 0–5 V, own 12 V PSU).
+  - DO `Water_Dev1` P0.0; `SuccessCue_Dev1` P0.1 (terminal 17, D GND 15; Adafruit #1536 buzzer).
+  - `frame counter_Dev1` on PFI8 (ctr0); pulse out ctr1 on PFI13 at 50 Hz. Camera runs on the rig PC.
+  - Rest pad terminals: +5 V terminal 8, `ai2` terminal 65, AI GND terminal 64.
+- `avg joystick and frame trig lick3.vi` acquisition loop: Read stays **10** samples (1 kHz logged), input buffer **100000** installed, in-loop `stop in` Value property node deleted, `stop all` global (`PushTask Globals.vi`) drives all loops. Earlier -200279 overrun is provisionally fixed; a 25–30 min no-animal run with rewards, stopped cleanly, is still to be reported. Do not switch Read to 100.
+- Do not run two simultaneous AI tasks (one AI timing engine). 1 MΩ source impedance ghosts `ai0` onto `ai2` on this multiplexed ADC.
+- Data on the rig: `C:\Users\Mathis_Lab_1\Desktop\RIG1_DATA` (`joystick_`, `REWARD_`, `TRIAL_`, `EVENTS_`, `TIMESTAMPS_LABVIEW_`). Python 3.6.4 at `C:\Users\Mathis_Lab_1\AppData\Local\Programs\Python\Python36-32\python.exe`.
+
+## Current status (9 Oct 2026)
+- **Rest-pad sensor.** Live pad is still the Interlink FSR 402 under tape with a 3.15 mm puck and a 1 MΩ divider; `ai2` unloaded 0.6–0.825 V (follows joystick X), threshold about 1 V. A resting mouse paw does not trigger it (FSR needs ~10–20 gf; a resting forelimb is ~1–2 gf). Hazard: a large X excursion could give a false contact. Resistor/threshold changes cannot fix this (the FSR switches from open circuit at its break force). Until a new sensor is bench-validated, mouse sessions stay on cue-then-water habituation (see Mice).
+- **Replacement: capacitive touch, Arduino build (nothing assembled yet).** Capacitive is approved, with grounded shielding required during ephys. SingleTact and FlexiForce are not options (purchase failed; FlexiForce turn-on is not lower than the FSR's). Requirement: ~10×10 mm flat pad, sensitivity knob mountable elsewhere.
+  - Design: classic Arduino Nano (ATmega328, A000005; not Nano Every, library compatibility) + 10×10 mm copper-tape pad under thin tape + 10 kΩ linear pot to the screw terminals (A0, 5 V, GND). Sketch reads the pad (CapacitiveSensor-style, ~1 MΩ send resistor), compares with the pot level, outputs push-pull 0/5 V on D2 to `ai2` (high = touch, so the LabVIEW `>` comparison stays; low impedance, no X ghosting). Power from rig +5 V (terminal 8, 5V pin), GND to AI GND 64; unplug USB when running from the rig.
+  - Remove the FSR and the 1 MΩ when installing. Pad wire short (<30 cm), shielded wire with shield to GND at the Arduino end only; solder the wire to bare copper tape before sticking it down. Threshold on `ai2` about 2.5 V.
+  - Parts (via Galaxus/Digitec, Distrelec as the catalogue fallback): Arduino Nano item 6864826; Nano screw-terminal adapter ASX00037 (Galaxus 23950109, Distrelec 303-68-956); Velleman copper tape item 22201928; Bourns 51AAD-B28-A15L pot (Galaxus 69284715, Distrelec 301-94-343, 6.35 mm slotted shaft, needs knob). Still needed: 6.35 mm knob, Mini-USB cable. If the Galaxus pot or adapter cannot be ordered, use the Distrelec equivalents.
+  - Bench checks before mice: finger and mouse-sized contact, wet pad and water drops, licking/spout nearby, joystick and metal nearby, cable movement, long rest (>60 s) stays high, release goes low, joystick sweep does not move `ai2`. Next step: write the Nano sketch (with calibration printout).
+  - Rejected for good: AT42QT1010 (recalibrates after ~60 s), Omron E2K-F (too big), M12/M18 industrial sensors (too big or expensive), load-cell route (needs amp and mechanics; fallback only).
+- **Mice (stay on stage-1 habituation until the new sensor works).** Use only `deliverWater_RIG1_cue.vi` (50 ms cue then water), `Water on time (ms)` 240 (~8 µl), extend spout to 3.0 V before the first reward and retract to 0 V at the end (that VI does not move the spout). Keep the push VI closed. Cap 25 min and the approved water limit; stop when licking fades; tally rewards. Leave `01_fsr_contact_shaping*.txt` and `02_micro_push_day1_5s_8ul.txt` unloaded until the new sensor is validated. First pilot (28 Sep) and shaping attempts showed contact activation was too rare for contingency learning.
+- **Ledex `195224-230` + PVA 1.6 (0–10 V) commissioning**, following `MAGNET_COMMISSIONING.md`: Checkpoints 1–3 done (unpowered preflight: H–G ~105 kΩ, coil ~21 Ω, no case short, supply 12 V; 1 A ESKA fuse fitted in the TC-R3-32AA1 holder; power side wired D = +12 V, F = ground; first power-up 11.91 V, LED red; command 22 → H, 55 → G twisted; ao0 steps 0/0.5/1/2 V reproduced across H–G with Enable J open and coil disconnected). Imin (trimmer 4) and Imax (trimmer 3) turned ~30 turns counterclockwise (direction to be verified by current). **Next: Checkpoint 4 step 4.1**, wire the Ledex to C/A with the DMM in series (10 A range) and a removable Enable lead to J, all unpowered, steel target away. PVA outside the mouse box, command wires 30–100 cm twisted, coil cable 1–2 m twisted and away from `ai0/ai1/ai2`. Short pulses, long cool-downs; stop on heat, smell, binding, wrong direction or failure to release. Endpoint is a repeatable low-duty pull at a measured current, not force calibration. Terminal map: D +12 V, F power ground, J Enable, H/G command, C/A coil. Random-force sessions need this proportional driver (not a binary MOSFET switch). Spare: Bürkert 316532 (due 2 Dec) if not cancelled.
+- **Spout at Run:** set `Session start spout (V)` = 3.0 V before Run. Day-one file holds extend and retract at 3.00 V, so the spout stays extended. Normal Stop retracts to 0 V.
+- **Home voltage depends on whether the shaft and object are fitted.** Remeasure before loading any file. For the current object-on setup use `parameters/training/02_micro_push_day1_5s_8ul.txt` (rest ~2.25 V, home 2.225–2.350, `home TO` 1 ms, reward 0.00–2.22, move time 5000 ms, water 240 ms, 250 rows, 500 ms ITI, spout 3 V) and the FSR shaping files. `02_micro_push.txt` and stages 03–08 still use the 2.50 V / `home TO` 250 ms calibration.
+- **Bench presets** (no animal): `parameters/push_bench_full-system.txt` (20 rows; home/start match `training/07_expert.txt`; success 0.00–2.22 V, no end dwell; 50 ms cue, 500 ms reward delay, spout 0→3 V, 185 ms water, 1500 ms consumption; set Session start spout to 0 V so motion is visible; `mag=0`; never use to energise the Ledex/PVA) and `push_bench_full-system_nocue.txt` (same, cue 0 ms; if a click is heard disconnect the buzzer from P0.1). Procedure in `parameters/README.md`. `parameters/push_bench_wide-zone.txt` is the older hand-test file.
+- **Repo:** local `master` synced with `origin/master` at `371aaa9` (9 Oct). `.cursorrules` edits are uncommitted.
+
+## Logging and sync
+- Joystick file: 5 doubles per 1 kHz sample. TRIAL/REWARD files unchanged. Frame count is software-polled once per loop, not hardware-aligned.
+- **EVENTS logger** (done, bench-validated, `f9a363c`; plan in `EVENTS_LOGGER_PLAN.md`): file `EVENTS_<name>`, big-endian float64, 4 per record `[code, sample_index, unix_time_s, value]`. Codes: 1 start, 2 state change, 3 trial start, 4 success (Case 4), 5 timeout, 10–18 water-loop steps (13 = extend V, 15 = water on with ms, 18 = retract V), 20/21 magnet on/off, 90 heartbeat (1 s), 99 stop. Named queue `push events`, reentrant `Log Event.vi`, one writer loop, global `sample count` (reset to 0 before code 1). Known: code 99 sample is ~0.3 s stale (excluded from fits). REWARD col 0 matches code 15, not code 4. Pending tests: camera sync run, stop from inside a reward sequence.
+- **Auto timing file:** `scripts/run_timing.bat` is called by System Exec at Stop after the EVENTS Close/Release (commit `92c1cc5`) and writes `TIMESTAMPS_LABVIEW_<name>.npy` via `scripts/make_labview_timing.py` (numpy only; refuses on mismatched files, empty REWARD, >5% outliers, drift ≥100 ms). Output in `timing_log.txt`. Merge Errors for the other file closes was skipped; revisit only if "Missing session file" errors appear.
+- Video timestamps (`TIMESTAMPS_VIDEO_*.npy`) are absolute Unix float64 at ~100 Hz; PC Unix time is the shared clock. File creation times are not session markers.
+
+## Task design
+- Trial: forepaw on rest pad AND object in home → trial starts → push forward into target band (held for `end TO`) → immediate auditory cue (50 ms) → reward delay → spout extends → water → spout retracts. Overshoot is not an abort; leaving the band resets the dwell; trial ends at `move time`.
+- Session blocks (later): Baseline (`mag=0`), Random perturbation, Fixed perturbation, Washout. Perturbation = axial resistance along the push axis (Ledex mounted on the home side, attraction opposes the push), pre-scripted `mag` per row, force magnitudes must be varied (proportional driver).
+- Training progression (criterion on two consecutive days, change one thing at a time, ~3–6 weeks): 1) head-fix habituation with cue→water (short interval); 2) micro-push discovery; 3) proximal broad zone; 4) zone translation; 5) zone refinement; 6) delay 0/250/500/1000 ms; 7) expert stabilisation (≥80% success); 8) zero-force shadow sessions; 9) resistance pilot (separate mice), then main experiment. Optional rest-only stage as fallback.
+- Parameter files: one identical-row file per stage in `parameters/training/` (27 columns; see `parameters/README.md`). Loader reads cases 0–26.
+  Columns (0-based): 0,2 `home` push bounds (named X); 1,3 `home` lateral (named Y); 4 `home TO`; 5–8 legacy `start` box; 9 `start TO` (keep 0); 10,12 `end` push bounds; 11,13 `end` lateral; 14 `end TO`; 15 `mag`; 16 `magtime`; 17 `watertime` (130/185/240 ms → 4/6/8 µl); 18 `timeout` (Case 0 ITI); 19 `move time`; 20 `light` (0); 21 `reward delay`; 22 `cue duration`; 23 `spout extend`; 24 `spout settle`; 25 `consumption`; 26 `spout retract`. White/push values go in the columns named X; there is no ×2 on `home X2`. Do not reuse the old pull files' end voltages or `magtime=100`.
+- Calibrate before final numbers: volts-to-mm (`calibration/joystick-volts-mm.md`), joystick noise, water volume (`calibration/water-volume.md`), spout settle, spring return.
+- A fixed-spout 500 ms ITI with a 1.5 s consumption loop needs a rapid-success bench check (one cue and one water pulse per success).
+- Perturbation notes: original Mathis kick was lateral at trial start; ours is sustained axial resistance. Minimal option `magtime ≈ move time`; cleaner is holding `mag` until a trial-end occurrence (Case 4 or Case 3 timeout) and a ~100 ms movement-onset delay. Do not reuse old `magtime=100` or the 2.2 V value; force-calibrate with a gauge/load cell and check heating.
+- Future LabVIEW work: habituation mode (cue→delay→water without Case 4), FSR/touch hysteresis and release-to-rearm, movement-onset-triggered or held `mag`, session metadata, one shared parameter typedef (the water-loop and loader clusters had mismatched element order; fixed, FP captions swapped for reward delay and spout retract).
+
+## VI architecture (`Push Behaviour_MCHALABI.vi` + `avg joystick and frame trig lick3.vi`, `frame counter.vi`, `PushTask Globals.vi`)
+- State machine in the middle While loop (state in a shift register, initial 0): Case 0 gate (object in home ROI AND rest pad `ai2` > threshold, held `home TO`, AND `timeout` elapsed), Case 1 start ROI, Case 2 stamp trial start and set the magnet occurrence, Case 3 movement window (timeout → Case 0; end ROI held `end TO` → Case 4), Case 4 set the reward occurrence.
+- Water loop (occurrence-driven flat sequence): cue HIGH → cue wait → cue LOW → reward delay → spout extend → settle → water HIGH → `watertime` → water LOW → consumption → spout retract.
+- Magnet loop: occurrence → AO0 `mag` for `magtime` (plus laser counter pulse, keyed off) → reset 0.
+- Startup writes cue LOW, water LOW, magnet 0 V, spout to `Session start spout (V)`; normal Stop propagates through `stop all`; Stop tests from idle, reward delay and extended spout passed.
+- Rest-pad threshold control and `paw on rest pad` Boolean sit before the `home TO` hold. Home gate and FSR share one timer; ROI X-in-range AND Y-in-range per row.
+- Known: `Trial #` is incremented at trial start (magnet loop) but indexed at success (water loop); verify alignment.
+
+## Mechanics and hardware facts
+- Joystick: 89 mm shaft + interchangeable tip handle (rounded cube preferred, 38 mm bar), 1D-axis constrainer (`38x38x56` revision, not yet printed/fit-checked), Ledex holder. CAD (STEP + STL) in `mechanical/3d-print/`. Spring return and the steel target are still to be fitted.
+- Magnet target: zinc-plated mild-steel washers (SFS M4 `111952` 4.3×9×0.8 mm, M3 `132845` 3.2×9×0.8 mm; stack five for ~4 mm). Not stainless, aluminium, brass or neodymium.
+- Ledex `195224-230`: 12 V, 7 W, 20.7 Ω, ~0.58 A nominal, pull type, mounted axially opposing the push.
+- Water: bubble-free priming before every session; calibrated pulse volumes in `calibration/water-volume.md`.
+- Actuonix spout: bench-tested extend/settle/water/retract; mouse-relative extend voltage and settle time still to calibrate.
+
+## Source context
+- Design authority: Weekly Update 29/06/26 (approved by the PI). Upstream: Mathis et al. 2017 (2D joystick pull).
+- Training precedent: Mathis 2017; Wagner 2020 (manipulandum troubleshooting); Roth lever-push and Linares-García 2025 (push less natural than pull). Rest pad defines a pre-contact start state, not identical posture.
+- The untouched `Pull Behavior_march2020.vi` hierarchy stays on the rig PC as the fallback. Keep the dated working archive through at least the first successful animal pilot.
+- Repo docs: `README.md`, `RIG_INVENTORY.md`, `MAGNET_COMMISSIONING.md`, `EVENTS_LOGGER_PLAN.md`, `parameters/README.md`, `calibration/`.
+- Rig-PC Python is 3.6.4; Git for Windows 2.55 installed.
