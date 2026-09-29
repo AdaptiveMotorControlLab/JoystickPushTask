@@ -113,6 +113,7 @@ ENV/
 .spyderproject
 .spyproject
 .vscode/*
+# Force-tracked so the Mac and rig PCs share one plan. The ignore rule does not untrack it.
 .cursorrules
 
 # Rope project settings
