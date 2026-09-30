@@ -45,7 +45,9 @@ Merged 29 Sep 2026 so the Mac planning history and the rig-PC session notes live
   `07_expert.txt`, and every row retains `mag=0`. At the 30 Sep commit
   checkpoint, `Push Behaviour_MCHALABI.vi` was also modified in the working
   tree. The user explicitly requested committing and pushing everything, so
-  that saved binary is included with the bench preset and documentation.
+  that saved binary was included with the bench preset and documentation in
+  commit `77065bd` (`Add a full-system bench test preset.`), pushed to GitHub
+  `master` on 30 Sep 2026.
 - Acquisition loop in `avg joystick and frame trig lick3.vi`: the user rejected the 100-sample read. Logged resolution stays 1 kHz (Read = **10** samples). The sentence below that says to confirm a constant-100 Read was a mistake; ignore it. The input buffer **is** 100000. The in-loop `Bool (strict)` Value property node on `stop in` **is** deleted; `stop all` drives that loop. The `AvailSampPerChan` indicator was not added. A ~25–30 min no-animal run with rewards, stopped without -200279, is still not reported.
 - Rest pad: the 29 Sep description is the live one. Tape covers the FSR. A rigid puck, 2 mm tall and 3.15 mm diameter, is glued on the tape over the centre of the active circle. The divider is **1 MΩ** (the 100 kΩ step was skipped). Unloaded `ai2` reads about **0.6–0.825 V** and follows joystick X. Light finger contact does not cross the **1 V** threshold; a slightly stronger touch does. A resting mouse paw did not trigger. Pre-change baselines (0–0.005 V unloaded, ~0.1 V lightest touch, 0.01 V threshold) do not apply.
 - Next sensor: Quartzy request 1 for the SingleTact was submitted 29 Sep evening (RobotShop `RB-Pre-11` / `CS8-1N`; no tail extender). Not installed yet. Leave the FSR circuit as it is until that sensor is in hand. Load-cell notes stay fallbacks only.
