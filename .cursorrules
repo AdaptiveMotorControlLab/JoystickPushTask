@@ -16,6 +16,36 @@ Merged 29 Sep 2026 so the Mac planning history and the rig-PC session notes live
 
 ## Live status confirmed by user (29 Sep 2026, evening)
 
+- Full-system bench preset added 30 Sep 2026:
+  `parameters/push_bench_full-system.txt` has 20 identical 27-column rows for
+  the no-joystick/base-movement test. User clarified that home and start must
+  match the older expert-mouse files, not the current object-on day-one file.
+  Both zones now exactly match `training/07_expert.txt`: X/push
+  2.46–2.54 V, Y/lateral 2.40–2.65 V, `home TO=250 ms`, and
+  `start TO=0`. The bench success criterion remains push voltage
+  0.00–2.22 V with no end dwell. Each success commands a 50 ms cue,
+  500 ms reward delay, spout 0→3 V with 2000 ms settle, 185 ms water
+  (~6 µl), 1500 ms consumption, then retracts to 0 V. ITI and movement
+  window are both 5000 ms. `mag=0` and `light=0`; this file must not be used
+  to energise or commission the unfused Ledex/PVA. Set front-panel
+  `Session start spout (V)` to 0 V for this bench test so protraction and
+  retraction are visible. The operator can deliberately withhold rest-pad
+  contact, withhold the push for one movement window, then complete pushes
+  to exercise the gate, timeout/failure path, joystick criterion, complete
+  reward path and repeated cycles. `parameters/README.md` now gives the
+  no-animal preflight and ordered test procedure, including normal-Stop tests
+  from idle and from an active reward sequence. Static validation passed:
+  exactly 20 rows, exactly 27 tab-separated columns on every row, and
+  `mag=0` throughout before the calibration change; revalidation of the
+  revised expert-calibration rows is pending. `parameters/README.md` now
+  identifies this as a no-joystick/base-movement test, gives the expert home
+  box for manual positioning, and distinguishes its wide 0.00–2.22 V bench
+  success range from the narrow expert target. Revised validation passed:
+  20 rows, 27 columns each, every row's first 10 fields exactly match
+  `07_expert.txt`, and every row retains `mag=0`. At the 30 Sep commit
+  checkpoint, `Push Behaviour_MCHALABI.vi` was also modified in the working
+  tree. The user explicitly requested committing and pushing everything, so
+  that saved binary is included with the bench preset and documentation.
 - Acquisition loop in `avg joystick and frame trig lick3.vi`: the user rejected the 100-sample read. Logged resolution stays 1 kHz (Read = **10** samples). The sentence below that says to confirm a constant-100 Read was a mistake; ignore it. The input buffer **is** 100000. The in-loop `Bool (strict)` Value property node on `stop in` **is** deleted; `stop all` drives that loop. The `AvailSampPerChan` indicator was not added. A ~25–30 min no-animal run with rewards, stopped without -200279, is still not reported.
 - Rest pad: the 29 Sep description is the live one. Tape covers the FSR. A rigid puck, 2 mm tall and 3.15 mm diameter, is glued on the tape over the centre of the active circle. The divider is **1 MΩ** (the 100 kΩ step was skipped). Unloaded `ai2` reads about **0.6–0.825 V** and follows joystick X. Light finger contact does not cross the **1 V** threshold; a slightly stronger touch does. A resting mouse paw did not trigger. Pre-change baselines (0–0.005 V unloaded, ~0.1 V lightest touch, 0.01 V threshold) do not apply.
 - Next sensor: Quartzy request 1 for the SingleTact was submitted 29 Sep evening (RobotShop `RB-Pre-11` / `CS8-1N`; no tail extender). Not installed yet. Leave the FSR circuit as it is until that sensor is in hand. Load-cell notes stay fallbacks only.
