@@ -85,6 +85,7 @@ one important thing at a time.
 | File | Stage | Push end box (X) | ~mm from rest | `end TO` | Rows | Extra |
 | --- | --- | --- | --- | --- | --- | --- |
 | [push_bench_wide-zone.txt](push_bench_wide-zone.txt) | Hand test | 2.20–2.35 | 5–10 mm, wide | 50 | 80 | delay 0 |
+| [push_bench_full-system.txt](push_bench_full-system.txt) | No-joystick/base-movement full-system hand test | 0.00–2.22 | manually move base from expert-file home | 0 | 20 | expert home/start and 250 ms FSR gate; 500 ms reward delay; cue, spout 0→3→0 V, 6 µl water; `mag=0` |
 | [training/01_fsr_contact_shaping.txt](training/01_fsr_contact_shaping.txt) | 1b supervised FSR shaping | 0.00–5.00 | Joystick ignored within 0–5 V | **0** | 125 | 1 ms FSR gate; 2 s ITI; 8 µl; fixed 3 V spout |
 | [training/01_fsr_contact_shaping_0ms.txt](training/01_fsr_contact_shaping_0ms.txt) | 1b supervised FSR shaping, zero hold | 0.00–5.00 | Joystick ignored within 0–5 V | **0** | 125 | 0 ms FSR gate; still requires one sampled/loop-visible contact; otherwise matches 1 ms file |
 | [training/02_micro_push.txt](training/02_micro_push.txt) | 2 Discovery | 2.15–2.45 | past ~1.7 mm, no far wall | **0** | 200 | delay 0 |
@@ -105,6 +106,45 @@ one important thing at a time.
 block labels are not in the file; they are session notes until the magnet exists.
 
 Do not load `Full_shoterPull_Training_Task_RIG1` for the push task.
+
+## Full-system bench test
+
+Use `push_bench_full-system.txt` without an animal and without the joystick
+fitted; move the base by hand. Its home and start fields are copied exactly
+from the older expert-mouse file `training/07_expert.txt`: push/white
+2.46–2.54 V, lateral/red 2.40–2.65 V, `home TO=250 ms`, and `start TO=0`.
+The success threshold remains the wider bench range 0.00–2.22 V rather than
+the expert file's narrow target. Before Run:
+
+1. Keep the Class 3B laser keyed off. Do not power the unfused PVA/Ledex.
+   The file commands `mag=0`.
+2. Stop the manual-reward and standalone FSR-test VIs. Prime the water line
+   until it is bubble-free.
+3. Position the base so both live signals are inside the expert home box:
+   push/white 2.46–2.54 V and lateral/red 2.40–2.65 V. Set the
+   front-panel rest-pad threshold from the live signal; the current 1 MΩ FSR
+   setup has been using about 1 V and is known to ghost joystick X.
+4. Set `Session start spout (V)` to **0.0 V** so this test visibly exercises
+   both protraction and retraction.
+
+Suggested sequence:
+
+1. Leave the pad untouched and confirm no trial starts.
+2. Activate the pad while the object is home, then do not push for 5 s.
+   Confirm the movement timeout returns to Case 0 with no cue, water or spout
+   motion.
+3. Activate the pad again and push the white/push signal below 2.22 V within
+   5 s. Confirm one 50 ms cue, 500 ms delay, spout protraction to 3 V,
+   2000 ms settle, one 185 ms water pulse (~6 µl), 1500 ms consumption, and
+   retraction to 0 V.
+4. Repeat several successes, then press normal Stop during idle and during a
+   reward sequence on separate runs. Confirm all loops stop, the spout ends
+   retracted, acquisition indicators did not freeze, and no DAQ error appears.
+
+The parameter file can select criteria and output timings, but operator
+actions determine whether the rest-pad gate, timeout and success branches are
+actually exercised. It cannot safely test the magnet until the required 1 A
+inline fuse is installed and magnet commissioning resumes.
 
 ## Stages that are **not** a parameter file
 
