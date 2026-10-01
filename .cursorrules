@@ -14,18 +14,31 @@ Merged 29 Sep 2026 so the Mac planning history and the rig-PC session notes live
   - At Run, `Session start spout (V)` is **3.0 V** and the day-one file holds extend and retract at **3.00 V**, so the spout stays extended. Normal Stop still retracts.
   - PVA 1.6 unpowered preflight passed (`H–G` ~105 kΩ, coil ~21 Ω, supply +12 V). Powered testing is blocked: the lab has no 1 A inline fuse, and one must be ordered. Never power the Ledex coil from AO0.
 
-## FSR moved to `joystick pos` index 3 (1 Oct 2026, in progress)
+## FSR moved to `joystick pos` index 3 (1 Oct 2026)
 
-- Plan: `joystick pos` becomes Y, X, 0, FSR. In `avg joystick and frame trig
-  lick3.vi`, Build Array input 3 gets a DBL constant 0, input 4 gets the row-2
-  (FSR) mean, and the nonexistent row-3 (NaN) chain is deleted. In
-  `Push Behaviour_MCHALABI.vi` Case 0 the rest-pad Index Array changes from
-  element 2 to 3. Binary-file column order changes (col 3 = 0, col 4 = FSR);
-  check downstream analysis. The user edits the VIs by hand, guided stepwise.
-  Status: Part 1 (acquisition VI) done per user screenshot 1 Oct 15:35:
-  Build Array = Y, X, const 0, FSR (index-2 mean on input 4). Part 2 (Case 0
-  index 2 -> 3 in the main VI) done per user 1 Oct 15:42; no other Index Array
-  on `joystick pos` uses 2 or 3. Bench test passed 1 Oct 15:47 (FSR press, joystick sweep, behaves normally). Reason for the change: joystick file layout (Y, X, 0, FSR) must match the lab's DataJoint pipeline. Committing and pushing to GitHub master.
+- `joystick pos` is now Y, X, 0, FSR. In `avg joystick and frame trig
+  lick3.vi`, Build Array input 3 is a DBL constant 0 and input 4 is the row-2
+  (FSR) mean; the nonexistent row-3 (NaN) chain is deleted. In
+  `Push Behaviour_MCHALABI.vi` Case 0 the rest-pad Index Array is element 3.
+  Binary-file column order is col 3 = 0, col 4 = FSR. Bench test passed 1 Oct
+  15:47 (FSR press, joystick sweep, behaves normally). Reason: joystick file
+  layout must match the lab's DataJoint pipeline. On GitHub `master` as
+  `ad78692`. This Mac pulled it 1 Oct 2026 (fast-forward `a6efd53`..`ad78692`).
+
+## EVENTS logger (planned 1 Oct 2026, not implemented)
+
+- Full plan for the rig agent: `EVENTS_LOGGER_PLAN.md` (repo root). New file
+  `EVENTS_<name>`: big-endian float64, 4 per record `[code, sample_index,
+  unix_time_s, value]`, no size prefix. Codes 1 start, 2 case entered, 3 trial
+  start, 4 success (next to REWARD write), 5 timeout, 10-18 water-loop steps,
+  20/21 magnet, 90 heartbeat 1 s, 99 stop. Named queue `push events` +
+  reentrant `Log Event.vi` + one writer loop; acquisition loop untouched
+  except a possible `sample count` global (step 0: find the counter TRIAL /
+  REWARD use first).
+- Reason: DataJoint pipeline needs trial events and a LabVIEW timing file
+  (`TIMESTAMPS_LABVIEW_*.npy`, built later from code 4 by a Mac-side script)
+  for video sync. Camera runs on this PC, so PC Unix time is the shared clock.
+- Existing joystick/TRIAL/REWARD formats stay unchanged.
 
 ## Live status confirmed by user (29 Sep 2026, evening)
 
@@ -73,6 +86,9 @@ Merged 29 Sep 2026 so the Mac planning history and the rig-PC session notes live
 - Spout at Run: the later day-one notes are correct. Set `Session start spout (V)` to **3.0 V** before Run so the spout is already extended. In `02_micro_push_day1_5s_8ul.txt`, extend and retract are both **3.00 V**, settle is 0 ms, and consumption is 1500 ms. Normal Stop still commands retract to 0 V. The startup write of 500 (`-200561`) was the cluster-order bug and is treated as fixed.
 - Ledex / PVA: commissioning stopped at the fuse. The lab does not have a 1 A inline fuse; the user will order one (preferred: 5×20 mm inline holder plus a separate **1 A** fuse). Do not energise the coil, the PVA, or `MagnetPush_Dev1` until that fuse is in the 12 V positive lead. Unpowered checks already passed and do not need to be repeated for this reason.
  Fuse sourcing (1 Oct 2026): Conrad.ch lists the inline holder `TRU COMPONENTS TC-R3-32AA1` (art. 1587915, 5×20 mm, 20 A / 32 V DC, loose wire ends, 2 mm², comes with a 200 mm red lead, ~CHF 0.90, stock shown) and the 1 A fuse `ESKA 522.717` (5×20 mm, 1 A, 250 V, slow-blow, pack of 10). Fast-blow alternative: `Püschel FSF1,0B`. Galaxus also stocks Littelfuse 5×20 1 A fuses. Verified 1 Oct 2026: the holder page was readable (5×20 mm, 32 V DC, 20 A, flying leads, 2 mm², in stock, delivery Mon 5 Oct, CHF 0.83 each with a 3-piece line total of CHF 2.49 excl. VAT); the ESKA 522.717 page was blocked by Cloudflare, so its specs (5×20, 1 A, 250 V, slow-blow, 10 pcs) rest on the URL and the earlier category listing. The two parts are compatible. User is ordering both links via two Quartzy requests (vendor Conrad): fuse `524358-62` (ESKA 522.717, 10 pcs, CHF 1.62 ex VAT, qty 1) and holder `1587915-62` (TC-R3-32AA1, CHF 0.83 each ex VAT, qty 2–3 incl. a spare, note says wire on both ends needed; the product image shows a holder with two red leads). Mark both urgent, needed for Ledex/PVA commissioning. Check on arrival that the holder has a wire on both ends. Not yet fitted; the holder must go in the 12 V positive lead with a 1 A fuse (not 4 A or more).
+
+## Sync note (1 Oct 2026)
+This Mac pulled `a6efd53`..`ad78692` (`Move the FSR to joystick pos index 3 so the joystick file is Y, X, 0, FSR for the DataJoint pipeline.`). Local `master` matches `origin/master`. The FSR-index VI binaries and the in-progress plan note came with that commit. The only remaining local edit after the pull is this sync update.
 
 ## Sync note (29 Sep 2026)
 This Mac fast-forwarded `8c93c8c`..`fc9ce7e` (`7ff5f9f` FSR shaping presets and DAQ loop, `79156cd` 1 MΩ / SingleTact plan, `9fba141` SingleTact order links, `fc9ce7e` non-capacitive alternatives). Both `.cursorrules` copies were merged into this file afterward.
