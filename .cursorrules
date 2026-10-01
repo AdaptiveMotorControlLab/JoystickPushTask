@@ -121,7 +121,8 @@ Merged 29 Sep 2026 so the Mac planning history and the rig-PC session notes live
  step 6 (save, bench run, check file, commit). Progress about 55-60 percent.
  Note: TRIAL write is in the magnet loop and REWARD write in the water loop,
  so codes 3 and 4 should go next to those writes, not in Cases 2 and 4.
- Please save both VIs and make a git commit only when the user asks.
+ Committed and pushed 1 Oct 2026 evening as `2f966b4` (`Add the EVENTS
+ logger foundation for the push task.`) to GitHub `master`. Resume at step 3.
 
 ## Live status confirmed by user (29 Sep 2026, evening)
 
