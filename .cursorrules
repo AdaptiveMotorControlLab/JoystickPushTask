@@ -14,6 +14,19 @@ Merged 29 Sep 2026 so the Mac planning history and the rig-PC session notes live
   - At Run, `Session start spout (V)` is **3.0 V** and the day-one file holds extend and retract at **3.00 V**, so the spout stays extended. Normal Stop still retracts.
   - PVA 1.6 unpowered preflight passed (`H–G` ~105 kΩ, coil ~21 Ω, supply +12 V). Powered testing is blocked: the lab has no 1 A inline fuse, and one must be ordered. Never power the Ledex coil from AO0.
 
+## FSR moved to `joystick pos` index 3 (1 Oct 2026, in progress)
+
+- Plan: `joystick pos` becomes Y, X, 0, FSR. In `avg joystick and frame trig
+  lick3.vi`, Build Array input 3 gets a DBL constant 0, input 4 gets the row-2
+  (FSR) mean, and the nonexistent row-3 (NaN) chain is deleted. In
+  `Push Behaviour_MCHALABI.vi` Case 0 the rest-pad Index Array changes from
+  element 2 to 3. Binary-file column order changes (col 3 = 0, col 4 = FSR);
+  check downstream analysis. The user edits the VIs by hand, guided stepwise.
+  Status: Part 1 (acquisition VI) done per user screenshot 1 Oct 15:35:
+  Build Array = Y, X, const 0, FSR (index-2 mean on input 4). Part 2 (Case 0
+  index 2 -> 3 in the main VI) done per user 1 Oct 15:42; no other Index Array
+  on `joystick pos` uses 2 or 3. Bench test passed 1 Oct 15:47 (FSR press, joystick sweep, behaves normally). Reason for the change: joystick file layout (Y, X, 0, FSR) must match the lab's DataJoint pipeline. Committing and pushing to GitHub master.
+
 ## Live status confirmed by user (29 Sep 2026, evening)
 
 - Full-system bench preset added 30 Sep 2026:
