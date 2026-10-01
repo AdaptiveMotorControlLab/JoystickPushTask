@@ -8,7 +8,7 @@ Merged 29 Sep 2026 so the Mac planning history and the rig-PC session notes live
 - Current overrides (user-confirmed 29 Sep 2026, evening — see the next section):
   - Acquisition Read stays at **10 samples**. Buffer **100000** is installed. The in-loop `stop in` Value property node is deleted. Do not switch the Read to 100.
   - Rest-pad hardware is the **29 Sep** state: tape, 3.15 mm puck, **1 MΩ** divider, threshold about **1 V**, joystick X ghosting onto `ai2`. The 8 Sep "working, ~10 kΩ, tape only" description is obsolete.
-  - SingleTact Quartzy request 1 submitted 29 Sep evening: RobotShop calibrated `CS8-1N` (`RB-Pre-11`) only. No tail extender ordered. It is not on the rig yet.
+  - SingleTact purchase switched 30 Sep afternoon: the bank blocked the RobotShop checkout. Do not retry that card payment. Buy the calibrated `CS8-1N` from the manufacturer, PPS UK, at https://www.eu.singletact.com/micro-force-sensors/calibrated-sensors/p/cs8-1n (€124.50 ex VAT, matched board and 4 jumpers, no tail extender). It is not on the rig. Until it is bench-validated, mouse sessions stay on cue-then-water habituation.
   - Home voltage depends on whether the joystick shaft and object are fitted. Current object-on files are the 28 Sep day-one file and the two FSR shaping files, not the 2.50 V set.
   - The 27-column file order is correct. White/push goes in the columns named X. The historical table that calls X lateral is obsolete.
   - At Run, `Session start spout (V)` is **3.0 V** and the day-one file holds extend and retract at **3.00 V**, so the spout stays extended. Normal Stop still retracts.
@@ -50,7 +50,8 @@ Merged 29 Sep 2026 so the Mac planning history and the rig-PC session notes live
   `master` on 30 Sep 2026.
 - Acquisition loop in `avg joystick and frame trig lick3.vi`: the user rejected the 100-sample read. Logged resolution stays 1 kHz (Read = **10** samples). The sentence below that says to confirm a constant-100 Read was a mistake; ignore it. The input buffer **is** 100000. The in-loop `Bool (strict)` Value property node on `stop in` **is** deleted; `stop all` drives that loop. The `AvailSampPerChan` indicator was not added. A ~25–30 min no-animal run with rewards, stopped without -200279, is still not reported.
 - Rest pad: the 29 Sep description is the live one. Tape covers the FSR. A rigid puck, 2 mm tall and 3.15 mm diameter, is glued on the tape over the centre of the active circle. The divider is **1 MΩ** (the 100 kΩ step was skipped). Unloaded `ai2` reads about **0.6–0.825 V** and follows joystick X. Light finger contact does not cross the **1 V** threshold; a slightly stronger touch does. A resting mouse paw did not trigger. Pre-change baselines (0–0.005 V unloaded, ~0.1 V lightest touch, 0.01 V threshold) do not apply.
-- Next sensor: Quartzy request 1 for the SingleTact was submitted 29 Sep evening (RobotShop `RB-Pre-11` / `CS8-1N`; no tail extender). Not installed yet. Leave the FSR circuit as it is until that sensor is in hand. Load-cell notes stay fallbacks only.
+- Next sensor: the bank blocked the RobotShop checkout on 30 Sep. Buy `CS8-1N` from PPS UK (eu.singletact.com, €124.50 ex VAT) instead of retrying RobotShop. Not installed. Leave the FSR circuit as it is. Load-cell notes stay fallbacks only.
+- Mice while waiting (30 Sep): stay on stage-1 habituation. Use only `deliverWater_RIG1_cue.vi` (50 ms cue, then water). Set `Water on time (ms)` to 240 (~8 µl). Extend the spout to 3.0 V before the first reward and retract it to 0 V at the end; that VI does not move the spout. Keep the push VI closed so it does not share the buzzer line or gate trials on the FSR. Cap a session at 25 min and at the approved water limit; stop earlier when licking fades. Tally rewards. Leave `01_fsr_contact_shaping*.txt` and `02_micro_push_day1_5s_8ul.txt` unloaded until the SingleTact is mounted and bench-validated.
 - Joystick rest voltage changes if the shaft or the object is attached or removed. Remeasure home before loading an older file. For the current object-on setup, the later files are the ones to use:
   `parameters/training/02_micro_push_day1_5s_8ul.txt` (rest about 2.25 V, home 2.225–2.350, `home TO` 1 ms, reward 0.00–2.22, move time 5000 ms, water 240 ms, spout held at 3 V),
   `parameters/training/01_fsr_contact_shaping.txt`, and
@@ -58,6 +59,7 @@ Merged 29 Sep 2026 so the Mac planning history and the rig-PC session notes live
   `02_micro_push.txt` and stages 03–08 still use the 2.50 V / `home TO` 250 ms calibration. Do not treat those voltages as the live rest.
 - Spout at Run: the later day-one notes are correct. Set `Session start spout (V)` to **3.0 V** before Run so the spout is already extended. In `02_micro_push_day1_5s_8ul.txt`, extend and retract are both **3.00 V**, settle is 0 ms, and consumption is 1500 ms. Normal Stop still commands retract to 0 V. The startup write of 500 (`-200561`) was the cluster-order bug and is treated as fixed.
 - Ledex / PVA: commissioning stopped at the fuse. The lab does not have a 1 A inline fuse; the user will order one (preferred: 5×20 mm inline holder plus a separate **1 A** fuse). Do not energise the coil, the PVA, or `MagnetPush_Dev1` until that fuse is in the 12 V positive lead. Unpowered checks already passed and do not need to be repeated for this reason.
+ Fuse sourcing (1 Oct 2026): Conrad.ch lists the inline holder `TRU COMPONENTS TC-R3-32AA1` (art. 1587915, 5×20 mm, 20 A / 32 V DC, loose wire ends, 2 mm², comes with a 200 mm red lead, ~CHF 0.90, stock shown) and the 1 A fuse `ESKA 522.717` (5×20 mm, 1 A, 250 V, slow-blow, pack of 10). Fast-blow alternative: `Püschel FSF1,0B`. Galaxus also stocks Littelfuse 5×20 1 A fuses. Verified 1 Oct 2026: the holder page was readable (5×20 mm, 32 V DC, 20 A, flying leads, 2 mm², in stock, delivery Mon 5 Oct, CHF 0.83 each with a 3-piece line total of CHF 2.49 excl. VAT); the ESKA 522.717 page was blocked by Cloudflare, so its specs (5×20, 1 A, 250 V, slow-blow, 10 pcs) rest on the URL and the earlier category listing. The two parts are compatible. User is ordering both links via two Quartzy requests (vendor Conrad): fuse `524358-62` (ESKA 522.717, 10 pcs, CHF 1.62 ex VAT, qty 1) and holder `1587915-62` (TC-R3-32AA1, CHF 0.83 each ex VAT, qty 2–3 incl. a spare, note says wire on both ends needed; the product image shows a holder with two red leads). Mark both urgent, needed for Ledex/PVA commissioning. Check on arrival that the holder has a wire on both ends. Not yet fitted; the holder must go in the 12 V positive lead with a 1 A fuse (not 4 A or more).
 
 ## Sync note (29 Sep 2026)
 This Mac fast-forwarded `8c93c8c`..`fc9ce7e` (`7ff5f9f` FSR shaping presets and DAQ loop, `79156cd` 1 MΩ / SingleTact plan, `9fba141` SingleTact order links, `fc9ce7e` non-capacitive alternatives). Both `.cursorrules` copies were merged into this file afterward.
@@ -588,6 +590,21 @@ This Mac fast-forwarded `8c93c8c`..`fc9ce7e` (`7ff5f9f` FSR shaping presets and 
   now. Admin still places the external order on RobotShop; confirm the one
   listed unit is still in the cart, ex-VAT Swiss export price, and DHL/UPS
   express.
+- Quartzy approved request 1 on 30 Sep. The user started the RobotShop checkout
+  directly. The bank then flagged that page as a scam and blocked the payment.
+  Do not retry the card there. `eu.robotshop.com` is the real RobotShop Europe
+  shop (Venlo warehouse), and the block is treated as a reason to change
+  vendor, not as a prompt to override the bank. Order the same calibrated
+  `CS8-1N` from PPS UK:
+  https://www.eu.singletact.com/micro-force-sensors/calibrated-sensors/p/cs8-1n
+  €124.50 ex VAT, matched sensor and board, 4 jumpers, no tail extender.
+  The card statement should show PPS UK Limited, Glasgow. Swiss import VAT and
+  customs are paid on delivery. Ask for an express courier. Update the Quartzy
+  request so it is not also bought from RobotShop.
+- Swiss-supplier check 30 Sep: no Swiss listing for `CS8-1N`. SingleTact's
+  published EU/UK distributor is PPS UK, Glasgow. Conrad.ch, Galaxus, and
+  Digitec do not list it. Distrelec hits on "tact" are ordinary tactile
+  switches. Keep the approved RobotShop request.
 - Non-capacitive alternative with equal or better precision: miniature
   strain-gauge (resistive) single-point load cell under a small paw plate.
   Candidates: Phidgets 3139_0 / CZL639HD, 100 g, about 35×12×4 mm, 3.2 g,
