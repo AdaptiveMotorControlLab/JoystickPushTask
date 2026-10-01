@@ -39,6 +39,89 @@ Merged 29 Sep 2026 so the Mac planning history and the rig-PC session notes live
   (`TIMESTAMPS_LABVIEW_*.npy`, built later from code 4 by a Mac-side script)
   for video sync. Camera runs on this PC, so PC Unix time is the shared clock.
 - Existing joystick/TRIAL/REWARD formats stay unchanged.
+- Implementation started 1 Oct 2026 ~16:20 on the rig PC. The user edits the VIs
+ by hand (LabVIEW beginner), guided one step at a time. Currently at: backup
+ + step 0 (find the sample counter behind TRIAL col 2 / REWARD col 0).
+ Findings so far (main VI): Cases 2 and 4 contain no file writes (only
+ `trail start`, `Reward Count`, `start time`). REWARD writes are in the water
+ loop: `queue loop` then `frame count 2` (both Write to Binary File, prepend
+ size FALSE). TRIAL writes are in the magnet loop: `frame count 2`, two
+ elements from `trial queue`, `frame count 2`. File paths come from
+ `Water Reward File` and `magnet strength (trial)` + `File Name!`. Still to
+ find: where `queue loop` and `frame count 2` are written, to pick the
+ sample-index source. Code 4 may have to be logged in the water loop next to
+ the REWARD write rather than in Case 4.
+ STEP 0 RESULT (1 Oct 17:00): `queue loop` = iteration terminal `i` of the big
+ middle state-machine loop, written to a local `queue loop` indicator each
+ iteration (outside the cases). It is the sample index REWARD col 0 uses.
+ Decision: add DBL/I32 global `sample count` to `PushTask Globals.vi`, written
+ from `i` next to the `queue loop` terminal in the main VI (not in the 1 kHz
+ acquisition loop). TRIAL (magnet loop) does NOT store `queue loop`; it stores
+ `frame count 2` + two `trial queue` elements, so the plan's TRIAL-column-2
+ bench check must be re-derived. Still to confirm: that the main loop dequeues
+ exactly one `joystick pos` per iteration. Now at step C (create global).
+ STEP C DONE (1 Oct 17:05): global `sample count` exists in `PushTask Globals.vi`
+ and is written from `i` in the main loop; bench-checked that it rises with
+ `queue loop`. Next: confirm one dequeue per iteration, then step 1
+ (`Log Event.vi`).
+ Dequeue Element for `joystick pos` confirmed inside the big middle loop (user
+ did not report its timeout wiring; treat `queue loop` as approximate sample
+ index, bench test will show). Now at STEP 1: user building `Log Event.vi`
+ (inputs code, value, error in; reads `sample count`; Unix time = Get
+ Date/Time In Seconds as DBL minus 2082844800; Build Array of 4; named queue
+ `push events`; preallocated clone reentrant).
+ Log Event.vi diagram built and reviewed 1 Oct 17:35 (wiring correct). Pending
+ on user: connector pane check, reentrant setting, save. Next: step 2, writer
+ loop.
+ Reentrant (preallocated clone) set 1 Oct 17:37. Step 1 done. Now step 2a:
+ asking user for screenshots of how the TRIAL/REWARD/joystick paths are built
+ (`File Name!` string + path controls + Build Path) so the EVENTS_ path can be
+ made by copying that and changing the prefix.
+ PATH PATTERN CONFIRMED (1 Oct 17:50): FP path controls `Water Reward File`
+ (`C:\Users\Mathis_Lab_1\Desktop\RIG1_DATA\REWARD_`), `Joystick File`
+ (`...\joystick_`), `magnet strength (trial)` (`...\TRIAL_`); diagram = Path to
+ String + `File Name!` (FP string, e.g. `test76666`) -> Concatenate -> String to
+ Path -> Open/Create/Replace File ("replace or create with confirmation").
+ Plan: copy the TRIAL chain, new FP path `Events File` default
+ `C:\Users\Mathis_Lab_1\Desktop\RIG1_DATA\EVENTS_`, same `File Name!`. Writer
+ must Obtain Queue `push events` BEFORE calling Log Event code 1, or the first
+ event is lost (Log Event releases its own ref). Existing startup area also
+ makes queues `joystick pos` and `trial queue`/`trial index`.
+ Step 2a/2b done 1 Oct 17:58: `Events File` path chain + Open File + Obtain Queue
+ `push events` + Log Event (code 1) built outside the loops; user told to check
+ that the file refnum is not wired into Log Event. Now step 2c: writer While
+ loop (Dequeue 200 ms timeout, case on timed out, Write to Binary File with
+ prepend size FALSE, stop all -> stop). 2d = heartbeat (code 90 every 1 s),
+ 2e = after loop (code 99, Flush Queue, write remainder, Close File, Release
+ Queue force destroy TRUE). Watch for race: `stop all` still TRUE from last
+ run could end the writer at once.
+ 18:30: pre-loop block verified: Open File -> Obtain Queue `push events`
+ (element type 1D DBL array constant) -> Log Event(1, 0) outside loop, error
+ chain correct; queue ref and file refnum enter the new writer While loop via
+ two shift registers (queue top, file bottom); Log Event error out tunnelled
+ into the loop so code 1 is queued before the loop starts. Now building 2c
+ loop body.
+ 2c built by user 1 Oct ~18:40: Dequeue (200 ms) -> case on `timed out?` ->
+ False: Write to Binary File (prepend size F); `stop all` -> stop. Queue and
+ file enter via tunnels (no shift registers needed; after the loop use the
+ original wires from Open File / Obtain Queue). Error wire runs through a
+ shift register. Now 2d: heartbeat (Tick Count shift register, case at >=1000
+ ms calls Log Event code 90).
+ 2d built ~19:10 (shift register `last beat`, True: Log Event 90 + current tick,
+ False: old value). 2e (after loop) changed from the plan: Flush Queue cannot
+ return arrays of arrays, so drain with a second While loop (Dequeue timeout 0,
+ write on False case of timed out, stop on timed out), then Log Event 99 before
+ it, Close File, Release Queue (force destroy TRUE).
+ STEP 2 COMPLETE 1 Oct ~19:35 (user-built, Run arrow solid, not yet run or saved
+ as tested): writer loop with heartbeat, plus post-loop code 99, drain loop,
+ Close File, Release Queue. Remaining: step 3 (state transition logging: `previous
+ state` shift register, code 2 on change; code 3 in magnet loop next to TRIAL
+ write or Case 2; code 4 next to REWARD write in water loop; code 5 in Case 3
+ timeout branch), step 4 (water loop codes 10-18), step 5 (magnet loop 20/21),
+ step 6 (save, bench run, check file, commit). Progress about 55-60 percent.
+ Note: TRIAL write is in the magnet loop and REWARD write in the water loop,
+ so codes 3 and 4 should go next to those writes, not in Cases 2 and 4.
+ Please save both VIs and make a git commit only when the user asks.
 
 ## Live status confirmed by user (29 Sep 2026, evening)
 
