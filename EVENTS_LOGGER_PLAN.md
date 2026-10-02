@@ -197,8 +197,7 @@ Then check (this can be done on the Mac with Python):
 
 ## Not part of this step
 
-- `SETTINGS_<name>.txt` (front-panel values at session start): separate, small follow-up.
-- `make_labview_timing.py` (EVENTS -> `TIMESTAMPS_LABVIEW_*.npy` from code 4): written on the Mac after
-  the bench files arrive.
+- `SETTINGS_<name>.txt`: **dropped** (2 Oct 2026). Parameter file + EVENTS are enough; no LabVIEW work.
+- `make_labview_timing.py` (EVENTS -> `TIMESTAMPS_LABVIEW_*.npy`): done on the Mac in `scripts/`.
 - Any DataJoint change. The pipeline side (`push` schema, GUI field for the EVENTS file) is planned in the
   DataJoint repo and only starts once this file format is validated.
