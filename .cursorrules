@@ -123,6 +123,86 @@ Merged 29 Sep 2026 so the Mac planning history and the rig-PC session notes live
  so codes 3 and 4 should go next to those writes, not in Cases 2 and 4.
  Committed and pushed 1 Oct 2026 evening as `2f966b4` (`Add the EVENTS
  logger foundation for the push task.`) to GitHub `master`. Resume at step 3.
+ STEP 3a (2 Oct 2026, 16:15): the big state-machine Case Structure's selector is
+ fed by the left box of a shift register (initial 0); its right output tunnel
+ (next state; Case 0: inner case True gives 1, False gives 0) goes to the
+ shift register's right box. Simplified design (no `previous state` register):
+ Not Equal?(left-box state, next state) -> boolean Case Structure -> True:
+ Log Event code 2, value = next state as DBL. Placed right of the big case.
+ STEP 3a DONE 2 Oct ~16:20 (user-built). STEP 3b decisions: because the REWARD
+ write sits in the same frame as `Water_Dev1` HIGH (seconds after success),
+ codes 3/4/5 go in the main state-machine cases instead: Case 2 Log Event(3,0);
+ Case 4 Log Event(4,0) (true success moment; code 4 sample index will NOT equal
+ REWARD col 0, which is the water-on moment, so the bench check must match
+ code 15 to REWARD instead); Case 3 timeout branch = first inner case True
+ (elapsed > `move time`, outputs state 0): Log Event(5,0). Case 2 and Case 4
+ done by user; Case 3 pending.
+ STEP 3 DONE 2 Oct ~16:30 (Case 3 timeout branch Log Event(5,0) added).
+ STEP 4 plan (water loop, 2 Oct 16:35): flat sequence of ~12 frames (cue HIGH,
+ wait, cue LOW, wait delay, extend write, settle wait, water HIGH + REWARD
+ writes, ..., wait watertime, water LOW, consumption wait, retract). The DAQmx
+ writes have no error wires wired, so ordering uses frame order: each Log Event
+ goes at the START of the frame after its action (10 in frame after cue HIGH,
+ 11 after cue LOW, 12 after delay wait, 13 after extend, 14 after settle,
+ 15 after water HIGH, 16 after water LOW, 17 after consumption wait, 18 in a
+ NEW last frame after retract). Value = 0 for all on this first pass; real
+ values (extend V, water ms, retract V) to be wired later. Batch 1 = 10-13,
+ batch 2 = 14-18.
+ STEP 4 PLACED 2 Oct ~16:45: all nine Log Event calls (codes 10-18) placed in the
+ water-loop sequence, value 0. Now wiring real values into code 13 (extend V),
+ 15 (water ms) and 18 (retract V) from the same source wires as the
+ corresponding DAQmx write or wait; convert to DBL if needed. Next: step 5
+ magnet loop (codes 20 and 21).
+ STEP 4 DONE 2 Oct ~16:48 (values wired for 13, 15, 18).
+ STEP 5 plan (2 Oct 16:50): magnet loop = occurrence-wait loop; the "False"
+ (occurrence received) case holds a 4-frame flat sequence. Frame 0: laser
+ counter pulse setup + MagnetPush_Dev1 activation write (`mag`); Frame 1: wait
+ loop (`magtime`) plus laser Stop/Clear Task; Frame 2: reset write (0);
+ Frame 3: error pass/cleanup. Code 20 goes at the start of Frame 1 (outside
+ the inner wait loop), value = `mag` branched from its source; code 21 in
+ Frame 3, value 0. Do NOT touch the laser pulse nodes (Class 3B, keep keyed
+ off). The four icons at the bottom are the TRIAL file writes, not events.
+ STEP 5 DONE 2 Oct ~17:00 (CORRECTION to the plan above): the magnet loop
+ sequence actually has THREE frames: frame 1 = laser pulse setup + wait loop
+ (lasts the whole magnet pulse) + activation; frame 2 = reset write (0);
+ frame 3 = Log Event 21 (value 0, fine without error wire because frame order
+ forces it after the reset write). Log Event 20 stays at the START of frame 1
+ on the error wire, before the laser nodes (within a few ms of magnet on; moving
+ it to frame 2 would log the END of the pulse, so do not). Its value must come
+ from the `mag` wire. STEPS 1-5 ALL PLACED. Next: step 6 (save, bench run with
+ `parameters/push_bench_full-system.txt`, laser keyed OFF, no animal, check
+ EVENTS file, commit).
+ STEP 6 FIRST BENCH RUN 2 Oct 2026 ~17:04 (files `*_events_test` in
+ `C:\Users\Mathis_Lab_1\Desktop\RIG1_DATA`, push_bench_full-system.txt, no
+ animal, no camera, ~136 s). RESULT: PASSED. EVENTS = 7392 B = 231 records,
+ starts code 1, ends code 99. 7 code-3 == 7 TRIAL rows; TRIAL float32 column
+ index 2 == code-3 sample exactly (20009, 30016, 40662, ...). 4 code-4, 3
+ code-5. REWARD rows are two big-endian int32 (col 0 = sample, col 1 = 0) and
+ col 0 matches code 15 (water on) within 0-3 samples, NOT code 4. Each success
+ has 10-18 in order (13 value 3.0, 15 value 185). Heartbeat 1.001 s, ~1001
+ samples; fit slope 0.0010000 s/sample (max resid 15 ms). Joystick file 135,981
+ records of 40 B (5 doubles) vs code 99 sample 135,979. 20/21 present per trial
+ with value 0 (mag=0). KNOWN FLAW: code 1 has a stale sample (33046) because the
+ `sample count` global keeps its last value from the previous run; ignore code
+ 1's sample index in analysis (optional fix: reset the global before Log Event
+ 1). Python on the rig PC is 3.6.4 (no numpy checked); parsing done with struct.
+ STILL TO DO: 5 min run with the camera running (video sync check), stop from
+ inside a reward sequence, optional FSR press visible on camera, then
+ make_labview_timing.py on the Mac. Not committed yet at this point.
+ STALE-SAMPLE FIX (2 Oct ~17:10): the camera test is deferred to next session.
+ Fix being built: wrap the pre-loop Log Event(1, 0) in a 2-frame flat sequence;
+ frame 1 writes constant 0 to the `sample count` global, frame 2 holds the Log
+ Event. Verify with a short run (File Name! `events_test2`): code 1 sample
+ should be near 0.
+ STALE-SAMPLE FIX VERIFIED 2 Oct ~17:25 (files `*_events_test2`, 86.8 s):
+ EVENTS 4416 B = 138 records, code 1 now has sample 0, 4 trials (2 success,
+ 2 timeout), TRIAL col 2 == code-3 samples (20960, 37705, 57613, 75338), REWARD
+ col 0 (26154, 43536) ~ code 15 (26156, 43536), joystick 86,409 records vs
+ code 99 sample 86,408, samples monotonic. Heartbeats ~1.0 s with occasional
+ 1.1-1.2 s gaps (writer loop checks the heartbeat only once per Dequeue pass,
+ and Dequeue waits up to 200 ms; timestamps themselves are exact). Report
+ canvas: canvases/events-file-test2.canvas.tsx. Camera sync test deferred to
+ next session; not committed yet.
 
 ## Live status confirmed by user (29 Sep 2026, evening)
 
