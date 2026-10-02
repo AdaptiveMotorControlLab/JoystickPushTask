@@ -25,7 +25,7 @@ Merged 29 Sep 2026 so the Mac planning history and the rig-PC session notes live
   layout must match the lab's DataJoint pipeline. On GitHub `master` as
   `ad78692`. This Mac pulled it 1 Oct 2026 (fast-forward `a6efd53`..`ad78692`).
 
-## EVENTS logger (planned 1 Oct 2026, not implemented)
+## EVENTS logger (bench-validated 2 Oct 2026; on `master` as `f9a363c`)
 
 - Full plan for the rig agent: `EVENTS_LOGGER_PLAN.md` (repo root). New file
   `EVENTS_<name>`: big-endian float64, 4 per record `[code, sample_index,
@@ -39,6 +39,21 @@ Merged 29 Sep 2026 so the Mac planning history and the rig-PC session notes live
   (`TIMESTAMPS_LABVIEW_*.npy`, built later from code 4 by a Mac-side script)
   for video sync. Camera runs on this PC, so PC Unix time is the shared clock.
 - Existing joystick/TRIAL/REWARD formats stay unchanged.
+- IMPLEMENTED (commits 2f966b4, ca55426) and validated on the Mac 2 Oct with
+  `events_test2` (86.4 s, 4 trials, 2 rewards, 2 timeouts): code-3 samples ==
+  TRIAL col 2 exactly; session start sample 0; clock fit +5.8 ppm, max
+  residual 1.5 ms. REWARD rows are written at settle end / water on (codes
+  14/15), NOT at code 4. Code 99 sample is ~0.3 s stale (acquisition stops
+  first) and is excluded from fits. (`EVENTS_events_test`, an earlier run,
+  had a stale code-1 sample 33046; fixed by test2.)
+- `scripts/make_labview_timing.py` (numpy only): EVENTS_<name> + sibling
+  REWARD_/TRIAL_/joystick_ -> `TIMESTAMPS_LABVIEW_<name>.npy` = 1-D float64
+  Unix time per REWARD row via the sample->time fit. Refuses to write on
+  mismatched runs, empty REWARD, >5% fit outliers, drift >= 100 ms, or
+  (with `--camera`) rewards outside the video. Verified with the DataJoint
+  repo's own `align_joystick`: 0 NaN frames, <0.5 ms vs truth. Camera
+  TIMESTAMPS npy files are Python-2 pickled npy (loads fine, warning only).
+- SETTINGS txt dropped 2 Oct (user): parameter file + EVENTS suffice; no extra rig work.
 - Implementation started 1 Oct 2026 ~16:20 on the rig PC. The user edits the VIs
  by hand (LabVIEW beginner), guided one step at a time. Currently at: backup
  + step 0 (find the sample counter behind TRIAL col 2 / REWARD col 0).
@@ -202,7 +217,11 @@ Merged 29 Sep 2026 so the Mac planning history and the rig-PC session notes live
  1.1-1.2 s gaps (writer loop checks the heartbeat only once per Dequeue pass,
  and Dequeue waits up to 200 ms; timestamps themselves are exact). Report
  canvas: canvases/events-file-test2.canvas.tsx. Camera sync test deferred to
- next session; not committed yet.
+ next session. Committed and pushed 2 Oct 2026 as `f9a363c` (`Log trial,
+ reward, magnet and heartbeat events to the EVENTS file and fix the stale
+ session-start sample.`): steps 3–5 event codes, stale `sample count` reset
+ before code 1, plus `Push Behaviour_MCHALABI.vi` and `frame counter.vi`.
+ Still pending: camera sync run, stop-from-reward test.
 
 ## Live status confirmed by user (29 Sep 2026, evening)
 
@@ -251,8 +270,11 @@ Merged 29 Sep 2026 so the Mac planning history and the rig-PC session notes live
 - Ledex / PVA: commissioning stopped at the fuse. The lab does not have a 1 A inline fuse; the user will order one (preferred: 5×20 mm inline holder plus a separate **1 A** fuse). Do not energise the coil, the PVA, or `MagnetPush_Dev1` until that fuse is in the 12 V positive lead. Unpowered checks already passed and do not need to be repeated for this reason.
  Fuse sourcing (1 Oct 2026): Conrad.ch lists the inline holder `TRU COMPONENTS TC-R3-32AA1` (art. 1587915, 5×20 mm, 20 A / 32 V DC, loose wire ends, 2 mm², comes with a 200 mm red lead, ~CHF 0.90, stock shown) and the 1 A fuse `ESKA 522.717` (5×20 mm, 1 A, 250 V, slow-blow, pack of 10). Fast-blow alternative: `Püschel FSF1,0B`. Galaxus also stocks Littelfuse 5×20 1 A fuses. Verified 1 Oct 2026: the holder page was readable (5×20 mm, 32 V DC, 20 A, flying leads, 2 mm², in stock, delivery Mon 5 Oct, CHF 0.83 each with a 3-piece line total of CHF 2.49 excl. VAT); the ESKA 522.717 page was blocked by Cloudflare, so its specs (5×20, 1 A, 250 V, slow-blow, 10 pcs) rest on the URL and the earlier category listing. The two parts are compatible. User is ordering both links via two Quartzy requests (vendor Conrad): fuse `524358-62` (ESKA 522.717, 10 pcs, CHF 1.62 ex VAT, qty 1) and holder `1587915-62` (TC-R3-32AA1, CHF 0.83 each ex VAT, qty 2–3 incl. a spare, note says wire on both ends needed; the product image shows a holder with two red leads). Mark both urgent, needed for Ledex/PVA commissioning. Check on arrival that the holder has a wire on both ends. Not yet fitted; the holder must go in the 12 V positive lead with a 1 A fuse (not 4 A or more).
 
+## Sync note (2 Oct 2026)
+This Mac fast-forwarded `ca55426`..`f9a363c` (EVENTS steps 3–5 + stale-sample fix; bench-validated on rig), then added `scripts/make_labview_timing.py` and Mac-side EVENTS validation notes in `.cursorrules` / `EVENTS_LOGGER_PLAN.md`.
+
 ## Sync note (1 Oct 2026)
-This Mac pulled `a6efd53`..`ad78692` (`Move the FSR to joystick pos index 3 so the joystick file is Y, X, 0, FSR for the DataJoint pipeline.`). Local `master` matches `origin/master`. The FSR-index VI binaries and the in-progress plan note came with that commit. The only remaining local edit after the pull is this sync update.
+This Mac pulled `a6efd53`..`ad78692` (FSR to `joystick pos` index 3), committed/pushed `c81cc1b` (`EVENTS_LOGGER_PLAN.md`), then pulled `c81cc1b`..`ca55426` (EVENTS foundation `2f966b4`).
 
 ## Sync note (29 Sep 2026)
 This Mac fast-forwarded `8c93c8c`..`fc9ce7e` (`7ff5f9f` FSR shaping presets and DAQ loop, `79156cd` 1 MΩ / SingleTact plan, `9fba141` SingleTact order links, `fc9ce7e` non-capacitive alternatives). Both `.cursorrules` copies were merged into this file afterward.
