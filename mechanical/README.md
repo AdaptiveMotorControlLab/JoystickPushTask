@@ -30,7 +30,7 @@ push-biased surface that discourages grasping like the original pull handles.
 - [Joystick shaft](3d-print/joystick/README.md) — 89 mm STEP source and STL export
 - [Joystick bar handle](3d-print/joystick-handle-bar/README.md) — 38 mm STEP source and STL export
 - [Joystick rounded-cube handle](3d-print/joystick-handle-cube/README.md) — rounded-box STEP source and STL export
-- [Joystick 1D-axis constrainer](3d-print/joystick-1d-axis-constrainer/README.md) — 38 × 38 × 41 mm STEP source and STL export
+- [Joystick 1D-axis constrainer](3d-print/joystick-1d-axis-constrainer/README.md) — 38 × 38 × 56 mm STEP source and STL export
 - [Ledex holder](3d-print/ledex-holder/README.md) — holder for the Ledex `195224-230`, 30 mm axis STEP source and STL export
 
 One printed joystick, handle and 1D-axis constrainer are fitted for bench testing. Further

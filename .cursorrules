@@ -1374,6 +1374,10 @@ The checklist below was written on the Mac before the 28–29 Sep animal and DAQ
   - Follow-up audit 03/09/26: corrected AO occupancy (AO1 Actuonix occupied; AO0 magnet empty),
     standardized “1D-axis constrainer” terminology, marked old water/FSR notes as historical, and
     promoted the Würth washer-target specifications into tracked mechanical documentation.
+  - 1D-axis constrainer CAD updated 5 Oct 2026: user-edited STEP/STL replaces
+    `joystick_1d_axis_constrainer_38x38x41.*` with `38x38x56` in
+    `mechanical/3d-print/joystick-1d-axis-constrainer/`; READMEs updated. Not yet
+    printed or fit-checked on the rig.
 - [x] Begin LabVIEW mods — CORE SUCCESS PATH BENCH-FUNCTIONAL 18/08/26: rest-pad gate, cue, spout sequence and water delivery integrated
 - [x] Absorb 07/09/26 training-protocol planning (work-AI chat + old pull-task parameter files from the rig PC). Shaft/handle/constrainer are now fitted; still do **not** write numerical push files until home voltage, volts-to-mm, push-axis index and ROM are measured. Keep the 21-wide format; session-constant cue/delay/spout/FSR controls stay on the front panel until the live unbundle map is confirmed. Split FSR vs joystick **log files** later if needed; do **not** split them into two simultaneous NI-MAX AI tasks (PCIe-6321 has one AI timing engine).
 - [x] Live parameter unbundle mapped 08/09/26 (indices 0–20; `timeout`=18, `move time`=19, `light`=20)
