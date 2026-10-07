@@ -49,7 +49,13 @@ Merged 29 Sep 2026 so the Mac planning history and the rig-PC session notes live
   String To Path). Session `cmdline_test3` (3 rewards, 51.3 s, +1.8 ppm,
   mismatch 0.1 ms) wrote `TIMESTAMPS_LABVIEW_cmdline_test3.npy` automatically
   at Stop. Remaining: optional Merge Errors so the call waits for the REWARD/
-  TRIAL/joystick closes; save/close VI and commit. Remaining: user wires System Exec in
+  TRIAL/joystick closes; save/close VI and commit.
+  7 Oct 16:58: VI committed (`92c1cc5`) and pushed; user SKIPPED the Merge
+  Errors step. The auto timing call waits only for the EVENTS Close File and
+  Release Queue. Known small race: if the script runs before the other files
+  are closed it should fail its checks, not write a wrong file. Treat the
+  feature as done; revisit only if "Missing session file" or size errors
+  appear in `timing_log.txt`. Remaining: user wires System Exec in
   `Push Behaviour_MCHALABI.vi` (VI binary not edited by the agent).
 
 ## EVENTS logger (bench-validated 2 Oct 2026; on `master` as `f9a363c`)
