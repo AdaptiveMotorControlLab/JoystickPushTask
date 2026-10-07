@@ -86,6 +86,7 @@ one important thing at a time.
 | --- | --- | --- | --- | --- | --- | --- |
 | [push_bench_wide-zone.txt](push_bench_wide-zone.txt) | Hand test | 2.20–2.35 | 5–10 mm, wide | 50 | 80 | delay 0 |
 | [push_bench_full-system.txt](push_bench_full-system.txt) | No-joystick/base-movement full-system hand test | 0.00–2.22 | manually move base from expert-file home | 0 | 20 | expert home/start and 250 ms FSR gate; 500 ms reward delay; cue, spout 0→3→0 V, 6 µl water; `mag=0` |
+| [push_bench_full-system_nocue.txt](push_bench_full-system_nocue.txt) | Same as full-system bench test, silent | 0.00–2.22 | same as above | 0 | 20 | identical except `cue duration` = 0 ms (column 23), so the buzzer is not held HIGH |
 | [training/01_fsr_contact_shaping.txt](training/01_fsr_contact_shaping.txt) | 1b supervised FSR shaping | 0.00–5.00 | Joystick ignored within 0–5 V | **0** | 125 | 1 ms FSR gate; 2 s ITI; 8 µl; fixed 3 V spout |
 | [training/01_fsr_contact_shaping_0ms.txt](training/01_fsr_contact_shaping_0ms.txt) | 1b supervised FSR shaping, zero hold | 0.00–5.00 | Joystick ignored within 0–5 V | **0** | 125 | 0 ms FSR gate; still requires one sampled/loop-visible contact; otherwise matches 1 ms file |
 | [training/02_micro_push.txt](training/02_micro_push.txt) | 2 Discovery | 2.15–2.45 | past ~1.7 mm, no far wall | **0** | 200 | delay 0 |
