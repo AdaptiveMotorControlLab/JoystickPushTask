@@ -311,6 +311,71 @@ Merged 29 Sep 2026 so the Mac planning history and the rig-PC session notes live
  LOW, so a microsecond glitch is possible; if any click is heard, disconnect
  the buzzer from `P0.1` terminal 17. Listed in `parameters/README.md`.
 
+## Ledex / PVA commissioning resumed (7 Oct 2026)
+
+- User now has the 1 A fuse and the inline holder. Checkpoint 1 (unpowered
+ preflight) already passed on 27-29 Sep. Now at Checkpoint 2 (wiring, still
+ unpowered), step 2.1: verify the fuse marking is 1 A, the holder has a wire on
+ both ends, and continuity through the fused holder. Power stays off and the laser keyed off.
+ STEP 2.1 DONE 7 Oct ~17:20: user confirms the fuse is 1 A (ESKA 522.717) and
+ the holder is TC-R3-32AA1 with a wire on both ends. Fuse alone 0 ohm; holder
+ with fuse 0 ohm; holder without fuse OL. Next: step 2.2, 12 V power-side wiring
+ only (PSU + -> fuse holder -> PVA D; PSU - -> PVA F), supply unplugged,
+ Enable J left open, no coil and no AO0 connected yet.
+ STEP 2.2 DONE 7 Oct ~17:52: user reports the power side wired (supply +
+ through the fused holder to D; supply - to F), fuse left out, supply unplugged.
+ Holder lead is pre-tinned/stiff (material not stated in listings); user soldered
+ or crimped a thinner extension where a terminal needed it. Now step 2.3:
+ unpowered resistance checks (D-F not a short; with fuse in, + to D and - to F
+ about 0 ohm, + to F not 0 ohm; fuse out, + to D OL).
+ STEP 2.3 DONE 7 Oct ~18:12: all checks passed (D-F OL with fuse out = no short;
+ + to D and - to F about 0 ohm with fuse in; + to F not 0 ohm; + to D OL with
+ fuse out). Power side is wired and verified unpowered. Coil (C/A), command
+ (H/G) and Enable (J) are still NOT connected. Per Checkpoint 3 the first
+ power-up is done with the coil disconnected and J open. Next: step 3.1, set Imin
+ and Imax trimmers to minimum (identify from a photo of the PVA front), then
+ first power-up and measure D-F = about 12 V, LED red.
+ STEP 3.1 STARTED 7 Oct ~18:20: user photo shows five slotted trimmers left of
+ the LED on the PVA front panel. Datasheet legend order (assumed left to right):
+ 1 rising ramp, 2 falling ramp, 3 Imax, 4 Imin, 5 dither. Direction for minimum
+ is NOT stated in the datasheet; assumed counterclockwise, to be verified in
+ Checkpoint 4 by measuring current at 0 V command. User asked to turn trimmers
+ 4 and 3 counterclockwise to their stops (no forcing), leave 1, 2, 5 alone.
+ With coil and H/G disconnected and J open the trimmers cannot energise
+ anything, so this is low-risk before the Checkpoint 3 power-up.
+ STEP 3.2 DONE 7 Oct ~18:22: first power-up with only D/F connected (fuse in,
+ coil, H/G/J disconnected): LED red, D-F = 11.91 V, fuse not warm. Next: step
+ 3.3, NI-MAX init MagnetPush_Dev1 to 0.0 V, measure SCB-68A terminal 22 vs 55 =
+ 0 V before connecting H/G.
+ STEP 3.3 DONE 7 Oct ~18:31: NI-MAX Test Panel (Analog Output tab, Dev1/ao0,
+ 0.0 V) and DMM on SCB-68A terminal 22 vs 55 read about 0 V (user: check passed).
+ Note: user first opened the Analog Input tab by mistake; ao1 (spout) not touched.
+ Next: step 3.4, wire 22 -> H and 55 -> G with the 12 V supply unplugged, AO0 held
+ at 0 V, J open, coil still disconnected.
+ STEP 3.4 DONE 7 Oct ~18:44: user wired terminal 22 -> H and 55 -> G (twisted,
+ short; length advice: command wires 30-100 cm twisted, coil cable 1-2 m twisted
+ and kept away from ai0/ai1/ai2; plan is PVA outside the mouse box, only the
+ Ledex inside, re-test 0 V and a small command after moving). Unpowered
+ continuity readings for 22-H, 55-G, H-G (~105 kohm) and H/G to F were asked for
+ but not yet reported. Now step 3.5: power the PVA with J open (LED red) and
+ verify NI-MAX ao0 steps 0, 0.5, 1, 2 V reproduce across H-G.
+ 7 Oct ~18:48: user's first H-G resistance reading with the wires on the SCB
+ fluctuated (around 10, unit unreported) because the powered DAQ was driving ao0;
+ with the SCB end disconnected H-G read a stable 105 kohm. So the PVA input is
+ unchanged and the earlier reading stands. Next: reconnect 22/55, do the
+ remaining unpowered continuity checks, then power up and step ao0 0/0.5/1/2 V
+ while reading H-G (J open, LED red).
+ STEP 3.5 DONE 7 Oct ~18:53: with the PVA powered (J open, coil disconnected),
+ ao0 steps 0, 0.5, 1, 2 V were reproduced across H-G; returned to 0 V; LED stayed
+ red; nothing warm. CHECKPOINT 3 COMPLETE. Next: Checkpoint 4 step 4.1, wire the
+ Ledex to C/A with the DMM in series (10 A range) and a removable Enable lead to
+ J, all unpowered, steel target away.
+ STEP 3.1 DONE 7 Oct ~18:18: user turned Imax (3) and Imin (4) about 30 turns
+ counterclockwise each with no hard stop (consistent with a multi-turn slip-clutch
+ trimmer at its end). Direction still to be verified by current measurement in
+ Checkpoint 4. Next: step 3.2, first power-up with fuse in, coil and H/G/J
+ disconnected: measure D-F about 12 V, LED red.
+
 ## Sync note (2 Oct 2026)
 This Mac fast-forwarded `ca55426`..`f9a363c` (EVENTS steps 3–5 + stale-sample fix; bench-validated on rig), then committed and pushed `6ba7e38` (`Add the Mac script that builds LABVIEW timing files from EVENTS data.`): `scripts/make_labview_timing.py` plus Mac-side EVENTS validation notes. Local `master` matches `origin/master`.
 
