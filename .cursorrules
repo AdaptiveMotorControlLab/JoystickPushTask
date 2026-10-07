@@ -25,6 +25,33 @@ Merged 29 Sep 2026 so the Mac planning history and the rig-PC session notes live
   layout must match the lab's DataJoint pipeline. On GitHub `master` as
   `ad78692`. This Mac pulled it 1 Oct 2026 (fast-forward `a6efd53`..`ad78692`).
 
+## Auto timing file on Stop (planned 2 Oct 2026, resumed 7 Oct)
+
+- Idea: call `scripts/make_labview_timing.py EVENTS_<name>` from the push VI via
+  System Exec.vi after all loops exit and session files are closed (not inside
+  the stop loop). Needs python + numpy visible to LabVIEW (use full python.exe
+  path). Script exits non-zero and writes nothing on failed checks, e.g. a
+  session with no rewards. Abort skips it. Step 1 (7 Oct): run the script by
+  hand on a real session's files and confirm it writes
+  `TIMESTAMPS_LABVIEW_<name>.npy`; then wire System Exec.
+- 7 Oct: step 1 PASSED on `Desktop\RIG1_DATA\EVENTS_events_test2` (2 rewards,
+  +5.9 ppm, mismatch 0.1 ms). Rig python is
+  `C:\Users\Mathis_Lab_1\AppData\Local\Programs\Python\Python36-32\python.exe`
+  (3.6.4, numpy OK; the WindowsApps `python.exe` is only a stub).
+  Added `scripts/run_timing.bat "<EVENTS path>"`: runs the script with that
+  python, saves output to `timing_log.txt` beside EVENTS, returns exit code
+  (0 ok, 1 failed). Tested ok and fail. 7 Oct 16:33: user wired System Exec
+  after the EVENTS Close File/Release Queue with a HARD-CODED events_test2
+  path; it runs from LabVIEW at Stop (twice) and prints the script output.
+  Next: replace the constant with the live EVENTS path, then wait for the
+  other file closes (Merge Errors).
+  7 Oct 16:44: live path wired (branch from the Search/Replace string before
+  String To Path). Session `cmdline_test3` (3 rewards, 51.3 s, +1.8 ppm,
+  mismatch 0.1 ms) wrote `TIMESTAMPS_LABVIEW_cmdline_test3.npy` automatically
+  at Stop. Remaining: optional Merge Errors so the call waits for the REWARD/
+  TRIAL/joystick closes; save/close VI and commit. Remaining: user wires System Exec in
+  `Push Behaviour_MCHALABI.vi` (VI binary not edited by the agent).
+
 ## EVENTS logger (bench-validated 2 Oct 2026; on `master` as `f9a363c`)
 
 - Full plan for the rig agent: `EVENTS_LOGGER_PLAN.md` (repo root). New file
@@ -269,6 +296,14 @@ Merged 29 Sep 2026 so the Mac planning history and the rig-PC session notes live
 - Spout at Run: the later day-one notes are correct. Set `Session start spout (V)` to **3.0 V** before Run so the spout is already extended. In `02_micro_push_day1_5s_8ul.txt`, extend and retract are both **3.00 V**, settle is 0 ms, and consumption is 1500 ms. Normal Stop still commands retract to 0 V. The startup write of 500 (`-200561`) was the cluster-order bug and is treated as fixed.
 - Ledex / PVA: commissioning stopped at the fuse. The lab does not have a 1 A inline fuse; the user will order one (preferred: 5×20 mm inline holder plus a separate **1 A** fuse). Do not energise the coil, the PVA, or `MagnetPush_Dev1` until that fuse is in the 12 V positive lead. Unpowered checks already passed and do not need to be repeated for this reason.
  Fuse sourcing (1 Oct 2026): Conrad.ch lists the inline holder `TRU COMPONENTS TC-R3-32AA1` (art. 1587915, 5×20 mm, 20 A / 32 V DC, loose wire ends, 2 mm², comes with a 200 mm red lead, ~CHF 0.90, stock shown) and the 1 A fuse `ESKA 522.717` (5×20 mm, 1 A, 250 V, slow-blow, pack of 10). Fast-blow alternative: `Püschel FSF1,0B`. Galaxus also stocks Littelfuse 5×20 1 A fuses. Verified 1 Oct 2026: the holder page was readable (5×20 mm, 32 V DC, 20 A, flying leads, 2 mm², in stock, delivery Mon 5 Oct, CHF 0.83 each with a 3-piece line total of CHF 2.49 excl. VAT); the ESKA 522.717 page was blocked by Cloudflare, so its specs (5×20, 1 A, 250 V, slow-blow, 10 pcs) rest on the URL and the earlier category listing. The two parts are compatible. User is ordering both links via two ordering-system requests (vendor Conrad): fuse `524358-62` (ESKA 522.717, 10 pcs, CHF 1.62 ex VAT, qty 1) and holder `1587915-62` (TC-R3-32AA1, CHF 0.83 each ex VAT, qty 2–3 incl. a spare, note says wire on both ends needed; the product image shows a holder with two red leads). Mark both urgent, needed for Ledex/PVA commissioning. Check on arrival that the holder has a wire on both ends. Not yet fitted; the holder must go in the 12 V positive lead with a 1 A fuse (not 4 A or more).
+
+## Silent bench preset (7 Oct 2026)
+
+- Added `parameters/push_bench_full-system_nocue.txt`: copy of
+ `push_bench_full-system.txt` with column 23 `cue duration` = 0 ms in all 20
+ rows (27 columns each, validated). The cue frame still runs HIGH, wait 0,
+ LOW, so a microsecond glitch is possible; if any click is heard, disconnect
+ the buzzer from `P0.1` terminal 17. Listed in `parameters/README.md`.
 
 ## Sync note (2 Oct 2026)
 This Mac fast-forwarded `ca55426`..`f9a363c` (EVENTS steps 3–5 + stale-sample fix; bench-validated on rig), then committed and pushed `6ba7e38` (`Add the Mac script that builds LABVIEW timing files from EVENTS data.`): `scripts/make_labview_timing.py` plus Mac-side EVENTS validation notes. Local `master` matches `origin/master`.
