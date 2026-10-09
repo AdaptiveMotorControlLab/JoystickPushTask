@@ -377,7 +377,7 @@ Consequences:
 - Ordered 27/08/26 from Contact Evolution SA, Payerne and received 02/09/26:
   **Ledex / Johnson Electric `195224-230`** (tubular STA 75L pull, 12 VDC, 7 W)
   (https://shop.contact-evolution.ch/en/home/26325-195224-230.html).
-  The Ledex is the Swiss/EU equivalent of the original McMaster `69905K25`. The Ledex is not yet mounted or wired.
+  The Ledex is the Swiss/EU equivalent of the original McMaster `69905K25`. It is not yet mounted or wired.
   Install **axially** (opposing the push), not laterally.
   Coil driver ordered 25/09/26: Hydraulik-Kompetenz **PVA 1.6 0–10 V**
   (CHF 260; not the 4–20 mA SKU). It is a current-regulated PWM amplifier. AO0 is the
