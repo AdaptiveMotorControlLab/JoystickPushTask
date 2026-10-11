@@ -3,8 +3,10 @@
 **Status 11/10/2026:** Checkpoints 1–4 done on the bench (wiring verified, 1 A fuse fitted, coil
 current vs AO0 measured: 10 V gives 0.31 A at minimum `Imax`; table in `calibration/README.md`).
 Checkpoint 5 waits for the printed holder. Plunger must stay fitted and seated (without it the
-coil gives no usable pull). A FEMM estimate of the pull on the washer target is in
-`simulations/ledex_femm/` (grams-level, falls steeply with gap); measure it with a jig before use.
+coil gives no usable pull). A FEMM estimate of the pull on the washer target, calibrated against
+the datasheet force-stroke curves, is in `simulations/ledex_femm/` (see its "Calibration against
+the datasheet" section): about 1 g at 2 mm and 10 V for five M3 washers, roughly ∝ current², so
+only ~0.06 g at 1 V; falls ~2× per mm. Measure it with a jig before use.
 
 **Status 27/09/2026:** The Hydraulik-Kompetenz **PVA 1.6 0–10 V** driver is now physically
 available at the training rig. The Ledex `195224-230`, reserved 12 V / 1 A Goobay supply,
