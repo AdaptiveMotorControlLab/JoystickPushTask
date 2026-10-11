@@ -220,6 +220,78 @@ def plot_fieldmaps():
     save(fig, "fieldmaps.png")
 
 
+def draw_half_panel(ax, tag, gap, a, vmax=50.0):
+    """Side view with the solenoid axis horizontal (bottom edge). Back of the coil on the left, plunger tip pointing
+    right toward the target. Only the half above the axis (r >= 0) is drawn."""
+    r, z, br, bz, bm = load_grid(os.path.join(RES, "fieldgrid_{}_{:.3f}A.csv".format(tag, a)))
+    x = -z[::-1]                          # x = distance along the axis, increasing toward the tip side
+    flip = lambda m: m[::-1, :].T         # shape (len(r), len(x))
+    im = ax.pcolormesh(x, r, np.clip(flip(bm) * 1000, 0, vmax), vmin=0, vmax=vmax, cmap="inferno", shading="auto")
+    ax.streamplot(x, r, -flip(bz), flip(br), color="w", linewidth=0.4, density=1.0, arrowsize=0.5)
+    kw = dict(color="c", lw=0.9)
+    ax.plot([-5, PROTRUDE, PROTRUDE], [3.91, 3.91, 0], **kw)           # plunger side and tip
+    ax.plot([0, 0, -5], [4.06, 9.78, 9.78], **kw)                      # front face, case wall
+    ax.plot([0, -2.5, -2.5, -5], [4.06, 4.06, 8.28, 8.28], **kw)       # bore, front plate
+    if gap is not None:
+        x2 = PROTRUDE + gap
+        ax.add_patch(plt.Rectangle((x2, 1.6), 4, 2.9, fill=False, ec="c", lw=1.2))
+        ax.text(x2 + 2, 5.0, "target", color="c", fontsize=7, ha="center", va="bottom")
+    ax.axhline(0, color="grey", lw=0.6, ls=":")
+    ax.set_aspect("equal")
+    ax.set_xlim(-5, 25)
+    ax.set_ylim(0, 14)
+    ax.set_title(("No target, " if gap is None else "Target 2 mm from tip, ") + current_label(a), fontsize=9)
+    ax.set_xlabel("position along the axis (mm)", fontsize=7)
+    ax.set_ylabel("distance from axis (mm)", fontsize=8)
+    return im
+
+
+def style_colorbar(cb):
+    cb.set_ticks([0, 10, 20, 30, 40, 50])
+    cb.set_ticklabels(["0 mT (no field)", "10 mT", "20 mT", "30 mT", "40 mT", "50 mT or more"])
+    cb.set_label("field strength |B| in mT (brighter = stronger)", fontsize=9)
+    cb.ax.tick_params(labelsize=8)
+
+
+NOTE = ("Side view, cut through the solenoid axis (bottom edge, dotted); only the half above the axis is drawn because the\n"
+        "part is round: spin it around the bottom edge to get the full shape.\n0 mm = front face of the solenoid, plunger tip points right. White lines = field direction; cyan = case, plunger, target.")
+
+
+def plot_readable():
+    """Readable field figures in figures/readable/: one overview (half sections) and one PNG per panel."""
+    top = [0.074, 0.106, 0.180, 0.310, 0.580]
+    bottom = [0.074, 0.310, 0.580]
+    panels = [("notarget", None, a) for a in top] + [("washers5_gap2mm", 2, a) for a in bottom]
+    if not all(os.path.exists(os.path.join(RES, "fieldgrid_{}_{:.3f}A.csv".format(t, a))) for t, _, a in panels):
+        return
+    out = os.path.join(HERE, "figures", "readable")
+    os.makedirs(out, exist_ok=True)
+    no_target = panels[:5]
+    with_target = panels[5:]
+    fig = plt.figure(figsize=(18, 8))
+    gs = fig.add_gridspec(2, 6, width_ratios=[1, 1, 1, 1, 1, 0.05], wspace=0.25, hspace=0.35)
+    im = None
+    for j, p in enumerate(no_target):
+        im = draw_half_panel(fig.add_subplot(gs[0, j]), *p)
+    for j, p in enumerate(with_target):
+        im = draw_half_panel(fig.add_subplot(gs[1, j]), *p)
+    style_colorbar(fig.colorbar(im, cax=fig.add_subplot(gs[:, 5]), extend="max"))
+    fig.suptitle("Ledex field around the plunger tip\n" + NOTE, fontsize=10)
+    path = os.path.join(out, "overview_readable.png")
+    fig.savefig(path, dpi=150, bbox_inches="tight")
+    plt.close(fig)
+    print("wrote", os.path.relpath(path, HERE))
+    for tag, gap, a in panels:
+        fig, ax = plt.subplots(figsize=(9, 4.5))
+        im = draw_half_panel(ax, tag, gap, a)
+        style_colorbar(fig.colorbar(im, ax=ax, extend="max", shrink=0.8, pad=0.03))
+        fig.text(0.5, 0.0, NOTE, ha="center", va="top", fontsize=6.5)
+        name = "{}_{:.3f}A.png".format("notarget" if gap is None else "target_gap2mm", a)
+        fig.savefig(os.path.join(out, name), dpi=150, bbox_inches="tight")
+        plt.close(fig)
+        print("wrote figures/readable/" + name)
+
+
 def plot_axial_profile():
     files = sorted(glob.glob(os.path.join(RES, "fieldgrid_notarget_*.csv")))
     if not files:
@@ -249,6 +321,7 @@ def main():
     plot_stroke(rows)
     plot_sensitivity(rows)
     plot_fieldmaps()
+    plot_readable()
     plot_axial_profile()
     if args.show:
         plt.show()

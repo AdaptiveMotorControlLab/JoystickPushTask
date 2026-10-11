@@ -6,7 +6,8 @@ $femm = "C:\femm42\bin\femm.exe"
 $here = Split-Path -Parent $MyInvocation.MyCommand.Path
 $main = (Join-Path $here "ledex_washer.lua") -replace '\\', '/'
 $tmp = Join-Path $env:LOCALAPPDATA "Temp\ledex_femm"
-New-Item -ItemType Directory -Force -Path $tmp, (Join-Path $here "figures") | Out-Null
+$femmdir = Join-Path $here "figures\plots\femm"
+New-Item -ItemType Directory -Force -Path $tmp, $femmdir | Out-Null
 Add-Type -AssemblyName System.Drawing
 
 function Invoke-Femm([string]$preamble, [string]$name) {
@@ -40,7 +41,7 @@ foreach ($m in $maps) {
     Invoke-Femm $pre $m[3]
     if (Test-Path $bmp) {
         $img = [System.Drawing.Image]::FromFile($bmp)
-        $img.Save((Join-Path $here ("figures\" + $m[3] + ".png")), [System.Drawing.Imaging.ImageFormat]::Png)
+        $img.Save((Join-Path $femmdir ($m[3] + ".png")), [System.Drawing.Imaging.ImageFormat]::Png)
         $img.Dispose()
         Remove-Item $bmp
     }
@@ -61,7 +62,7 @@ $g.Clear([System.Drawing.Color]::White)
 $font = New-Object System.Drawing.Font "Segoe UI", 16
 for ($r = 0; $r -lt $rows.Count; $r++) {
     for ($c = 0; $c -lt $rows[$r].Count; $c++) {
-        $png = Join-Path $here ("figures\" + $rows[$r][$c][0] + ".png")
+        $png = Join-Path $femmdir ($rows[$r][$c][0] + ".png")
         if (-not (Test-Path $png)) { continue }
         $img = [System.Drawing.Image]::FromFile($png)
         $y = $r * ($th + $cap)
@@ -71,5 +72,5 @@ for ($r = 0; $r -lt $rows.Count; $r++) {
     }
 }
 $g.Dispose()
-$sheet.Save((Join-Path $here "figures\overview.png"), [System.Drawing.Imaging.ImageFormat]::Png)
+$sheet.Save((Join-Path $femmdir "overview.png"), [System.Drawing.Imaging.ImageFormat]::Png)
 $sheet.Dispose()

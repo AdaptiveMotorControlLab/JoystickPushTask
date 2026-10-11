@@ -57,7 +57,8 @@ Pull on five stacked M3 washers (3.2 × 9 × 0.8 mm, mild steel), plunger seated
 - `ledex_washer.lua`: the FEMM 4.2 model (modes `forces`, `profile`, `stroke`, `sweep`,
   `fieldgrid`, `map`).
 - `run_femm.ps1`: first runs (`results/forces.csv`, `axial_B.csv`, `stroke.csv`) and FEMM
-  screenshots in `figures/` (`overview.png` and one PNG per case; colour scale 0–0.05 T).
+  FEMM screenshots in `figures/plots/femm/` (`overview.png` and one PNG per case; colour scale 0–0.05 T).
+  Matplotlib redraws with readable legends are in `figures/readable/`.
 - `run_sweeps.ps1`: all sweeps and field grids (about 30 min on the rig PC).
 - `plot_results.py`: makes `figures/plots/*.png` from the CSVs (numpy + matplotlib; runs on the
   Mac). Edit it to plot things differently.
