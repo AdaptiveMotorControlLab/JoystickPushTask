@@ -1,5 +1,11 @@
 # Ledex / PVA 1.6 commissioning handoff
 
+**Status 11/10/2026:** Checkpoints 1–4 done on the bench (wiring verified, 1 A fuse fitted, coil
+current vs AO0 measured: 10 V gives 0.31 A at minimum `Imax`; table in `calibration/README.md`).
+Checkpoint 5 waits for the printed holder. Plunger must stay fitted and seated (without it the
+coil gives no usable pull). A FEMM estimate of the pull on the washer target is in
+`simulations/ledex_femm/` (grams-level, falls steeply with gap); measure it with a jig before use.
+
 **Status 27/09/2026:** The Hydraulik-Kompetenz **PVA 1.6 0–10 V** driver is now physically
 available at the training rig. The Ledex `195224-230`, reserved 12 V / 1 A Goobay supply,
 `MagnetPush_Dev1` NI-MAX task and LabVIEW AO0 path already exist, but the driver and coil have

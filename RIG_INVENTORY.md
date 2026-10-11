@@ -355,7 +355,7 @@ Digital port 0:
 
 ### Terminals confirmed physically empty
 
-- **22 (AO 0)** — reserved for the axial-resistance magnet (EU/CH Ledex equivalent); currently no wire landed
+- **22 (AO 0)** — axial-resistance magnet command, wired to PVA `H` (with 55 AO GND to PVA `G`) on 7 Oct 2026
 - 37 (PFI 8) and 40 (PFI 13) — not in the occupied list
 - AI10 terminal 31 remains unused because FSR AI2 uses RSE, not differential
 - Remaining unused P0 lines: P0.2–P0.7
@@ -364,8 +364,9 @@ Digital port 0:
 
 ### Analog-output split and current physical state
 
-AO1 terminal 21 is now physically wired to the Actuonix command input. AO0 terminal 22 remains
-physically empty until the received training-rig magnet is installed. The old `Magnets_Dev1` task still
+AO1 terminal 21 is now physically wired to the Actuonix command input. AO0 terminal 22 is wired
+to the PVA 1.6 command input `H` (terminal 55 AO GND to `G`) since 7 Oct 2026; the Ledex is
+bench-commissioned but not yet mounted. The old `Magnets_Dev1` task still
 contains both channels but is not used by the working push VI; `MagnetPush_Dev1` owns AO0 and
 `LickSpout_Dev1` owns AO1.
 
@@ -377,7 +378,8 @@ Consequences:
 - Ordered 27/08/26 from Contact Evolution SA, Payerne and received 02/09/26:
   **Ledex / Johnson Electric `195224-230`** (tubular STA 75L pull, 12 VDC, 7 W)
   (https://shop.contact-evolution.ch/en/home/26325-195224-230.html).
-  The Ledex is the Swiss/EU equivalent of the original McMaster `69905K25`. It is not yet mounted or wired.
+  The Ledex is the Swiss/EU equivalent of the original McMaster `69905K25`. Bench-commissioned through
+  the PVA on 11 Oct 2026 (current vs AO0 in `calibration/README.md`); not yet mounted (holder not printed).
   Install **axially** (opposing the push), not laterally.
   Coil driver ordered 25/09/26: Hydraulik-Kompetenz **PVA 1.6 0–10 V**
   (CHF 260; not the 4–20 mA SKU). It is a current-regulated PWM amplifier. AO0 is the
@@ -457,7 +459,8 @@ add a small transistor/MOSFET driver if the tone is weak or the line is loaded.
 - [x] Ordered 27/08/26: Ledex `195224-230` from Contact Evolution SA (Payerne), the Swiss/EU equivalent of McMaster `69905K25`
 - [x] Ledex `195224-230` received 02/09/26; holder STEP model added 03/09/26
 - [x] Ordered 25/09/26: Hydraulik-Kompetenz PVA 1.6 0–10 V (CHF 260) as the Ledex coil driver. Not the 4–20 mA SKU. Bürkert Type 8605 / `316532` stays the ~2 December spare unless cancelled
-- [ ] Print/fit holder, install the PVA driver, wire AO0 terminal 22 and force-calibrate the Ledex
+- [x] PVA driver installed (1 A fuse in the 12 V lead) and AO0 terminal 22 wired; coil current vs AO0 measured 11/10/26
+- [ ] Print/fit holder and force-calibrate the Ledex on the steel target
 - [x] `Water_Dev1`: `Dev1/port0/line0`, digital line output, on-demand, not inverted in NI-MAX
 - [x] `frame counter_Dev1`: `Dev1/ctr0`, rising edges from `PFI8`
 - [x] `MyPulseOutputTask`: `Dev1/ctr1` output on `PFI13`, continuous 50 Hz pulse train
@@ -482,10 +485,10 @@ add a small transistor/MOSFET driver if the tone is weak or the line is loaded.
 | FSR 402 rest pad      | `Dev1/ai2`         | signal → 65, ground → AI GND (64), excitation → +5 V (**8**, not 14)                        | replaced 08/09/26 after 04/09 tail rip; fixed on rail with protective tape; working. Threshold/hysteresis still to calibrate |
 | Adafruit #1536 buzzer | `Dev1/port0/line1` | `+` → 17 (P0.1), `−` → 15 (D GND)                                                           | installed; NI-MAX and 50 ms LabVIEW success-cue tests passed                                            |
 | Actuonix lick spout   | `Dev1/ao1`         | signal → 21, reference → AO GND (54), motor power from separate 12 V PSU with shared ground | installed; `LickSpout_Dev1` and full extend/water/retract sequence passed across three spaced trials    |
-| Axial magnet Ledex `195224-230` | `Dev1/ao0` | command → 22, AO GND shared with drive electronics; coil power **not** from the DAQ pin | coil received 02/09/26; driver ordered 25/09/26 (Hydraulik-Kompetenz PVA 1.6 0–10 V). Not mounted or wired. Mount axially; steel-ring target on push object |
+| Axial magnet Ledex `195224-230` | `Dev1/ao0` | command → 22, AO GND shared with drive electronics; coil power **not** from the DAQ pin | PVA 1.6 0–10 V driver wired (22 → `H`, 55 → `G`, coil on `C`/`A`, Enable `J` on a removable lead); bench-commissioned 11/10/26, 10 V gives 0.31 A at minimum Imax. Not mounted. Mount axially; steel target on push object |
 
 
-Leave `ao0` (terminal 22) reserved for the Ledex until its drive is installed.
+`ao0` (terminal 22) belongs to the Ledex; keep the PVA Enable open unless a test needs the coil.
 
 ### Buzzer installation — 06/08/26
 
