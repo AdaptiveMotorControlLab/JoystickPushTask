@@ -1,0 +1,44 @@
+{
+  "params": {
+    "SEAT": 1.0,
+    "CLR": 0.8,
+    "BSCALE": 0.984,
+    "TPL": 1.5788,
+    "WALL": 0.8,
+    "CONEA": 37.5179
+  },
+  "err_fit": 0.17882,
+  "err_holdout": 0.19191,
+  "err_all": 0.182,
+  "eval": 212,
+  "n_evaluated": 249,
+  "n_accepted": 134,
+  "accept_rule": "err_fit <= 1.2 x best",
+  "ranges_accepted": {
+    "SEAT": [
+      0.5185,
+      1.0
+    ],
+    "CLR": [
+      0.6767,
+      0.8
+    ],
+    "BSCALE": [
+      0.8232,
+      1.0546
+    ],
+    "TPL": [
+      1.5,
+      2.7847
+    ],
+    "WALL": [
+      0.8,
+      1.6173
+    ],
+    "CONEA": [
+      29.8955,
+      42.2379
+    ]
+  },
+  "note": "err = RMS of ln(model/datasheet); fitted: 100/25/10 % curves + holding force; held out: 50 % curve"
+}
