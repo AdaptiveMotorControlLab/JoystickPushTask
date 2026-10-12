@@ -5,7 +5,7 @@
 
 Data: results/sweeps.csv (one row per FEMM solve), results/fieldgrid_*.csv (r, z, Br, Bz, |B| on a
 0.25 mm grid), results/calibration/ (datasheet fit and the target-force band) and
-results/uncalibrated/ (the first, uncalibrated model, for comparison). See README.md.
+results/uncalibrated/ (the first model, kept for the record; not plotted). See README.md.
 """
 import argparse
 import csv
@@ -221,10 +221,6 @@ def plot_calibration_fit():
             ax.plot(*zip(*m), style, color="C0" if eid else "grey", label=lab)
         d = sorted((p["stroke_mm"], p["datasheet_N"]) for p in sel if p["eval"] == 0)
         ax.plot(*zip(*d), "o", color="C3", ms=4, label="datasheet (digitized)")
-        if duty == 100 and os.path.exists(os.path.join(RES, "uncalibrated", "stroke.csv")):
-            old = read_csv(os.path.join(RES, "uncalibrated", "stroke.csv"))
-            o = sorted((r["stroke_mm"], r["plunger_force_N"]) for r in old if abs(r["current_A"] - 0.58) < 1e-3)
-            ax.plot(*zip(*o), "x", color="k", ms=6, label="first model (9.5 mm protrusion), 0.58 A")
         ax.set_title("{} % duty, {} ({:.2f} A)".format(duty, txt, cur), fontsize=10)
         ax.set_yscale("log")
         ax.grid(True, which="both", alpha=0.3)
@@ -244,7 +240,6 @@ def plot_calibration_fit():
 def plot_target_band(rows, band):
     if not band:
         return
-    old = load_sweeps(os.path.join(RES, "uncalibrated", "sweeps.csv"))
     fig, axes = plt.subplots(1, 3, figsize=(13, 4.2), sharey=True)
     for ax, g in zip(axes, [1, 2, 3]):
         ba = sorted(k[1] for k in band if k[0] == g)
@@ -253,8 +248,6 @@ def plot_target_band(rows, band):
         cal = sorted((r["current_A"], r["target_force_g"]) for r in rows
                      if r["case"] == "baseline_gap{:g}".format(g))
         ax.plot(*zip(*cal), "o-", color="C0", ms=3, label="best fit")
-        un = sorted((r["current_A"], r["target_force_g"]) for r in old if r["case"] == "baseline_gap{:g}".format(g))
-        ax.plot(*zip(*un), "--", color="grey", label="first model (uncalibrated)")
         ax.set_title("gap {} mm".format(g))
         ax.set_xlabel("coil current (A); 10 V = 0.31 A")
         ax.set_yscale("log")
