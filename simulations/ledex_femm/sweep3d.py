@@ -72,13 +72,14 @@ def params_for(s):
 def solve(p, n, g, st, i):
     """Netgen occasionally fails on some calibration sets; a slightly different plunger mesh size
     meshes them (the force moves by under 1 % with mesh size)."""
-    for kw in ({}, {"maxh_pl": 0.6}, {"maxh_pl": 0.8}):
+    for kw in ({}, {"maxh_pl": 0.6}, {"maxh_pl": 0.8}, {"maxh_pl": 0.5}, {"maxh_pl": 0.9},
+               {"maxh_tip": 0.4}, {"maxh_tip": 0.5}, {"maxh_pl": 0.6, "maxh_tip": 0.5}):
         try:
             m = fea3d.Model(p, "across", n, g, i, stroke=st, **kw)
         except Exception:
             continue
         return m.solve(verbose=False)
-    raise RuntimeError("meshing failed for %r" % ((n, g, st, i),))
+    return None
 
 
 def run_group(group, budget_s):
@@ -93,6 +94,9 @@ def run_group(group, budget_s):
             print("time budget reached; rerun to continue", flush=True)
             return False
         f = solve(params_for(s), n, g, st, i)
+        if f is None:
+            print("MESHING FAILED, skipped:", s, n, g, st, i, flush=True)
+            continue
         open(OUT, "a").write("%s,%d,%g,%g,%g,%.5f\n" % (s, n, g, st, i, f))
         print(s, n, g, st, i, "%.4f g" % f, "(%.0f s)" % (time.time() - t0), flush=True)
     return True

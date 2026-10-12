@@ -1,6 +1,6 @@
 """Plot the Ledex FEMM results in results/ (needs numpy and matplotlib; Python 3.6+).
 
-    python plot_results.py            # writes PNGs to figures/plots/ (readable field maps: plot_target_across.py)
+    python plot_results.py            # writes PNGs to figures/plots/ (field maps: plot_target_across.py)
     python plot_results.py --show     # also opens the figures
 
 Force and field figures come from the 3D model (washer tower standing across the axis):
@@ -21,14 +21,12 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 RES = os.path.join(HERE, "results")
 CAL = os.path.join(RES, "calibration")
 OUT = os.path.join(HERE, "figures", "plots")
-READABLE = os.path.join(HERE, "figures", "readable")
 
 # measured coil current at each AO command (Checkpoint 4, 11 Oct 2026, Imax at its minimum)
 COMMAND_V = {0.053: 0.5, 0.074: 1, 0.106: 2, 0.121: 3, 0.147: 4, 0.180: 5,
              0.201: 6, 0.273: 8, 0.310: 10}
 
-# published geometry (mm), same as ledex_washer.lua
-PROTRUDE, RP, RO, LBOSS, RBOSS, SLOTR, SLOTD = 23.81, 3.91, 9.78, 9.52, 6.6, 2.43, 9.5
+# fitted internals, used for the outlines in the field figures
 GEOM = dict(SEAT=0.1, CLR=0.15, TPL=2.5, WALL=1.5)
 if os.path.exists(os.path.join(CAL, "best_params.json")):
     with open(os.path.join(CAL, "best_params.json")) as _f:
@@ -257,6 +255,20 @@ def plot_stroke(d):
     save(fig, "stroke.png")
 
 
+def plot_force_vs_washers(d):
+    fig, axs = plt.subplots(1, 3, figsize=(14, 4.2), sharey=True)
+    for ax, g in zip(axs, (1.0, 2.0, 3.0)):
+        for a, c in ((0.31, "tab:blue"), (0.58, "tab:red")):
+            pts = sorted((k[1], f) for k, f in d.items() if k[0] == "best" and k[2] == g and k[3] == 0 and k[4] == a)
+            ax.plot(*zip(*pts), marker="o", color=c, label="{} A".format(a))
+        ax.set_title("gap {:g} mm".format(g))
+        ax.set_xlabel("washers in the tower")
+        ax.grid(alpha=0.3)
+    axs[0].set_ylabel("pull on the washer tower (g-force)")
+    axs[0].legend(fontsize=8)
+    save(fig, "force_vs_washers_across.png")
+
+
 def plot_target_band(d):
     fig, axes = plt.subplots(1, 3, figsize=(13, 4.2), sharey=True)
     for ax, g in zip(axes, [1.0, 2.0, 3.0]):
@@ -293,87 +305,11 @@ def plot_axial_profile():
     save(fig, "axial_profile.png")
 
 
-def load_grid(path):
-    d = np.loadtxt(path, delimiter=",", skiprows=1)
-    r = np.unique(d[:, 0])
-    z = np.unique(d[:, 1])
-    shape = (len(z), len(r))
-    return r, z, d[:, 2].reshape(shape), d[:, 3].reshape(shape), d[:, 4].reshape(shape)
-
-
-STACK_T = 8.0   # thickness of the target stack in the field figures: ten M3 washers, 0.8 mm each
-
-
-def draw_half_panel(ax, tag, gap, a, vmax=50.0):
-    """Side view with the solenoid axis horizontal (bottom edge). Body on the left, plunger tip pointing
-    right toward the target. Only the half above the axis (r >= 0) is drawn."""
-    r, z, br, bz, bm = load_grid(os.path.join(RES, "fieldgrid_{}_{:.3f}A.csv".format(tag, a)))
-    x = -z[::-1]                          # x = distance along the axis, increasing toward the tip side
-    flip = lambda m: m[::-1, :].T         # shape (len(r), len(x))
-    im = ax.pcolormesh(x, r, np.clip(flip(bm) * 1000, 0, vmax), vmin=0, vmax=vmax, cmap="inferno", shading="auto")
-    ax.streamplot(x, r, -flip(bz), flip(br), color="w", linewidth=0.4, density=1.0, arrowsize=0.5)
-    rb = RP + GEOM["CLR"]
-    rki = RO - GEOM["WALL"]
-    tpl = GEOM["TPL"]
-    kw = dict(color="c", lw=0.9)
-    ax.plot([XMIN, PROTRUDE, PROTRUDE, PROTRUDE - SLOTD, PROTRUDE - SLOTD],
-            [RP, RP, SLOTR, SLOTR, 0], **kw)                                    # plunger with tip slot
-    ax.plot([XMIN, LBOSS, LBOSS, 0, 0, XMIN], [rb, rb, RBOSS, RBOSS, RO, RO], **kw)  # bore, boss, body face
-    ax.plot([XMIN, -tpl, -tpl], [rki, rki, rb], **kw)                          # case wall, front plate
-    if gap is not None:
-        x2 = PROTRUDE + gap
-        ax.add_patch(plt.Rectangle((x2, 1.6), STACK_T, 2.9, fill=False, ec="c", lw=1.2))
-        ax.text(x2 + STACK_T / 2, 5.0, "target", color="c", fontsize=7, ha="center", va="bottom")
-    ax.text(LBOSS / 2, RBOSS + 0.3, "boss", color="c", fontsize=7, ha="center", va="bottom")
-    ax.text(XMIN + 0.3, RO + 0.3, "body", color="c", fontsize=7, ha="left", va="bottom")
-    ax.axhline(0, color="grey", lw=0.6, ls=":")
-    ax.set_aspect("equal")
-    ax.set_xlim(XMIN, XMAX)
-    ax.set_ylim(0, YMAX)
-    ax.set_title(("No target, " if gap is None else "10 washers at 2 mm, ") + current_label(a), fontsize=9)
-    ax.set_xlabel("position along the axis (mm)", fontsize=7)
-    ax.set_ylabel("distance from axis (mm)", fontsize=8)
-    return im
-
-
 def style_colorbar(cb):
     cb.set_ticks([0, 10, 20, 30, 40, 50])
     cb.set_ticklabels(["0 mT (no field)", "10 mT", "20 mT", "30 mT", "40 mT", "50 mT or more"])
     cb.set_label("field strength |B| in mT (brighter = stronger)", fontsize=9)
     cb.ax.tick_params(labelsize=8)
-
-
-NOTE = ("Side view, cut through the solenoid axis (bottom edge, dotted); only the half above the axis is drawn because the\n"
-        "part is round: spin it around the bottom edge to get the full shape.\n0 mm = front face of the solenoid body, "
-        "plunger tip (23.8 mm out) points right. Target = stack of ten M3 washers (8 mm thick) 2 mm from the tip.\nWhite lines = field direction; cyan = body, boss, plunger, target.")
-
-
-def plot_readable():
-    """Readable field figures in figures/readable/: one overview (half sections) and one PNG per panel."""
-    top = [0.074, 0.106, 0.180, 0.310, 0.580]
-    bottom = [0.074, 0.310, 0.580]
-    panels = [("notarget", None, a) for a in top] + [("washers10_gap2mm", 2, a) for a in bottom]
-    if not all(os.path.exists(os.path.join(RES, "fieldgrid_{}_{:.3f}A.csv".format(t, a))) for t, _, a in panels):
-        return
-    os.makedirs(READABLE, exist_ok=True)
-    fig = plt.figure(figsize=(20, 7))
-    gs = fig.add_gridspec(2, 6, width_ratios=[1, 1, 1, 1, 1, 0.04], wspace=0.25, hspace=0.35)
-    im = None
-    for j, p in enumerate(panels[:5]):
-        im = draw_half_panel(fig.add_subplot(gs[0, j]), *p)
-    for j, p in enumerate(panels[5:]):
-        im = draw_half_panel(fig.add_subplot(gs[1, j]), *p)
-    style_colorbar(fig.colorbar(im, cax=fig.add_subplot(gs[:, 5]), extend="max"))
-    fig.suptitle("Ledex field around the plunger tip (calibrated model)", fontsize=12, y=0.97)
-    fig.text(0.5, 0.01, NOTE, ha="center", va="bottom", fontsize=8)
-    save(fig, "overview_readable.png", READABLE)
-    for tag, gap, a in panels:
-        fig, ax = plt.subplots(figsize=(10, 4))
-        im = draw_half_panel(ax, tag, gap, a)
-        style_colorbar(fig.colorbar(im, ax=ax, extend="max", shrink=0.8, pad=0.03))
-        fig.text(0.5, 0.0, NOTE, ha="center", va="top", fontsize=6.5)
-        name = "{}_{:.3f}A.png".format("notarget" if gap is None else "target_gap2mm", a)
-        save(fig, name, READABLE)
 
 
 def main():
@@ -387,12 +323,12 @@ def main():
     plot_force_vs_gap(d)
     plot_force_vs_current(d)
     plot_targets(d)
+    plot_force_vs_washers(d)
     plot_stroke(d)
     plot_sensitivity(rows)          # FEMM (2D) on purpose, like the calibration fit
     plot_calibration_fit()
     plot_target_band(d)
     plot_axial_profile()
-    # readable figures now come from the 3D model: plot_target_across.py
     if args.show:
         plt.show()
 

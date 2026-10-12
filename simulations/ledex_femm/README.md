@@ -1,44 +1,48 @@
-# Ledex 195224-230 field and target-force model (FEMM)
+# Ledex 195224-230 field and target-force models (FEMM calibration, 3D target forces)
 
-Axisymmetric magnetostatic model of the Ledex STA 20 × 40 mm pull solenoid (60° plunger, plunger
-fully seated) attracting a steel target in front of the protruding pull end. Built on 11 Oct 2026
-to estimate the pull on the washer target before the holder and a force jig exist, then calibrated
-against the datasheet force-stroke curves (12 Oct 2026).
-**These are model estimates, not measurements.** Check them with one scale measurement once the
-printed holder and a gap jig are available.
+Two magnetostatic models of the Ledex STA 20 × 40 mm pull solenoid (60° plunger) and a steel washer
+target in front of the protruding pull end, built on 11-12 Oct 2026 to estimate the resistance force
+before the printed holder and a force jig exist.
 
-![field maps](figures/readable/overview_readable.png)
+- **FEMM (2D, axisymmetric)** reproduces the plunger force and was calibrated against the datasheet
+  force-stroke curves. It cannot represent washers standing across the axis.
+- **3D (NGSolve, `fea3d.py`)** rebuilds the same calibrated device and computes the pull on the
+  washer tower standing across the axis with its rim facing the tip (the real layout).
 
-## Main findings (calibrated model)
+All target forces, field maps and plots in `figures/plots/` and `figures/magnetic_fields/` come from the
+3D model, except `calibration_fit.png` and `sensitivity.png` (FEMM). **These are model estimates, not
+measurements.** Check them with one scale measurement once the printed holder and a gap jig are available.
 
-- The pull on five stacked M3 washers is very small at the currents the rig uses: about
-  **1 g-force (9 mN) at 2 mm** and **2.2 g at 1 mm** at 10 V (0.31 A), 0.5 g at 3 mm.
+![field maps](figures/magnetic_fields/overview_magnetic_fields.png)
+
+## Main findings (3D model, ten M3 washers standing across the axis, plunger seated)
+
+- The pull is very small at the currents the rig uses: about **1.2 g-force (12 mN) at 2 mm** and
+  **2.5 g at 1 mm** at 10 V (0.31 A), 0.7 g at 3 mm.
 - Below 10 V the force scales roughly with current squared: 1 V (0.074 A) gives only ~6 % of the
-  10 V force (0.06 g at 2 mm). Raising `Imax` to the rated 0.58 A doubles the 10 V force
-  (2.0 g at 2 mm).
-- It falls steeply with gap (about 2× per extra millimetre near the tip), so the resistance
-  fades within a few millimetres of the object moving away from the Ledex.
-- One washer gives only ~0.28 g at 2 mm and 10 V. (Solid steel discs were also simulated and are in
-  `results/sweeps.csv`, e.g. 16 × 6 mm ~2.3 g, but they are not available and not plotted.)
-- Taller washer stacks help with diminishing returns (2 mm, 10 V; 0.58 A in brackets): 5 washers
-  (4 mm, ~1.8 g) 0.96 g (2.0), 10 (~3.5 g) 1.6 g (3.3), 20 (~7 g) 2.5 g (5.1), 40 (~14 g) 3.4 g
-  (7.1); the far washers sit in a weaker field and the stack is modelled as solid, so real stacks
-  pull somewhat less.
-- The seated plunger gives the strongest target pull; holding the plunger out from its seat
-  lowers it (stroke sweep).
+  10 V force (0.08 g at 2 mm). Raising `Imax` to the rated 0.58 A (the most the 12 V supply can push
+  through the 20.7 Ω coil) gives about 1.8× the 10 V force (2.2 g at 2 mm, 4.7 g at 1 mm).
+- It falls steeply with gap (roughly 2× per extra millimetre near the tip), so the resistance fades
+  within a few millimetres of the object moving away from the Ledex.
+- Taller towers help with diminishing returns (2 mm; 0.58 A in brackets, 10 V first): 1 washer
+  0.39 g (0.75), 5 washers 0.79 (1.5), 10 washers 1.2 (2.2), 20 washers 1.6 (2.9), 40 washers 2.3 (4.4).
+  Each washer is 0.8 mm thick (10 washers = 8 mm, about 3.5 g of mass on the joystick), the far
+  washers sit in a weaker field, and the tower is modelled as solid, so real towers pull somewhat less.
+- The seated plunger gives the strongest pull; holding it out from its seat lowers it (10 V, 2 mm:
+  1.2 g seated, 0.63 g at 1.5 mm out, 0.13 g at 9.5 mm out).
 
 | Gap | 1 V (0.074 A) | 2 V (0.106 A) | 5 V (0.180 A) | 10 V (0.310 A) | 0.58 A (Imax raised) |
 | --- | --- | --- | --- | --- | --- |
-| 0.5 mm | 0.27 g | 0.54 g | 1.6 g | 4.3 g | 8.7 g |
-| 1 mm | 0.14 g (0.13–0.19) | 0.28 g (0.26–0.39) | 0.80 g (0.74–1.1) | 2.2 g (1.5–2.3) | 4.5 g (2.0–4.5) |
-| 2 mm | 0.059 g (0.055–0.082) | 0.12 g (0.11–0.17) | 0.35 g (0.32–0.47) | 0.96 g (0.65–1.0) | 2.0 g (0.86–2.0) |
-| 3 mm | 0.032 g (0.029–0.044) | 0.065 g (0.060–0.091) | 0.19 g (0.17–0.25) | 0.52 g (0.35–0.54) | 1.1 g (0.47–1.1) |
-| 5 mm | 0.012 g | 0.024 g | 0.070 g | 0.20 g | 0.41 g |
+| 0.5 mm | 0.33 g | 0.68 g | 1.9 g | 5.2 g | 9.7 g |
+| 1 mm | 0.16 g | 0.32 g | 0.93 g | 2.5 g | 4.7 g |
+| 2 mm | 0.075 g | 0.15 g | 0.44 g | 1.2 g | 2.2 g |
+| 3 mm | 0.043 g | 0.089 g | 0.26 g | 0.68 g | 1.3 g |
+| 5 mm | 0.018 g | 0.036 g | 0.10 g | 0.28 g | 0.52 g |
 
-Pull on five stacked M3 washers (3.2 × 9 × 0.8 mm, mild steel), plunger seated; 1 g = 9.81 mN.
-Best fit, with the range over the accepted calibration fits in brackets (1–3 mm only).
-The first, uncalibrated model gave 3–7× more at 1–2 V and ~1.4× more at 10 V
-(`results/uncalibrated/`).
+Pull on ten stacked M3 washers (3.2 × 9 × 0.8 mm, mild steel) standing across the axis, plunger
+seated; 1 g = 9.81 mN. Best-fit calibration; the spread over the accepted calibration sets is in
+`figures/plots/target_force_band.png`. (The earlier FEMM five-washer ring gave about 0.96 g at 2 mm
+and 10 V, in `results/sweeps.csv`; it is not the real layout.)
 
 ![target force band](figures/plots/target_force_band.png)
 
@@ -72,8 +76,9 @@ The first, uncalibrated model gave 3–7× more at 1–2 V and ~1.4× more at 10
   not as real dimensions.
 - Uncertainty band: 134 sets fit within 1.2× the best error (`accepted_sets.csv`; seat gap
   0.52–1.0 mm, clearance 0.68–0.8 mm, steel scale 0.82–1.05, plates 1.5–2.8 mm, wall 0.8–1.6 mm,
-  cone 30–42°). The target force was recomputed for 16 well-spread ones
-  (`results/calibration/target_band.csv`); the table brackets are their range.
+  cone 30–42°). The 3D target force of the ten-washer tower was recomputed for 16 well-spread ones
+  (`sweep3d.py band`, rows with a numeric `set` in `results/fea3d_sweep.csv`) and gives the bars and
+  shading in `force_vs_gap.png`, `force_vs_current.png` and `target_force_band.png`.
 
 ![calibration fit](figures/plots/calibration_fit.png)
 
@@ -90,13 +95,19 @@ Caveats:
 - Treat absolute numbers as uncertain by about ±40 %; trends (gap, current², target size) are
   reliable. One measurement at 2 mm will settle the scale.
 
-## 3D check: washers standing across the axis
+## 3D model: washers standing across the axis
 
-FEMM is axisymmetric, so washers stacked on the axis (coaxial) are modelled as a ring. The real layout is a column of washers standing across the solenoid axis, with the tip facing the rims. `fea3d.py` is a quarter-symmetry 3D magnetostatic model (NGSolve, edge elements, nonlinear 1010 B-H with the fitted BSCALE, Maxwell-stress force) that reuses the calibrated geometry. Setup: `python3 -m venv /tmp/ngenv && /tmp/ngenv/bin/pip install ngsolve numpy scipy`, then `/tmp/ngenv/bin/python fea3d.py across` (writes `results/fea3d.csv`, ~1 h).
+FEMM is axisymmetric, so it can only model washers stacked on the axis as a ring. The real layout is a
+tower of washers standing across the solenoid axis, with the tip facing the rims. `fea3d.py` is a
+quarter-symmetry 3D magnetostatic model (NGSolve, edge elements, nonlinear 1010 B-H with the fitted
+BSCALE, Maxwell-stress force) that reuses the calibrated geometry. It can also hold the plunger out
+from its seat (`stroke`). It gives the pull on the target only; the force on the plunger is not
+computed. Setup: `python3 -m venv /tmp/ngenv && /tmp/ngenv/bin/pip install ngsolve numpy scipy`.
 
-Validation: coaxial 5 washers, 2 mm, 0.31 A gives 0.90 g in 3D (mesh and box changes move it by under 2 %) against 0.96 g in FEMM, so the 3D model is about 6 % low.
+Validation: a coaxial ring of 5 washers, 2 mm, 0.31 A gives 0.90 g in 3D (mesh and box changes move it
+by under 2 %) against 0.96 g in FEMM, so the 3D model is about 6 % low.
 
-Pull (g-force) of a washer column across the axis, tip to nearest rim, 0.58 A (10 V; 0.31 A in brackets):
+Pull (g-force) of a washer tower across the axis, tip to nearest rim, 0.58 A (10 V, 0.31 A, in brackets):
 
 | washers | 1 mm | 2 mm | 3 mm |
 |---|---|---|---|
@@ -104,10 +115,10 @@ Pull (g-force) of a washer column across the axis, tip to nearest rim, 0.58 A (1
 | 5 | 2.5 (1.4) | 1.5 (0.79) | 0.93 (0.49) |
 | 10 | 4.7 (2.5) | 2.2 (1.2) | 1.3 (0.68) |
 | 20 | 6.8 (3.4) | 2.9 (1.6) | 1.7 (0.91) |
+| 40 | 8.9 (5.0) | 4.4 (2.3) | 2.4 (1.3) |
 
-Across the axis the column pulls about 25-35 % less than the same number of coaxial washers once there are 5 or more (10 washers at 2 mm: 2.2 g vs 2.8 g), but more for one washer at 2-3 mm. Gains from extra washers flatten past 10. Uncertainty: about +-10 % from the nonlinear iteration near saturation at 0.58 A, plus the calibration extrapolation (+-40 %). Coaxial 20-washer 3D runs were not completed.
-
-Figures: `figures/readable/across_field_10washers_gap2mm.png` (|B| in two cut planes, 10 washers, 2 mm, at 0.074 / 0.31 / 0.58 A) and `figures/plots/force_vs_washers_across.png` (pull against washer count for the across-axis tower, 0.31 and 0.58 A, gaps 1/2/3 mm). Both come from `plot_fea3d.py`. All other `figures/readable/` field figures and `overview_readable.png` also come from the 3D model (`plot_target_across.py`).
+Gains from extra washers flatten past 10. Uncertainty: about ±10 % from the nonlinear iteration near
+saturation at 0.58 A, plus the calibration extrapolation (±40 %).
 
 ## Model
 
@@ -115,12 +126,12 @@ Figures: `figures/readable/across_field_10washers_gap2mm.png` (|B| in two cut pl
   23.81 mm protrusion, 2.5 × 9.5 mm tip slot (modelled as an equal-area axial hole),
   1491 turns (30 AWG, 20.7 Ω), 60° plunger. Measured: coil current at each AO command
   (Checkpoint 4, `calibration/README.md`).
-- Fitted: see above. Assumed: bobbin 0.5 mm, 1 mm flat at the cone apex, FEMM "1010 Steel" for
-  the target, washer stack modelled as one solid 4 mm ring (real interfaces lower the force
+- Fitted: see above. Assumed: bobbin 0.5 mm, 1 mm flat at the cone apex, "1010 Steel" for the
+  target, washer tower modelled as solid steel (real interfaces between washers lower the force
   slightly). The PWM drive is modelled as its average DC current.
-- Coordinates in the grids: `r` radius, `z` axis, `z = 0` at the front face of the case body,
-  boss at −9.52 < z < 0, plunger tip at `z = -23.81`, targets beyond the tip. The readable
-  figures turn this sideways (x = −z).
+- Coordinates: `z = 0` at the front face of the case body, boss at −9.52 < z < 0, plunger tip at
+  `z = -23.81`, targets beyond the tip. The field-map figures turn this sideways (position along
+  the axis x = −z; 0 mm = body face, tip at 23.8 mm).
 
 ## Files
 
@@ -135,23 +146,31 @@ Figures: `figures/readable/across_field_10washers_gap2mm.png` (|B| in two cut pl
 - `calibrate.py`: the datasheet fit (`screen`, `refine`, `explore`, `best`, `band`, or `all`);
   writes `results/calibration/` (`fit_log.csv` one row per parameter set, `fit_points.csv` model
   vs datasheet per point, `best_params.json`, `accepted_sets.csv`, `target_band.csv`).
-- `plot_results.py`: makes `figures/plots/*.png` and `figures/readable/*.png` from the CSVs
-  (numpy + matplotlib).
-- `results/sweeps.csv`: one row per FEMM solve (319 rows). Columns: `case`, `target`,
+- `fea3d.py`: the 3D model (see above); `python fea3d.py check` compares a coaxial stack with FEMM.
+- `sweep3d.py`: resumable 3D sweeps (`grid`, `stacks`, `stroke`, `band`, `axial`) written to
+  `results/fea3d_sweep.csv` (`set`, `n_washers`, `gap_mm`, `stroke_mm`, `current_A`, `force_g`; `set`
+  = `best` or the FEMM eval number of an accepted calibration set) and `results/axial_B3d.csv`.
+  Older `results/fea3d.csv` holds the first across-axis runs (best fit only).
+- `plot_results.py`: makes `figures/plots/*.png` (numpy + matplotlib). The force, stroke, target and
+  profile figures read the 3D CSVs; `calibration_fit.png` and `sensitivity.png` read the FEMM CSVs.
+- `plot_target_across.py`: makes `figures/magnetic_fields/*.png` from the 3D model (needs the
+  NGSolve venv; solved fields cached in `results/fieldcache3d_*.npz`).
+- `results/sweeps.csv`: one row per FEMM solve (coaxial layouts, used for the calibration and sensitivity figures). Columns: `case`, `target`,
   `target_id_mm`, `target_od_mm`, `target_t_mm` (inner/outer diameter, thickness; id 0 = solid
   disc), `protrude_mm`, `seat_mm`, `stroke_mm` (plunger held out from its seat), `bscale`,
   `tpl_mm`, `wall_mm`, `steel`, `target_mesh_mm`, `gap_mm` (tip to target face), `current_A`,
   `target_force_N`, `target_force_g`, `plunger_force_N` (axial force on the plunger, toward the
   seat), `clr_mm`, `conea_deg`. Cases: `baseline_gap*` (five washers, 11 gaps × 12 currents),
   `target_*` (other targets), `stroke_*`, `sens_*`.
-- `results/fieldgrid_<target>_<current>A.csv`: `r_mm, z_mm, Br_T, Bz_T, Bmag_T` on a 0.25 mm grid,
-  r 0–20 mm, z −45 to 5 mm (no target at five currents; five washers at 2 mm at five currents; five
-  washers at 1 mm at 0.31 and 0.58 A; ten washers at 2 mm at 0.074, 0.31 and 0.58 A).
+- `results/fieldgrid_<target>_<current>A.csv`: FEMM field grids (`r_mm, z_mm, Br_T, Bz_T, Bmag_T` on a
+  0.25 mm grid) for the coaxial layouts; no longer plotted (the field maps now come from the 3D model).
 - `results/uncalibrated/`: the first model (9.5 mm protrusion, guessed internals), kept for
   comparison.
-- `figures/readable/`: field maps with a mT colour scale (overview plus one PNG per panel); the
-  target panels show the planned rig target, ten M3 washers 2 mm from the tip;
-  `figures/plots/femm/`: raw FEMM screenshots (colour scale 0–0.05 T).
+- `figures/magnetic_fields/`: 3D field maps with a mT colour scale: `notarget_<I>A.png`,
+  `target_gap{1,2,3}mm_<I>A.png` (ten washers across the axis) and `overview_magnetic_fields.png`
+  (rows: no target, 1, 2, 3 mm; columns: five currents). `figures/plots/`: force, stroke, field
+  profile and calibration figures. `figures/plots/femm/`: raw FEMM screenshots of the coaxial layouts
+  (colour scale 0–0.05 T), kept for the record.
 - Command voltage to current (minimum `Imax`): 0.5 V 0.053, 1 V 0.074, 2 V 0.106, 3 V 0.121,
   4 V 0.147, 5 V 0.180, 6 V 0.201, 8 V 0.273, 10 V 0.310 A; 0.40–0.58 A need `Imax` raised.
 

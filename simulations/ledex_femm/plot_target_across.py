@@ -1,10 +1,9 @@
-"""All readable field figures from the 3D model (washer tower standing across the axis).
+"""All magnetic-field figures from the 3D model (washer tower standing across the axis).
 
-The tower of ten washers stands across the solenoid axis (its own axis is vertical in the figure) and
-its rim faces the plunger tip. Needs the 3D model, so run with the NGSolve venv:
-    /tmp/ngenv/bin/python plot_target_across.py
-Optional args: currents in A (default 0.074 0.310 0.580). Writes figures/readable/notarget_*A.png, target_gap2mm_*A.png and overview_readable.png.
-Solved fields are cached in results/fieldcache3d_*.npz.
+Run with the NGSolve venv:  /tmp/ngenv/bin/python plot_target_across.py [current_A ...]
+Writes figures/magnetic_fields/: notarget_<I>A.png, target_gap{1,2,3}mm_<I>A.png (ten washers, rim 1/2/3 mm
+from the tip) and overview_magnetic_fields.png (4 rows x 5 currents; only when no currents are given).
+Default currents: 0.074 0.106 0.180 0.310 0.580 A. Solved fields are cached in results/fieldcache3d_*.npz.
 """
 import os
 import sys
@@ -18,7 +17,7 @@ import fea3d
 from plot_results import current_label, style_colorbar, GEOM
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-READ = os.path.join(HERE, "figures", "readable")
+READ = os.path.join(HERE, "figures", "magnetic_fields")
 N, GAPS = 10, (1.0, 2.0, 3.0)
 AMPS = [0.074, 0.106, 0.180, 0.310, 0.580]
 PROTRUDE, RP, RO, LBOSS, RBOSS, SLOTD = 23.81, 3.91, 9.78, 9.52, 6.6, 9.5
@@ -140,7 +139,7 @@ def main():
         style_colorbar(fig.colorbar(im, ax=axs, extend="max", shrink=0.5, pad=0.01))
         fig.suptitle("Ledex field around the plunger tip (calibrated 3D model)", fontsize=12)
         fig.text(0.5, -0.005, NOTE, ha="center", va="top", fontsize=8)
-        fig.savefig(os.path.join(READ, "overview_readable.png"), dpi=100, bbox_inches="tight")
+        fig.savefig(os.path.join(READ, "overview_magnetic_fields.png"), dpi=100, bbox_inches="tight")
         plt.close(fig)
 
 
