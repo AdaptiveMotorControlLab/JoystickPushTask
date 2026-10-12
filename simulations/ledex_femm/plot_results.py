@@ -153,8 +153,7 @@ def plot_force_vs_current(rows, band):
 
 def plot_targets(rows):
     tg = select(rows, case=lambda c: c.startswith("target_") or c.startswith("baseline_gap"))
-    names = ["washers1_M3", "washers3_M3", "washers5_M3", "washers10_M3", "washers20_M3", "washers40_M3",
-             "disc_8x4_solid", "disc_9x4_solid", "disc_12x4_solid", "disc_16x6_solid"]
+    names = ["washers1_M3", "washers3_M3", "washers5_M3", "washers10_M3", "washers20_M3", "washers40_M3"]
     fig, axes = plt.subplots(1, 2, figsize=(12.5, 4.5), sharey=True)
     for ax, a in zip(axes, [0.310, 0.58]):
         for n in names:
@@ -162,15 +161,15 @@ def plot_targets(rows):
                           if r["gap_mm"] in (1, 2, 3, 5)})
             if pts:
                 g, f = zip(*pts)
-                ax.plot(g, f, "o-", ms=3, label=n)
+                ax.plot(g, f, "o-", ms=3, label=n.replace("washers", "").replace("_M3", "") + (" washer" if n == "washers1_M3" else " washers"))
         ax.set_yscale("log")
         ax.set_title(current_label(a))
         ax.set_xlabel("gap (mm)")
         ax.grid(True, which="both", alpha=0.3)
     axes[0].set_ylabel("pull on target (g-force)")
     axes[1].legend(fontsize=7, loc="center left", bbox_to_anchor=(1.02, 0.5),
-                   title="washers: M3 stack (0.8 mm each)\ndiscs: diameter x thickness (mm)", title_fontsize=7)
-    fig.suptitle("Effect of the steel target (mild steel, plunger seated)")
+                   title="M3 washers in the stack\n(0.8 mm thick each)", title_fontsize=7)
+    fig.suptitle("Pull on washer stacks of different height (mild steel, plunger seated)")
     save(fig, "targets.png")
 
 
