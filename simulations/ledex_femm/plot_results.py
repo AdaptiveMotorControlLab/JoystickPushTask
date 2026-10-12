@@ -69,6 +69,9 @@ def select(rows, **conds):
 
 def save(fig, name, folder=OUT):
     os.makedirs(folder, exist_ok=True)
+    for ax in fig.axes:
+        if ax.get_yscale() == "log":
+            plain_log(ax)
     path = os.path.join(folder, name)
     fig.savefig(path, dpi=150, bbox_inches="tight")
     plt.close(fig)
@@ -83,6 +86,17 @@ def load_band():
     for r in read_csv(path):
         band.setdefault((r["gap_mm"], round(r["current_A"], 3)), []).append(r["target_force_g"])
     return {k: (min(v), max(v)) for k, v in band.items()}
+
+
+def plain_log(ax):
+    """Log y axis with plain-number labels at 1-2-5 steps (0.05, 0.1, 0.2, 0.5, 1, 2, 5, ...)."""
+    from matplotlib.ticker import FixedLocator, FuncFormatter, NullLocator
+    lo, hi = ax.get_ylim()
+    ticks = [m * 10.0 ** e for e in range(-4, 4) for m in (1, 2, 5) if lo / 1.01 <= m * 10.0 ** e <= hi * 1.01]
+    ax.yaxis.set_major_locator(FixedLocator(ticks))
+    ax.yaxis.set_minor_locator(NullLocator())
+    ax.yaxis.set_major_formatter(FuncFormatter(lambda v, _: "{:g}".format(v)))
+    ax.grid(True, axis="y", which="major", alpha=0.3)
 
 
 def plot_force_vs_gap(rows, band):
