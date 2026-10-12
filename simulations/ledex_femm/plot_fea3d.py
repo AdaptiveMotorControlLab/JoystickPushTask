@@ -95,16 +95,18 @@ def main():
                  "dashed line = plunger tip)", fontsize=11)
     fig.savefig(os.path.join(READ, "across_field_10washers_gap2mm.png"), dpi=140, bbox_inches="tight")
     plt.close(fig)
-    # force vs washers, across vs axial
+    plot_forces()
+
+
+def plot_forces():
+    """Force vs washers for the across-axis tower (reads results/fea3d.csv; no solving)."""
     rows = list(csv.DictReader(open(os.path.join(HERE, "results", "fea3d.csv"))))
     d = {(r["kind"], int(r["n_washers"]), float(r["gap_mm"]), float(r["current_A"])): float(r["force_g"]) for r in rows}
     fig, axs = plt.subplots(1, 3, figsize=(14, 4.2), sharey=True)
     for ax, g in zip(axs, (1.0, 2.0, 3.0)):
-        for kind, mk, ls in (("across", "o", "-"), ("axial", "s", "--")):
-            for I, c in ((0.31, "tab:blue"), (0.58, "tab:red")):
-                ns = [n for n in (1, 5, 10, 20) if (kind, n, g, I) in d]
-                ax.plot(ns, [d[(kind, n, g, I)] for n in ns], marker=mk, ls=ls, color=c,
-                        label="{} stack, {} A".format("across-axis" if kind == "across" else "coaxial", I))
+        for I, c in ((0.31, "tab:blue"), (0.58, "tab:red")):
+            ns = [n for n in (1, 5, 10, 20) if ("across", n, g, I) in d]
+            ax.plot(ns, [d[("across", n, g, I)] for n in ns], marker="o", color=c, label="{} A".format(I))
         ax.set_title("gap {:g} mm".format(g))
         ax.set_xlabel("washers in the stack")
         ax.grid(alpha=0.3)
@@ -115,4 +117,5 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    import sys
+    plot_forces() if sys.argv[1:] == ["forces"] else main()
