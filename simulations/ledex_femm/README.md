@@ -90,6 +90,23 @@ Caveats:
 - Treat absolute numbers as uncertain by about ±40 %; trends (gap, current², target size) are
   reliable. One measurement at 2 mm will settle the scale.
 
+## 3D check: washers standing across the axis
+
+FEMM is axisymmetric, so washers stacked on the axis (coaxial) are modelled as a ring. The real layout is a column of washers standing across the solenoid axis, with the tip facing the rims. `fea3d.py` is a quarter-symmetry 3D magnetostatic model (NGSolve, edge elements, nonlinear 1010 B-H with the fitted BSCALE, Maxwell-stress force) that reuses the calibrated geometry. Setup: `python3 -m venv /tmp/ngenv && /tmp/ngenv/bin/pip install ngsolve numpy scipy`, then `/tmp/ngenv/bin/python fea3d.py across` (writes `results/fea3d.csv`, ~1 h).
+
+Validation: coaxial 5 washers, 2 mm, 0.31 A gives 0.90 g in 3D (mesh and box changes move it by under 2 %) against 0.96 g in FEMM, so the 3D model is about 6 % low.
+
+Pull (g-force) of a washer column across the axis, tip to nearest rim, 0.58 A (10 V; 0.31 A in brackets):
+
+| washers | 1 mm | 2 mm | 3 mm |
+|---|---|---|---|
+| 1 | 1.2 (0.63) | 0.75 (0.39) | 0.50 (0.26) |
+| 5 | 2.5 (1.4) | 1.5 (0.79) | 0.93 (0.49) |
+| 10 | 4.7 (2.5) | 2.2 (1.2) | 1.3 (0.68) |
+| 20 | 6.8 (3.4) | 2.9 (1.6) | 1.7 (0.91) |
+
+Across the axis the column pulls about 25-35 % less than the same number of coaxial washers once there are 5 or more (10 washers at 2 mm: 2.2 g vs 2.8 g), but more for one washer at 2-3 mm. Gains from extra washers flatten past 10. Uncertainty: about +-10 % from the nonlinear iteration near saturation at 0.58 A, plus the calibration extrapolation (+-40 %). Coaxial 20-washer 3D runs were not completed.
+
 ## Model
 
 - Published: case 19.56 mm dia × 39.37 mm, M14 boss 9.52 mm, plunger 7.82 mm dia and 20.1 g,
