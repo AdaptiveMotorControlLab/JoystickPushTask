@@ -232,10 +232,12 @@ def plot_calibration_fit():
         ax.set_xlabel("stroke: plunger out from its seat (mm)")
     for ax in axes[:, 0]:
         ax.set_ylabel("force on plunger (N)")
-    axes[0, 0].legend(fontsize=7, loc="upper right")
+    handles, labels = axes[0, 0].get_legend_handles_labels()
     fig.suptitle("Plunger force: datasheet vs model (60-degree plunger)\n"
                  "RMS error of ln(model/datasheet): fit {:.2f}, held-out curve {:.2f}".format(
-                     best["err_fit"], best["err_holdout"]))
+                     best["err_fit"], best["err_holdout"]), y=1.0)
+    fig.legend(handles, labels, loc="upper center", bbox_to_anchor=(0.5, 0.95), ncol=2, fontsize=8, frameon=True)
+    fig.tight_layout(rect=(0, 0, 1, 0.93))
     save(fig, "calibration_fit.png")
 
 
