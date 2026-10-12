@@ -292,7 +292,7 @@ if MODE == "profile" then
     solve(AMPS[i])
     prof[i] = {}
     for k = 0, 40 do
-      prof[i][k] = bmag(0.001, ZT - 0.05 - k * 0.5)
+      prof[i][k] = bmag(RP, ZT - 0.05 - k * 0.5)  -- along the plunger outer edge (r = RP), not the slotted axis
     end
     mo_close()
   end

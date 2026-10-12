@@ -106,7 +106,7 @@ Caveats:
   the calibrated values.
 - `femm_run.py`: runs FEMM in parallel on Windows or on a Mac under Wine (Python 3.6+, standard
   library only). `python3 femm_run.py sweeps` (all sweeps and field grids; `--only <regex>`,
-  `--no-grids`), `summary` (`results/forces.csv`, `axial_B.csv`, `stroke.csv`), `maps` (FEMM
+  `--no-grids`), `summary` (`results/forces.csv`, `axial_B.csv` (field along the plunger outer edge r = 3.91 mm, not the slotted axis), `stroke.csv`), `maps` (FEMM
   screenshots in `figures/plots/femm/`, needs Pillow for PNG). `FEMM_WORKERS` sets the number of
   parallel FEMM processes.
 - `calibrate.py`: the datasheet fit (`screen`, `refine`, `explore`, `best`, `band`, or `all`);

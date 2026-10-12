@@ -279,10 +279,13 @@ def plot_axial_profile():
             continue
         r, z, br, bz, bm = load_grid(path)
         sel = z <= -PROTRUDE
-        ax.plot(-PROTRUDE - z[sel], bm[sel, 0] * 1000, label=current_label(a))
-    ax.set_xlabel("distance in front of the plunger tip, on axis (mm)")
+        i = np.searchsorted(r, RP)                      # interpolate to r = RP between grid columns
+        w = (RP - r[i - 1]) / (r[i] - r[i - 1])
+        line = (1 - w) * bm[sel, i - 1] + w * bm[sel, i]
+        ax.plot(-PROTRUDE - z[sel], line * 1000, label=current_label(a))
+    ax.set_xlabel("distance in front of the plunger tip, along its outer edge r = 3.9 mm (mm)")
     ax.set_ylabel("|B| (mT)")
-    ax.set_title("On-axis field in front of the tip, no target")
+    ax.set_title("Field in front of the tip along the plunger edge (not the slotted axis), no target")
     ax.grid(True, alpha=0.3)
     ax.legend(fontsize=7)
     save(fig, "axial_profile.png")
