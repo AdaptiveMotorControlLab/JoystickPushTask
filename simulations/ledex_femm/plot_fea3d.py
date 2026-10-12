@@ -2,7 +2,7 @@
 
 Run with the NGSolve venv: /tmp/ngenv/bin/python plot_fea3d.py
 Writes figures/readable/across_*.png (|B| in two cut planes through the tip) and
-figures/plots/across_vs_axial.png (force table from results/fea3d.csv).
+figures/plots/force_vs_washers_across.png (force table from results/fea3d.csv).
 """
 import csv
 import os
@@ -112,7 +112,7 @@ def plot_forces():
         ax.grid(alpha=0.3)
     axs[0].set_ylabel("pull on the washers (g-force)")
     axs[0].legend(fontsize=8)
-    fig.savefig(os.path.join(PLOTS, "across_vs_axial.png"), dpi=140, bbox_inches="tight")
+    fig.savefig(os.path.join(PLOTS, "force_vs_washers_across.png"), dpi=140, bbox_inches="tight")
     print("figures written")
 
 
