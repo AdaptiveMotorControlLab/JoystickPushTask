@@ -19,14 +19,14 @@ from plot_results import current_label, style_colorbar, GEOM
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 READ = os.path.join(HERE, "figures", "readable")
-N, GAP = 10, 2.0
+N, GAPS = 10, (1.0, 2.0, 3.0)
 AMPS = [0.074, 0.106, 0.180, 0.310, 0.580]
 PROTRUDE, RP, RO, LBOSS, RBOSS, SLOTD = 23.81, 3.91, 9.78, 9.52, 6.6, 9.5
 XMIN, XMAX, YMAX = -5, 40, 14
 
 NOTE = ("Side view, cut through the solenoid axis (horizontal, dotted) and the axis of the washer tower (vertical).\n"
         "0 mm = front face of the solenoid body, plunger tip (23.8 mm out) points right. Target = ten M3 washers "
-        "(8 mm tall, 9 mm across) standing\non top of each other across the axis, rim 2 mm from the tip.\n"
+        "(8 mm tall, 9 mm across) standing\non top of each other across the axis, rim 1, 2 or 3 mm from the tip (see panel title).\n"
         "White lines = field direction; cyan = body, boss, plunger, washers (dotted = hole).")
 
 
@@ -54,7 +54,7 @@ def sample(m, xs, ys):
     return mag, by, bz
 
 
-def draw(ax, xs, ys, mag, by, bz, a, tgt):
+def draw(ax, xs, ys, mag, by, bz, a, tgt, gap=2.0):
     im = ax.pcolormesh(xs, ys, np.clip(np.nan_to_num(mag) * 1000, 0, 50), vmin=0, vmax=50, cmap="inferno",
                        shading="auto")
     ax.streamplot(xs, ys, -np.nan_to_num(bz), np.nan_to_num(by), color="w", linewidth=0.4, density=1.3,
@@ -79,20 +79,21 @@ def draw(ax, xs, ys, mag, by, bz, a, tgt):
     ax.set_aspect("equal")
     ax.set_xlim(XMIN, XMAX)
     ax.set_ylim(-YMAX, YMAX)
-    ax.set_title(("No target, " if tgt is None else "10 washers standing across the axis at 2 mm, ")
+    ax.set_title(("No target, " if tgt is None else "10 washers standing across the axis at {:g} mm, ".format(gap))
                  + current_label(a), fontsize=9)
     ax.set_xlabel("position along the axis (mm)", fontsize=7)
     ax.set_ylabel("height up the washer tower (mm)", fontsize=8)
     return im
 
 
-def solved(p, xs, ys, a, n):
+def solved(p, xs, ys, a, n, gap=2.0):
     """Field in the cut plane for n washers (0 = no target), cached on disk."""
-    path = os.path.join(HERE, "results", "fieldcache3d_{}_{:.3f}A.npz".format("notarget" if not n else "washers%d" % n, a))
+    path = os.path.join(HERE, "results", "fieldcache3d_{}_{:.3f}A.npz".format(
+        "notarget" if not n else "washers%d" % n + ("" if gap == 2.0 else "_gap%gmm" % gap), a))
     if os.path.exists(path):
         d = np.load(path)
         return d["mag"], d["by"], d["bz"], float(d["fz"]), d["tgt"]
-    m = fea3d.Model(p, "across", n, GAP, a)
+    m = fea3d.Model(p, "across", n, gap, a)
     fz = m.solve(verbose=False) if n else 0.0
     if not n:
         m.solve(verbose=False)
@@ -110,34 +111,34 @@ def main():
     os.makedirs(READ, exist_ok=True)
     amps = [float(v) for v in sys.argv[1:]] or AMPS
     res = {}
-    for n in (0, N):
+    cases = [(0, 2.0)] + [(N, g) for g in GAPS]
+    for n, gap in cases:
         for a in amps:
-            mag, by, bz, fz, tgt = solved(p, xs, ys, a, n)
-            res[(n, a)] = (mag, by, bz, (tuple(tgt) if n else None))
+            mag, by, bz, fz, tgt = solved(p, xs, ys, a, n, gap)
+            res[(n, gap, a)] = (mag, by, bz, (tuple(tgt) if n else None))
             fig, ax = plt.subplots(figsize=(10, 6))
-            im = draw(ax, xs, ys, mag, by, bz, a, res[(n, a)][3])
+            im = draw(ax, xs, ys, mag, by, bz, a, res[(n, gap, a)][3], gap)
             style_colorbar(fig.colorbar(im, ax=ax, extend="max", shrink=0.8, pad=0.03))
             fig.text(0.5, 0.0, NOTE if n else NOTE_NT, ha="center", va="top", fontsize=6.5)
-            name = "{}_{:.3f}A.png".format("notarget" if not n else "target_gap2mm", a)
+            name = "{}_{:.3f}A.png".format("notarget" if not n else "target_gap%gmm" % gap, a)
             fig.savefig(os.path.join(READ, name), dpi=100, bbox_inches="tight")
             plt.close(fig)
             print("done", name, "{:.2f} g".format(fz), flush=True)
     if len(amps) == len(AMPS):
-        fig, axs = plt.subplots(2, 5, figsize=(20, 8.5), sharex=True, sharey=True, constrained_layout=True)
+        fig, axs = plt.subplots(4, 5, figsize=(20, 15), sharex=True, sharey=True, constrained_layout=True)
         im = None
-        for r, n in enumerate((0, N)):
+        for r, (n, gap) in enumerate(cases):
             for j, a in enumerate(AMPS):
-                mag, by, bz, tgt = res[(n, a)]
-                im = draw(axs[r, j], xs, ys, mag, by, bz, a, tgt)
-                axs[r, j].set_title(axs[r, j].get_title().replace(" standing across the axis at 2 mm", " at 2 mm"),
-                                    fontsize=9)
+                mag, by, bz, tgt = res[(n, gap, a)]
+                im = draw(axs[r, j], xs, ys, mag, by, bz, a, tgt, gap)
+                axs[r, j].set_title(axs[r, j].get_title().replace(" standing across the axis", ""), fontsize=9)
                 if j:
                     axs[r, j].set_ylabel("")
-                if r == 0:
+                if r < 3:
                     axs[r, j].set_xlabel("")
-        style_colorbar(fig.colorbar(im, ax=axs, extend="max", shrink=0.7, pad=0.01))
+        style_colorbar(fig.colorbar(im, ax=axs, extend="max", shrink=0.5, pad=0.01))
         fig.suptitle("Ledex field around the plunger tip (calibrated 3D model)", fontsize=12)
-        fig.text(0.5, -0.01, NOTE, ha="center", va="top", fontsize=8)
+        fig.text(0.5, -0.005, NOTE, ha="center", va="top", fontsize=8)
         fig.savefig(os.path.join(READ, "overview_readable.png"), dpi=100, bbox_inches="tight")
         plt.close(fig)
 
