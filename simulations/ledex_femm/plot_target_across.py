@@ -3,9 +3,10 @@
 The tower of ten washers stands across the solenoid axis (its own axis is vertical in the figure) and
 its rim faces the plunger tip. Needs the 3D model, so run with the NGSolve venv:
     /tmp/ngenv/bin/python plot_target_across.py
-Overwrites figures/readable/target_gap2mm_{0.074,0.310,0.580}A.png (same style as the no-target figures).
+Optional args: currents in A (default 0.074 0.310 0.580). Overwrites figures/readable/target_gap2mm_{0.074,0.310,0.580}A.png (same style as the no-target figures).
 """
 import os
+import sys
 
 import matplotlib
 matplotlib.use("Agg")
@@ -81,7 +82,7 @@ def main():
     xs = np.arange(XMIN, XMAX + 0.01, 0.4)
     ys = np.arange(-YMAX, YMAX + 0.01, 0.4)
     os.makedirs(READ, exist_ok=True)
-    for a in AMPS:
+    for a in ([float(v) for v in sys.argv[1:]] or AMPS):
         m = fea3d.Model(p, "across", N, GAP, a)
         fz = m.solve(verbose=False)
         mag, by, bz = sample(m, xs, ys)
