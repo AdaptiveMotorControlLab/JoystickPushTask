@@ -6,6 +6,7 @@ temporary CSV, which is merged afterwards (a crash loses at most one job).
     python femm_run.py sweeps [--only REGEX] [--no-grids]   # results/femm/femm_sweeps.csv + femm_fieldgrid_*.csv
     python femm_run.py summary                              # results/femm/femm_forces_5washers_coaxial.csv, femm_stroke_..., femm_field_along_plunger_edge_...
     python femm_run.py maps                                 # FEMM screenshots in figures/femm/
+    python femm_run.py plunger                              # results/femm/femm_plunger_force_vs_stroke.csv (no target)
 
 FEMM location: C:\\femm42\\bin\\femm.exe on Windows. Elsewhere set FEMM_WINE (path to the wine
 binary) and WINEPREFIX; the defaults match the Mac install described in README.md.
@@ -211,6 +212,21 @@ def run_summary(over=None):
     print("wrote results/femm/femm_forces_5washers_coaxial.csv, femm_field_along_plunger_edge_no_target.csv, femm_stroke_5washers_coaxial.csv")
 
 
+PLUNGER_STROKES = [0.5 * k for k in range(1, 27)]          # 0.5-13 mm
+PLUNGER_AMPS = [0.053, 0.074, 0.106, 0.180, 0.310, 0.40, 0.50, 0.5734, 0.58]   # 0.5734 A = datasheet 100 % duty
+
+
+def run_plunger(over=None):
+    """Plunger force vs stroke, no target: results/femm/femm_plunger_force_vs_stroke.csv."""
+    res = plunger_forces(dict(over or {}), PLUNGER_STROKES, PLUNGER_AMPS, tag="plunger")
+    path = os.path.join(RES, "femm_plunger_force_vs_stroke.csv")
+    with open(path, "w") as f:
+        f.write("stroke_mm,current_A,plunger_force_N\n")
+        for (s, a), fp in sorted(res.items()):
+            f.write("{:g},{:.4f},{:.5f}\n".format(s, a, fp))
+    print("wrote", os.path.relpath(path, HERE), len(res), "rows")
+
+
 def run_maps(over=None):
     """FEMM density-plot screenshots (BMP via FEMM, converted to PNG with Pillow if available)."""
     os.makedirs(FEMM_DIR, exist_ok=True)
@@ -236,7 +252,7 @@ def run_maps(over=None):
 
 def main():
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    p.add_argument("what", choices=["sweeps", "summary", "maps"])
+    p.add_argument("what", choices=["sweeps", "summary", "maps", "plunger"])
     p.add_argument("--only", default=".*", help="regex on job names (sweeps)")
     p.add_argument("--no-grids", action="store_true")
     a = p.parse_args()
@@ -244,6 +260,8 @@ def main():
         run_sweeps(a.only, not a.no_grids)
     elif a.what == "summary":
         run_summary()
+    elif a.what == "plunger":
+        run_plunger()
     else:
         run_maps()
 

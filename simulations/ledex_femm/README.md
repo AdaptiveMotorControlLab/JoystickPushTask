@@ -13,6 +13,9 @@ All target forces, field maps and plots in `figures/plots/` and `figures/magneti
 3D model, except `calibration_fit.png` and `sensitivity.png` (FEMM). **These are model estimates, not
 measurements.** Check them with one scale measurement once the printed holder and a gap jig are available.
 
+Outcome: the washer target gives only ~1 g at the handle, so the chosen design links the plunger itself
+to the joystick shaft (section "Plunger link"; ~10-85 gf at the handle over the command range).
+
 ![field maps](figures/magnetic_fields/overview_magnetic_fields.png)
 
 ## Main findings (3D model, ten M3 washers standing across the axis, plunger seated)
@@ -147,9 +150,9 @@ handle into tower motion, gap and resistance (`results/lever/lever_table.csv`,
 - Resistance at the handle = tower pull × (tower height / handle height above the pivot), about a
   quarter of the tower pull. Pivot 10 mm, 0.58 A (10 V in brackets): home gap 1 mm 0.91 g (0.49) at
   1 mm push, 0.46 (0.25) at 5 mm, 0.14 (0.07) at 15 mm; home gap 2 mm 0.46 (0.25), 0.27 (0.15),
-  0.09 (0.05) g. For comparison, APEM's 3.1 N operating force at the cap top scales to roughly
-  30-60 g at the cube, and Mathis 2017 quote a 10-20 g spring, so the magnet adds a few percent of
-  the spring force at most.
+  0.09 (0.05) g. The stock thumbstick spring is far stiffer (Mathis 2017: about 4 N), and Mathis
+  replaced it to bring the force down to 0.1-0.2 N (10-20 g); even against that the washer target adds
+  only a few percent. This is why the plunger link below was chosen instead.
 - Assumptions: rigid shaft, no play in the stub or the 1D constrainer, push = forward travel of the
   cube face at mid-height, coil current constant. The tower tilt (up to ~9°, top washer ~1.2 mm
   further than the bottom one at 15 mm) and its ~0.1 mm drop are not in the force model.
@@ -158,6 +161,81 @@ handle into tower motion, gap and resistance (`results/lever/lever_table.csv`,
   is (92.4 r − 15.5) / (1 − r) mm. Also note: the lever geometry gives ~5.6° for a 10 mm push, i.e.
   ~0.56 V if the 0-5 V output spans the full 50° travel, against the provisional 0.30 V eyeball
   reading in `calibration/joystick-volts-mm.md`; the ruler check settles both.
+
+## Plunger link: the plunger itself as the resistance (chosen design)
+
+The washer target gives ~1 g at the handle; the task needs ~10-100 g. The plunger is the strong part
+of the solenoid (5.35 N at 1.5 mm stroke, 0.57 A, vs ~0.02 N on the washers at 2 mm), so it is linked to
+the shaft: a rigid link (10 mm pin to pin) joins the plunger's pull end to a collar pin 3 mm from the
+shaft axis on the home (mouse) side. A forward push draws the plunger out of the coil and the coil pulls
+it back, so the resistance opposes the push. `plunger_link.py` models this, and `plunger_link_3d.py`
+draws the assembly.
+
+![side view](figures/plunger_link/side_view.png)
+
+- Plunger pull: new FEMM run with no target (`femm_run.py plunger`, 0.5-13 mm stroke, nine currents),
+  scaled at each stroke so that the 0.5734 A curve matches the datasheet 100 % duty curve (the FEMM model
+  reads up to 1.9× high at long stroke). The same scale is used at all currents.
+- Kinematics: rigid shaft rotating about the pivot (`lever.py`); the plunger pin stays on the Ledex axis.
+  The handle force is the plunger pull × ~0.24 (the link height over the cube height above the pivot).
+  Recommended layout: link at shaft z 14.5 mm (the Ledex axis 30 mm above the plate, where the washers
+  were), home stroke s0 = 3 mm (never 0: seated, the plunger holds with 12.8 N), pivot 10 mm. A 15 mm push
+  takes the stroke from 3.0 to 6.6 mm; the link tilts by at most 1°.
+- Magnet resistance at the cube handle (gf; a pivot at 5 / 20 mm instead of 10 mm gives −16 / +28 %,
+  the shading in `handle_force_vs_push.png`):
+
+| push at the cube | 0 mm | 1 mm | 2 mm | 5 mm | 10 mm | 15 mm |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 V (0.074 A) | 1.5 | 1.4 | 1.3 | 1.0 | 0.76 | 0.59 |
+| 2 V (0.106 A) | 3.2 | 2.9 | 2.7 | 2.1 | 1.6 | 1.2 |
+| 5 V (0.180 A) | 9.1 | 8.3 | 7.7 | 6.1 | 4.5 | 3.5 |
+| 10 V (0.310 A) | 27 | 25 | 23 | 18 | 13 | 10 |
+| 0.58 A (Imax raised) | 84 | 78 | 73 | 60 | 45 | 35 |
+
+  That is 50-100× the washer target at the same command (0.25-0.49 gf at 10 V, 1 mm push), and the command range spans ~1-85 gf, so
+  graded random forces are possible without new hardware. Smaller home strokes or a higher link give more
+  (`design_space.png`: 10 V at home 51 gf for s0 = 1.5 mm, 37 gf for z 23.5 mm), but the force then falls
+  off faster with the push.
+- The magnet pulls the handle toward the mouse at home, so the joystick needs a **hard stop at home**:
+  the home ends of the constrainer slots. The spring only has to return the handle to that stop.
+- Spring (handle-equivalent force at the cube, as a scale pressed by the cube reads it; P0 + k × push).
+  Friction is the plunger weight (20.1 g) on its nylon bearing × mu (0.15-0.4) plus 0.5 gf for the pins,
+  i.e. 0.84 / 1.6 / 2.0 gf at the handle for mu 0.15 / 0.3 / 0.4 (pivot 10 mm). The weakest spring that
+  still returns home reliably is 2 × that at home: **~1.7-4.1 gf preload (3.2 gf for mu 0.3)**; about
+  5 gf covers every layout in the table up to mu 0.3, 6.6 gf the worst case (mu 0.4, pivot 20 mm, link z 23.5) (`spring_requirement.csv`).
+  The thumbstick's own friction is part of the measured spring curve.
+- Return after release from 15 mm (`spring_return.png`; effective mass at the cube ~4.0 g from the
+  printed shaft and cube, solid PLA, plus the plunger): weakest safe spring (3.2 gf + 0.2 gf/mm) reaches
+  home in ~55 ms, a Mathis-like spring (10 gf at home, 20 gf at 15 mm) in ~27 ms; with 10 V on the
+  magnet helps the return (~28 ms). A spring with no preload stalls at ~1.5 mm after the bounce, so
+  preload matters more than stiffness.
+- Assumptions to confirm on the rig: constrainer and holder placement (the constrainer must sit above the
+  link because the shaft runs in slots in its base and top; constrainer base 6 mm above the link here),
+  collar pin 3 mm off axis and plunger pin 3 mm from the tip, rigid link with free pins, no residual
+  magnetism at 0 V, coil current constant during a push, the pivot guess (`lever.py`), shaft base 15.5 mm
+  above the panel. Not modelled: the link's weight and the extra friction of a side load (the link
+  stays within 1°, so side load is < 2 % of the pull).
+- Bench checks before relying on these numbers:
+  1. Spring curve: press a gram scale with the cube at 0 / 5 / 10 / 15 mm, with and without the plunger
+     linked, Ledex off. The difference is the friction; the preload at home should be ≥ 2× it.
+  2. Release test: push to 15 mm and let go, 10 times; `ai1` must return to the home voltage within
+     ±0.035 V every time (with and without the plunger).
+  3. Hard stop: with 10 V on and the handle at home, the plunger must not seat (the stop holds the
+     handle) and the release at 0 V must be clean.
+  4. Force at one or two commands with the scale at the cube (e.g. 5 V and 10 V at 5 mm push) to
+     calibrate the model.
+
+![handle force](figures/plunger_link/handle_force_vs_push.png)
+
+![spring return](figures/plunger_link/spring_return.png)
+
+3D views: `figures/plunger_link/assembly_3d.png` (static, home and 15 mm ghost) and
+`figures/plunger_link/assembly_3d.html` (open in a browser; push slider, command selector with the live
+handle force, part toggles, orbit and zoom). The thumbstick body comes from APEM's STEP model (downloaded on
+first run), the printed parts from `mechanical/3d-print/` STLs, and the Ledex, plunger and link are drawn
+from the datasheet dimensions.
+
+![3D assembly](figures/plunger_link/assembly_3d.png)
 
 ## Model
 
@@ -180,13 +258,21 @@ handle into tower motion, gap and resistance (`results/lever/lever_table.csv`,
 - `femm_run.py`: runs FEMM in parallel on Windows or on a Mac under Wine (Python 3.6+, standard
   library only). `python3 femm_run.py sweeps` (all sweeps and field grids; `--only <regex>`,
   `--no-grids`), `summary` (`results/femm/femm_forces_5washers_coaxial.csv`, `femm_field_along_plunger_edge_no_target.csv` (along the plunger outer edge r = 3.91 mm, not the slotted axis), `femm_stroke_5washers_coaxial.csv`), `maps` (FEMM
-  screenshots in `figures/femm/`, needs Pillow for PNG). `FEMM_WORKERS` sets the number of
-  parallel FEMM processes.
+  screenshots in `figures/femm/`, needs Pillow for PNG), `plunger` (plunger force vs stroke with no
+  target, 0.5-13 mm × nine currents, `results/femm/femm_plunger_force_vs_stroke.csv`). `FEMM_WORKERS` sets
+  the number of parallel FEMM processes.
 - `calibrate.py`: the datasheet fit (`screen`, `refine`, `explore`, `best`, `band`, or `all`);
   writes `results/calibration/` (`fit_log.csv` one row per parameter set, `fit_points.csv` model
   vs datasheet per point, `best_params.json`, `accepted_sets.csv`, `target_band.csv`).
 - `fea3d.py`: the 3D model (see above); `python fea3d.py check` compares a coaxial stack with FEMM.
 - `lever.py`: joystick lever (see above; numpy + matplotlib, reads the 3D CSVs).
+- `plunger_link.py`: plunger-link model (see above; numpy + matplotlib). Writes
+  `results/plunger_link/plunger_link_table.csv` (pivot, link height, home stroke, current, push → tilt,
+  stroke, plunger pull, handle force) and `spring_requirement.csv` (friction, weakest preload, effective
+  mass, return time), and `figures/plunger_link/{handle_force_vs_push,design_space,spring_return,side_view}.png`.
+- `plunger_link_3d.py`: 3D assembly (needs the NGSolve venv for netgen). Downloads APEM's TS STEP to the
+  temp folder, writes `figures/plunger_link/assembly_3d.{png,html}` and the thumbstick outline used by the
+  side view (`results/plunger_link/apem_ts_outline.csv`). Run it before `plunger_link.py` on a fresh clone.
 - `sweep3d.py`: resumable 3D sweeps (`grid`, `far` (gaps 6-10 mm), `stacks`, `stroke`, `band`, `axial`) written to
   `results/fea3d/force_sweep_3d.csv` (`set`, `n_washers`, `gap_mm`, `stroke_mm`, `current_A`, `force_g`; `set`
   = `best` or the FEMM eval number of an accepted calibration set) and `results/fea3d/field_along_plunger_edge_no_target_3d.csv`.
