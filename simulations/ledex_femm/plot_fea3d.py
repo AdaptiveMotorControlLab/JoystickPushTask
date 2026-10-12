@@ -86,7 +86,11 @@ def main():
             ax.set_xlabel("distance along the solenoid axis (mm), tip to the right")
             ax.set_title("{:.3f} A, {} washers, 2 mm: {:.2f} g\n{}".format(a, N, fz, lab), fontsize=9)
     cb = fig.colorbar(im, ax=axs, shrink=0.7, pad=0.02, extend="max")
-    cb.set_label("|B| (T), log scale")
+    ticks = [0.01, 0.03, 0.1, 0.3, 1.0, 2.0]
+    cb.set_ticks(ticks)
+    cb.set_ticklabels(["0.01", "0.03", "0.1", "0.3", "1", "2"])
+    cb.ax.minorticks_off()
+    cb.set_label("field strength |B| in tesla (steps of about 3x)")
     fig.suptitle("Ledex tip and a 10-washer tower standing across the axis (3D model; white outline = washers, "
                  "dashed line = plunger tip)", fontsize=11)
     fig.savefig(os.path.join(READ, "across_field_10washers_gap2mm.png"), dpi=140, bbox_inches="tight")
