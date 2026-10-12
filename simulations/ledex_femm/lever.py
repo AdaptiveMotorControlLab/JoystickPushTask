@@ -134,30 +134,28 @@ def plot_motion():
 
 
 def plot_force(curves):
-    fig, axes = plt.subplots(2, 2, figsize=(12.5, 8), sharex=True)
-    face = HOLES[1][1]
-    for row, g0 in zip(axes, HOME_GAPS):
-        for a, c in ((0.310, "tab:blue"), (0.580, "tab:red")):
-            vals = {}
-            for d_p in PIVOT_DEPTHS:
-                g = geometry(PUSH, d_p, face)
-                ft = force_at(curves, a, g0 + g["target_dx_mm"])
-                vals[d_p] = (ft, ft * g["arm_target"] / g["arm_handle"])
-            for ax, k in zip(row, (0, 1)):
-                ax.fill_between(PUSH, vals[5.0][k], vals[20.0][k], color=c, alpha=0.15, lw=0)
-                ax.plot(PUSH, vals[10.0][k], color=c, label=current_label(a))
-        row[0].set_ylabel("home gap {:g} mm\npull on the 10-washer tower (g-force)".format(g0))
-        row[1].set_ylabel("resistance felt at the cube handle (g-force)")
-        for ax in row:
-            ax.set_yscale("log")
-            ax.grid(True, which="both", alpha=0.3)
-    axes[0, 0].set_title("Force on the washer tower")
-    axes[0, 1].set_title("Resistance at the handle (torque balance)")
-    for ax in axes[1]:
+    fig, axes = plt.subplots(1, 2, figsize=(12.5, 4.6), sharex=True)
+    face, a = HOLES[1][1], 0.580
+    for g0, ls, alpha in zip(HOME_GAPS, ("-", "--"), (0.18, 0.09)):
+        vals = {}
+        for d_p in PIVOT_DEPTHS:
+            g = geometry(PUSH, d_p, face)
+            ft = force_at(curves, a, g0 + g["target_dx_mm"])
+            vals[d_p] = (ft, ft * g["arm_target"] / g["arm_handle"])
+        for ax, k in zip(axes, (0, 1)):
+            ax.fill_between(PUSH, vals[5.0][k], vals[20.0][k], color="tab:red", alpha=alpha, lw=0)
+            ax.plot(PUSH, vals[10.0][k], ls, color="tab:red", label="home gap {:g} mm".format(g0))
+    axes[0].set_ylabel("pull on the 10-washer tower (g-force)")
+    axes[1].set_ylabel("resistance felt at the cube handle (g-force)")
+    axes[0].set_title("Force on the washer tower")
+    axes[1].set_title("Resistance at the handle (torque balance)")
+    for ax in axes:
+        ax.set_yscale("log")
+        ax.grid(True, which="both", alpha=0.3)
         ax.set_xlabel("push at the cube handle (mm), middle cube hole")
-    axes[0, 0].legend(fontsize=8, title="line = pivot 10 mm below shaft base;\nshading = pivot 5-20 mm",
-                      title_fontsize=7)
-    fig.suptitle("Ledex resistance vs push (3D model, best fit, plunger seated, coil current held constant)")
+    axes[0].legend(fontsize=8, title="line = pivot 10 mm below shaft base;\nshading = pivot 5-20 mm",
+                   title_fontsize=7)
+    fig.suptitle("Ledex resistance vs push at {} (3D model, best fit, plunger seated)".format(current_label(a)))
     save(fig, "lever_force_vs_push.png")
 
 
