@@ -1,11 +1,12 @@
 """Plot the Ledex FEMM results in results/ (needs numpy and matplotlib; Python 3.6+).
 
-    python plot_results.py            # writes PNGs to figures/plots/ and figures/readable/
+    python plot_results.py            # writes PNGs to figures/plots/ (readable field maps: plot_target_across.py)
     python plot_results.py --show     # also opens the figures
 
-Data: results/sweeps.csv (one row per FEMM solve), results/fieldgrid_*.csv (r, z, Br, Bz, |B| on a
-0.25 mm grid), results/calibration/ (datasheet fit and the target-force band) and
-results/uncalibrated/ (the first model, kept for the record; not plotted). See README.md.
+Force and field figures come from the 3D model (washer tower standing across the axis):
+results/fea3d.csv and results/fea3d_sweep.csv (sweep3d.py) and results/axial_B3d.csv.
+calibration_fit.png and sensitivity.png stay on the 2D FEMM model: results/calibration/ and
+results/sweeps.csv. results/uncalibrated/ is the first model, kept for the record (not plotted).
 """
 import argparse
 import csv
@@ -78,16 +79,6 @@ def save(fig, name, folder=OUT):
     print("wrote", os.path.relpath(path, HERE))
 
 
-def load_band():
-    path = os.path.join(CAL, "target_band.csv")
-    if not os.path.exists(path):
-        return None
-    band = {}
-    for r in read_csv(path):
-        band.setdefault((r["gap_mm"], round(r["current_A"], 3)), []).append(r["target_force_g"])
-    return {k: (min(v), max(v)) for k, v in band.items()}
-
-
 def plain_log(ax):
     """Log y axis with plain-number labels at 1-2-5 steps (0.05, 0.1, 0.2, 0.5, 1, 2, 5, ...)."""
     from matplotlib.ticker import FixedLocator, FuncFormatter, NullLocator
@@ -97,101 +88,6 @@ def plain_log(ax):
     ax.yaxis.set_minor_locator(NullLocator())
     ax.yaxis.set_major_formatter(FuncFormatter(lambda v, _: "{:g}".format(v)))
     ax.grid(True, axis="y", which="major", alpha=0.3)
-
-
-def plot_force_vs_gap(rows, band):
-    base = select(rows, case=lambda c: c.startswith("baseline_gap"))
-    fig, ax = plt.subplots(figsize=(7.5, 4.8))
-    for a in sorted({r["current_A"] for r in base}):
-        pts = sorted((r["gap_mm"], r["target_force_g"]) for r in select(base, current_A=a))
-        g, f = zip(*pts)
-        line, = ax.plot(g, f, "o-", ms=3, label=current_label(a))
-        if band:
-            bg = [k[0] for k in sorted(band) if k[1] == round(a, 3)]
-            if bg:
-                lo = [band[(x, round(a, 3))][0] for x in bg]
-                hi = [band[(x, round(a, 3))][1] for x in bg]
-                ax.errorbar(bg, [(l + h) / 2 for l, h in zip(lo, hi)],
-                            yerr=[[(h - l) / 2 for l, h in zip(lo, hi)]] * 2, fmt="none",
-                            ecolor=line.get_color(), capsize=3, lw=1.2)
-    ax.set_yscale("log")
-    ax.set_xlabel("gap between plunger tip and washer stack (mm)")
-    ax.set_ylabel("pull on five M3 washers (g-force)")
-    ax.set_title("Seated plunger: washer pull vs gap (calibrated model; bars = accepted-fit range)")
-    ax.grid(True, which="both", alpha=0.3)
-    ax.legend(fontsize=7, ncol=2)
-    save(fig, "force_vs_gap.png")
-
-
-def plot_force_vs_current(rows, band):
-    base = select(rows, case=lambda c: c.startswith("baseline_gap"))
-    fig, ax = plt.subplots(figsize=(7.5, 4.8))
-    for g in [0.5, 1, 2, 3, 5]:
-        pts = sorted((r["current_A"], r["target_force_g"]) for r in select(base, gap_mm=g))
-        if not pts:
-            continue
-        a, f = zip(*pts)
-        line, = ax.plot(a, f, "o-", ms=3, label="gap {:g} mm".format(g))
-        if band:
-            ba = sorted(k[1] for k in band if k[0] == g)
-            if ba:
-                ax.fill_between(ba, [band[(g, x)][0] for x in ba], [band[(g, x)][1] for x in ba],
-                                color=line.get_color(), alpha=0.2, lw=0)
-    for a, v in COMMAND_V.items():
-        ax.axvline(a, color="grey", lw=0.5, alpha=0.4)
-        ax.text(a, 1.0, "{:g} V".format(v), transform=matplotlib.transforms.blended_transform_factory(ax.transData, ax.transAxes),
-                rotation=90, fontsize=6, va="top", ha="right", color="grey")
-    ax.axvline(0.31, color="k", ls="--", lw=0.8)
-    ax.set_yscale("log")
-    ax.set_xlabel("coil current (A); dashed = maximum at the current Imax setting")
-    ax.set_ylabel("pull on five M3 washers (g-force)")
-    ax.set_title("Washer pull vs coil current (shading = accepted-fit range)")
-    ax.grid(True, which="both", alpha=0.3)
-    ax.legend(fontsize=8)
-    save(fig, "force_vs_current.png")
-
-
-def plot_targets(rows):
-    tg = select(rows, case=lambda c: c.startswith("target_") or c.startswith("baseline_gap"))
-    names = ["washers1_M3", "washers3_M3", "washers5_M3", "washers10_M3", "washers20_M3", "washers40_M3"]
-    fig, axes = plt.subplots(1, 2, figsize=(12.5, 4.5), sharey=True)
-    for ax, a in zip(axes, [0.310, 0.58]):
-        for n in names:
-            pts = sorted({(r["gap_mm"], r["target_force_g"]) for r in select(tg, target=n, current_A=a)
-                          if r["gap_mm"] in (1, 2, 3, 5)})
-            if pts:
-                g, f = zip(*pts)
-                ax.plot(g, f, "o-", ms=3, label=n.replace("washers", "").replace("_M3", "") + (" washer" if n == "washers1_M3" else " washers"))
-        ax.set_yscale("log")
-        ax.set_title(current_label(a))
-        ax.set_xlabel("gap (mm)")
-        ax.grid(True, which="both", alpha=0.3)
-    axes[0].set_ylabel("pull on target (g-force)")
-    axes[1].legend(fontsize=7, loc="center left", bbox_to_anchor=(1.02, 0.5),
-                   title="M3 washers in the stack\n(0.8 mm thick each)", title_fontsize=7)
-    fig.suptitle("Pull on washer stacks of different height (mild steel, plunger seated)")
-    save(fig, "targets.png")
-
-
-def plot_stroke(rows):
-    st = select(rows, case=lambda c: c.startswith("stroke_") or c == "baseline_gap2")
-    fig, axes = plt.subplots(1, 2, figsize=(11, 4.2))
-    for a in sorted({r["current_A"] for r in select(rows, case=lambda c: c.startswith("stroke_"))}):
-        pts = sorted({(r["stroke_mm"], r["target_force_g"], r["plunger_force_N"])
-                      for r in select(st, current_A=a)})
-        if len(pts) < 2:
-            continue
-        s, fw, fp = zip(*pts)
-        axes[0].plot(s, fw, "o-", ms=3, label=current_label(a))
-        axes[1].plot(s, fp, "o-", ms=3, label=current_label(a))
-    axes[0].set_ylabel("pull on washers 2 mm from the tip (g-force)")
-    axes[1].set_ylabel("force on plunger (N)")
-    for ax in axes:
-        ax.set_xlabel("plunger held out from its seat (mm)")
-        ax.grid(True, alpha=0.3)
-    axes[0].legend(fontsize=7)
-    fig.suptitle("Seated plunger gives the strongest washer pull")
-    save(fig, "stroke.png")
 
 
 def plot_sensitivity(rows):
@@ -251,25 +147,150 @@ def plot_calibration_fit():
     save(fig, "calibration_fit.png")
 
 
-def plot_target_band(rows, band):
-    if not band:
-        return
+LBL10 = "pull on the 10-washer tower (g-force)"
+
+
+def load3d():
+    """3D results (washer tower across the axis): {(set, n, gap, stroke, current): force_g}."""
+    d = {}
+    old = os.path.join(RES, "fea3d.csv")
+    if os.path.exists(old):
+        for r in read_csv(old):
+            if r["kind"] == "across":
+                d[("best", int(r["n_washers"]), r["gap_mm"], 0.0, round(r["current_A"], 3))] = r["force_g"]
+    path = os.path.join(RES, "fea3d_sweep.csv")
+    if os.path.exists(path):
+        for r in read_csv(path):
+            s = r["set"] if isinstance(r["set"], str) else "%d" % r["set"]
+            d[(s, int(r["n_washers"]), r["gap_mm"], r["stroke_mm"], round(r["current_A"], 3))] = r["force_g"]
+    return d
+
+
+def band3d(d, gap, a):
+    """Range of the 10-washer pull over the accepted calibration sets (3D), or None."""
+    v = [f for (s, n, g, st, i), f in d.items() if n == 10 and g == gap and st == 0 and i == round(a, 3)]
+    return (min(v), max(v)) if len(v) > 2 else None
+
+
+def series(d, n=10, a=0.31):
+    """Gap and pull for the fitted model, plunger seated."""
+    pts = sorted((k[2], f) for k, f in d.items() if k[0] == "best" and k[1] == n and k[3] == 0 and k[4] == round(a, 3))
+    return list(zip(*pts)) if pts else ([], [])
+
+
+def plot_force_vs_gap(d):
+    fig, ax = plt.subplots(figsize=(7.5, 4.8))
+    for a in [0.074, 0.106, 0.180, 0.310, 0.580]:
+        g, f = series(d, a=a)
+        line, = ax.plot(g, f, "o-", ms=3, label=current_label(a))
+        bg = [x for x in (1.0, 2.0, 3.0) if band3d(d, x, a)]
+        if bg:
+            lo, hi = zip(*[band3d(d, x, a) for x in bg])
+            ax.errorbar(bg, [(l + h) / 2 for l, h in zip(lo, hi)], yerr=[[(h - l) / 2 for l, h in zip(lo, hi)]] * 2,
+                        fmt="none", ecolor=line.get_color(), capsize=3, lw=1.2)
+    ax.set_yscale("log")
+    ax.set_xlabel("gap between plunger tip and washer rims (mm)")
+    ax.set_ylabel(LBL10)
+    ax.set_title("Seated plunger: washer pull vs gap (3D model; bars = accepted calibration fits)")
+    ax.grid(True, which="both", alpha=0.3)
+    ax.legend(fontsize=7, ncol=2)
+    save(fig, "force_vs_gap.png")
+
+
+def plot_force_vs_current(d):
+    fig, ax = plt.subplots(figsize=(7.5, 4.8))
+    for g in [0.5, 1.0, 2.0, 3.0, 5.0]:
+        pts = sorted((k[4], f) for k, f in d.items() if k[0] == "best" and k[1] == 10 and k[2] == g and k[3] == 0)
+        if not pts:
+            continue
+        a, f = zip(*pts)
+        line, = ax.plot(a, f, "o-", ms=3, label="gap {:g} mm".format(g))
+        ba = [x for x in (0.074, 0.310, 0.580) if band3d(d, g, x)]
+        if len(ba) > 1:
+            ax.fill_between(ba, [band3d(d, g, x)[0] for x in ba], [band3d(d, g, x)[1] for x in ba],
+                            color=line.get_color(), alpha=0.2, lw=0)
+    for a, v in COMMAND_V.items():
+        ax.axvline(a, color="grey", lw=0.5, alpha=0.4)
+        ax.text(a, 1.0, "{:g} V".format(v), transform=matplotlib.transforms.blended_transform_factory(ax.transData, ax.transAxes),
+                rotation=90, fontsize=6, va="top", ha="right", color="grey")
+    ax.axvline(0.31, color="k", ls="--", lw=0.8)
+    ax.set_yscale("log")
+    ax.set_xlabel("coil current (A); dashed = maximum at the current Imax setting")
+    ax.set_ylabel(LBL10)
+    ax.set_title("Washer pull vs coil current (3D model; shading = accepted calibration fits)")
+    ax.grid(True, which="both", alpha=0.3)
+    ax.legend(fontsize=8)
+    save(fig, "force_vs_current.png")
+
+
+def plot_targets(d):
+    fig, axes = plt.subplots(1, 2, figsize=(12.5, 4.5), sharey=True)
+    for ax, a in zip(axes, [0.310, 0.580]):
+        for n in (1, 5, 10, 20, 40):
+            g, f = series(d, n=n, a=a)
+            g, f = zip(*[(x, y) for x, y in zip(g, f) if x in (1, 2, 3, 5)]) if g else ((), ())
+            if g:
+                ax.plot(g, f, "o-", ms=3, label="{} washer{}".format(n, "" if n == 1 else "s"))
+        ax.set_yscale("log")
+        ax.set_title(current_label(a))
+        ax.set_xlabel("gap (mm)")
+        ax.grid(True, which="both", alpha=0.3)
+    axes[0].set_ylabel("pull on the washer tower (g-force)")
+    axes[1].legend(fontsize=7, loc="center left", bbox_to_anchor=(1.02, 0.5),
+                   title="M3 washers in the tower\n(0.8 mm thick each)", title_fontsize=7)
+    fig.suptitle("Pull on washer towers of different height standing across the axis (3D model, plunger seated)")
+    save(fig, "targets.png")
+
+
+def plot_stroke(d):
+    fig, ax = plt.subplots(figsize=(7, 4.2))
+    for a in [0.074, 0.180, 0.310, 0.580]:
+        pts = sorted((k[3], f) for k, f in d.items() if k[0] == "best" and k[1] == 10 and k[2] == 2.0 and k[4] == round(a, 3))
+        if len(pts) > 1:
+            ax.plot(*zip(*pts), "o-", ms=3, label=current_label(a))
+    ax.set_yscale("log")
+    ax.set_xlabel("plunger held out from its seat (mm); washers stay 2 mm from the tip")
+    ax.set_ylabel(LBL10)
+    ax.set_title("Seated plunger gives the strongest washer pull (3D model)")
+    ax.grid(True, which="both", alpha=0.3)
+    ax.legend(fontsize=7)
+    save(fig, "stroke.png")
+
+
+def plot_target_band(d):
     fig, axes = plt.subplots(1, 3, figsize=(13, 4.2), sharey=True)
-    for ax, g in zip(axes, [1, 2, 3]):
-        ba = sorted(k[1] for k in band if k[0] == g)
-        ax.fill_between(ba, [band[(g, a)][0] for a in ba], [band[(g, a)][1] for a in ba],
-                        color="C0", alpha=0.25, lw=0, label="accepted fits (range)")
-        cal = sorted((r["current_A"], r["target_force_g"]) for r in rows
-                     if r["case"] == "baseline_gap{:g}".format(g))
-        ax.plot(*zip(*cal), "o-", color="C0", ms=3, label="best fit")
-        ax.set_title("gap {} mm".format(g))
+    for ax, g in zip(axes, [1.0, 2.0, 3.0]):
+        ba = [x for x in (0.074, 0.310, 0.580) if band3d(d, g, x)]
+        if len(ba) > 1:
+            ax.fill_between(ba, [band3d(d, g, a)[0] for a in ba], [band3d(d, g, a)[1] for a in ba],
+                            color="C0", alpha=0.25, lw=0, label="accepted fits (range)")
+        a, f = zip(*sorted((k[4], v) for k, v in d.items() if k[0] == "best" and k[1] == 10 and k[2] == g and k[3] == 0))
+        ax.plot(a, f, "o-", color="C0", ms=3, label="best fit")
+        ax.set_title("gap {:g} mm".format(g))
         ax.set_xlabel("coil current (A); 10 V = 0.31 A")
         ax.set_yscale("log")
         ax.grid(True, which="both", alpha=0.3)
-    axes[0].set_ylabel("pull on five M3 washers (g-force)")
+    axes[0].set_ylabel(LBL10)
     axes[0].legend(fontsize=7)
-    fig.suptitle("Target force after calibration against the datasheet")
+    fig.suptitle("Washer pull with the calibration uncertainty (3D model, 16 accepted calibration sets)")
     save(fig, "target_force_band.png")
+
+
+def plot_axial_profile():
+    path = os.path.join(RES, "axial_B3d.csv")
+    if not os.path.exists(path):
+        return
+    rows = read_csv(path)
+    fig, ax = plt.subplots(figsize=(7, 4.2))
+    for a in sorted({r["current_A"] for r in rows}):
+        pts = sorted((r["dist_mm"], r["B_T"] * 1000) for r in rows if r["current_A"] == a)
+        ax.plot(*zip(*pts), label=current_label(a))
+    ax.set_xlabel("distance in front of the plunger tip, along its outer edge r = 3.9 mm (mm)")
+    ax.set_ylabel("|B| (mT)")
+    ax.set_title("Field in front of the tip along the plunger edge, no target (3D model)")
+    ax.grid(True, alpha=0.3)
+    ax.legend(fontsize=7)
+    save(fig, "axial_profile.png")
 
 
 def load_grid(path):
@@ -280,27 +301,6 @@ def load_grid(path):
     return r, z, d[:, 2].reshape(shape), d[:, 3].reshape(shape), d[:, 4].reshape(shape)
 
 
-def plot_axial_profile():
-    fig, ax = plt.subplots(figsize=(7, 4.2))
-    for a in [0.074, 0.106, 0.180, 0.310, 0.580]:
-        path = os.path.join(RES, "fieldgrid_notarget_{:.3f}A.csv".format(a))
-        if not os.path.exists(path):
-            continue
-        r, z, br, bz, bm = load_grid(path)
-        sel = z <= -PROTRUDE
-        i = np.searchsorted(r, RP)                      # interpolate to r = RP between grid columns
-        w = (RP - r[i - 1]) / (r[i] - r[i - 1])
-        line = (1 - w) * bm[sel, i - 1] + w * bm[sel, i]
-        ax.plot(-PROTRUDE - z[sel], line * 1000, label=current_label(a))
-    ax.set_xlabel("distance in front of the plunger tip, along its outer edge r = 3.9 mm (mm)")
-    ax.set_ylabel("|B| (mT)")
-    ax.set_title("Field in front of the tip along the plunger edge (not the slotted axis), no target")
-    ax.grid(True, alpha=0.3)
-    ax.legend(fontsize=7)
-    save(fig, "axial_profile.png")
-
-
-XMIN, XMAX, YMAX = -5, 40, 14
 STACK_T = 8.0   # thickness of the target stack in the field figures: ten M3 washers, 0.8 mm each
 
 
@@ -383,14 +383,14 @@ def main():
     if args.show:
         plt.close = lambda *a, **k: None
     rows = load_sweeps()
-    band = load_band()
-    plot_force_vs_gap(rows, band)
-    plot_force_vs_current(rows, band)
-    plot_targets(rows)
-    plot_stroke(rows)
-    plot_sensitivity(rows)
+    d = load3d()
+    plot_force_vs_gap(d)
+    plot_force_vs_current(d)
+    plot_targets(d)
+    plot_stroke(d)
+    plot_sensitivity(rows)          # FEMM (2D) on purpose, like the calibration fit
     plot_calibration_fit()
-    plot_target_band(rows, band)
+    plot_target_band(d)
     plot_axial_profile()
     # readable figures now come from the 3D model: plot_target_across.py
     if args.show:

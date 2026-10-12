@@ -83,7 +83,7 @@ def prof(pts, ang=90):
 
 class Model:
     def __init__(self, p, kind, n_washers, gap, amps, rbox=62.0, zlo=-62.0, zhi=80.0, wri=1.6, wro=4.5,
-                 maxh_tip=0.45, maxh_air=9.0, order=2, maxh_pl=0.7):
+                 maxh_tip=0.45, maxh_air=9.0, order=2, maxh_pl=0.7, stroke=0.0):
         self.p, self.kind, self.n, self.gap, self.amps = p, kind, n_washers, gap, amps
         self.order = order
         seat, clr, tpl, wall, conea = p["SEAT"], p["CLR"], p["TPL"], p["WALL"], p["CONEA"]
@@ -104,8 +104,10 @@ class Model:
                        (RO, tpl), (RO, LEN), (0, LEN)])
         steel2 = prof([(rb, -LBOSS), (RBOSS, -LBOSS), (RBOSS, 0), (RO, 0), (RO, tpl), (rki, tpl), (rb, tpl)])
         coil = prof([(rci, tpl + 0.1), (rco, tpl + 0.1), (rco, LEN - tpl - 0.1), (rci, LEN - tpl - 0.1)])
-        plunger = prof([(0, zt + SLOTD), (SLOTR, zt + SLOTD), (SLOTR, zt), (RP, zt), (RP, zcone),
-                        (RTIP, zapex), (0, zapex)])
+        sp = stroke      # plunger held out from its seat: it moves away from the body, steel stays put
+        plunger = prof([(0, zt - sp + SLOTD), (SLOTR, zt - sp + SLOTD), (SLOTR, zt - sp), (RP, zt - sp),
+                        (RP, zcone - sp), (RTIP, zapex - sp), (0, zapex - sp)])
+        zt = zt - sp                                          # the target follows the tip
         steel1.mat("steel"); steel2.mat("steel"); coil.mat("coil"); plunger.mat("plunger")
         solids = [steel1, steel2, coil, plunger]
         if n_washers:
