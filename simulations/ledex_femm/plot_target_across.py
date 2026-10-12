@@ -1,9 +1,10 @@
-"""Readable field figures with the washer tower in its real orientation (3D model).
+"""All readable field figures from the 3D model (washer tower standing across the axis).
 
 The tower of ten washers stands across the solenoid axis (its own axis is vertical in the figure) and
 its rim faces the plunger tip. Needs the 3D model, so run with the NGSolve venv:
     /tmp/ngenv/bin/python plot_target_across.py
-Optional args: currents in A (default 0.074 0.310 0.580). Overwrites figures/readable/target_gap2mm_{0.074,0.310,0.580}A.png (same style as the no-target figures).
+Optional args: currents in A (default 0.074 0.310 0.580). Writes figures/readable/notarget_*A.png, target_gap2mm_*A.png and overview_readable.png.
+Solved fields are cached in results/fieldcache3d_*.npz.
 """
 import os
 import sys
@@ -19,7 +20,7 @@ from plot_results import current_label, style_colorbar, GEOM
 HERE = os.path.dirname(os.path.abspath(__file__))
 READ = os.path.join(HERE, "figures", "readable")
 N, GAP = 10, 2.0
-AMPS = [0.074, 0.310, 0.580]
+AMPS = [0.074, 0.106, 0.180, 0.310, 0.580]
 PROTRUDE, RP, RO, LBOSS, RBOSS, SLOTD = 23.81, 3.91, 9.78, 9.52, 6.6, 9.5
 XMIN, XMAX, YMAX = -5, 40, 14
 
@@ -27,6 +28,11 @@ NOTE = ("Side view, cut through the solenoid axis (horizontal, dotted) and the a
         "0 mm = front face of the solenoid body, plunger tip (23.8 mm out) points right. Target = ten M3 washers "
         "(8 mm tall, 9 mm across) standing\non top of each other across the axis, rim 2 mm from the tip.\n"
         "White lines = field direction; cyan = body, boss, plunger, washers (dotted = hole).")
+
+
+NOTE_NT = ("Side view, cut through the solenoid axis (horizontal, dotted).\n"
+           "0 mm = front face of the solenoid body, plunger tip (23.8 mm out) points right; no target.\n"
+           "White lines = field direction; cyan = body, boss, plunger.")
 
 
 def sample(m, xs, ys):
@@ -48,7 +54,7 @@ def sample(m, xs, ys):
     return mag, by, bz
 
 
-def draw(ax, xs, ys, mag, by, bz, a, zc_pos, wro, ht):
+def draw(ax, xs, ys, mag, by, bz, a, tgt):
     im = ax.pcolormesh(xs, ys, np.clip(np.nan_to_num(mag) * 1000, 0, 50), vmin=0, vmax=50, cmap="inferno",
                        shading="auto")
     ax.streamplot(xs, ys, -np.nan_to_num(bz), np.nan_to_num(by), color="w", linewidth=0.4, density=1.3,
@@ -61,20 +67,40 @@ def draw(ax, xs, ys, mag, by, bz, a, zc_pos, wro, ht):
         ax.plot([XMIN, PROTRUDE, PROTRUDE], [s * RP, s * RP, 0], **kw)
         ax.plot([XMIN, LBOSS, LBOSS, 0, 0, XMIN], [s * rb, s * rb, s * RBOSS, s * RBOSS, s * RO, s * RO], **kw)
         ax.plot([XMIN, -tpl, -tpl], [s * rki, s * rki, s * rb], **kw)
-    ax.add_patch(plt.Rectangle((zc_pos - wro, -ht / 2), 2 * wro, ht, fill=False, ec="c", lw=1.2))
-    for s in (-1, 1):
-        ax.plot([zc_pos + s * 1.6] * 2, [-ht / 2, ht / 2], color="c", lw=0.8, ls=":")
-    ax.text(zc_pos, ht / 2 + 0.6, "washers", color="c", fontsize=7, ha="center", va="bottom")
+    if tgt is not None:
+        zc_pos, wro, ht = tgt
+        ax.add_patch(plt.Rectangle((zc_pos - wro, -ht / 2), 2 * wro, ht, fill=False, ec="c", lw=1.2))
+        for s in (-1, 1):
+            ax.plot([zc_pos + s * 1.6] * 2, [-ht / 2, ht / 2], color="c", lw=0.8, ls=":")
+        ax.text(zc_pos, ht / 2 + 0.6, "washers", color="c", fontsize=7, ha="center", va="bottom")
     ax.text(LBOSS / 2, RBOSS + 0.3, "boss", color="c", fontsize=7, ha="center", va="bottom")
     ax.text(XMIN + 0.3, RO + 0.3, "body", color="c", fontsize=7, ha="left", va="bottom")
     ax.axhline(0, color="grey", lw=0.6, ls=":")
     ax.set_aspect("equal")
     ax.set_xlim(XMIN, XMAX)
     ax.set_ylim(-YMAX, YMAX)
-    ax.set_title("10 washers standing across the axis at 2 mm, " + current_label(a), fontsize=9)
+    ax.set_title(("No target, " if tgt is None else "10 washers standing across the axis at 2 mm, ")
+                 + current_label(a), fontsize=9)
     ax.set_xlabel("position along the axis (mm)", fontsize=7)
     ax.set_ylabel("height up the washer tower (mm)", fontsize=8)
     return im
+
+
+def solved(p, xs, ys, a, n):
+    """Field in the cut plane for n washers (0 = no target), cached on disk."""
+    path = os.path.join(HERE, "results", "fieldcache3d_{}_{:.3f}A.npz".format("notarget" if not n else "washers%d" % n, a))
+    if os.path.exists(path):
+        d = np.load(path)
+        return d["mag"], d["by"], d["bz"], float(d["fz"]), d["tgt"]
+    m = fea3d.Model(p, "across", n, GAP, a)
+    fz = m.solve(verbose=False) if n else 0.0
+    if not n:
+        m.solve(verbose=False)
+    mag, by, bz = sample(m, xs, ys)
+    tgt = np.array([-m.tgeo[1], m.tgeo[3], m.tgeo[2] * 2]) if n else np.zeros(3)
+    np.savez(path, mag=mag, by=by, bz=bz, fz=fz, tgt=tgt)
+    print("solved", n, a, flush=True)
+    return mag, by, bz, fz, tgt
 
 
 def main():
@@ -82,18 +108,38 @@ def main():
     xs = np.arange(XMIN, XMAX + 0.01, 0.4)
     ys = np.arange(-YMAX, YMAX + 0.01, 0.4)
     os.makedirs(READ, exist_ok=True)
-    for a in ([float(v) for v in sys.argv[1:]] or AMPS):
-        m = fea3d.Model(p, "across", N, GAP, a)
-        fz = m.solve(verbose=False)
-        mag, by, bz = sample(m, xs, ys)
-        zc, ht, wro = -m.tgeo[1], m.tgeo[2] * 2, m.tgeo[3]
-        fig, ax = plt.subplots(figsize=(10, 6))
-        im = draw(ax, xs, ys, mag, by, bz, a, zc, wro, ht)
-        style_colorbar(fig.colorbar(im, ax=ax, extend="max", shrink=0.8, pad=0.03))
-        fig.text(0.5, 0.0, NOTE, ha="center", va="top", fontsize=6.5)
-        fig.savefig(os.path.join(READ, "target_gap2mm_{:.3f}A.png".format(a)), dpi=100, bbox_inches="tight")
+    amps = [float(v) for v in sys.argv[1:]] or AMPS
+    res = {}
+    for n in (0, N):
+        for a in amps:
+            mag, by, bz, fz, tgt = solved(p, xs, ys, a, n)
+            res[(n, a)] = (mag, by, bz, (tuple(tgt) if n else None))
+            fig, ax = plt.subplots(figsize=(10, 6))
+            im = draw(ax, xs, ys, mag, by, bz, a, res[(n, a)][3])
+            style_colorbar(fig.colorbar(im, ax=ax, extend="max", shrink=0.8, pad=0.03))
+            fig.text(0.5, 0.0, NOTE if n else NOTE_NT, ha="center", va="top", fontsize=6.5)
+            name = "{}_{:.3f}A.png".format("notarget" if not n else "target_gap2mm", a)
+            fig.savefig(os.path.join(READ, name), dpi=100, bbox_inches="tight")
+            plt.close(fig)
+            print("done", name, "{:.2f} g".format(fz), flush=True)
+    if len(amps) == len(AMPS):
+        fig, axs = plt.subplots(2, 5, figsize=(20, 8.5), sharex=True, sharey=True, constrained_layout=True)
+        im = None
+        for r, n in enumerate((0, N)):
+            for j, a in enumerate(AMPS):
+                mag, by, bz, tgt = res[(n, a)]
+                im = draw(axs[r, j], xs, ys, mag, by, bz, a, tgt)
+                axs[r, j].set_title(axs[r, j].get_title().replace(" standing across the axis at 2 mm", " at 2 mm"),
+                                    fontsize=9)
+                if j:
+                    axs[r, j].set_ylabel("")
+                if r == 0:
+                    axs[r, j].set_xlabel("")
+        style_colorbar(fig.colorbar(im, ax=axs, extend="max", shrink=0.7, pad=0.01))
+        fig.suptitle("Ledex field around the plunger tip (calibrated 3D model)", fontsize=12)
+        fig.text(0.5, -0.01, NOTE, ha="center", va="top", fontsize=8)
+        fig.savefig(os.path.join(READ, "overview_readable.png"), dpi=100, bbox_inches="tight")
         plt.close(fig)
-        print("done", a, "{:.2f} g".format(fz), flush=True)
 
 
 if __name__ == "__main__":

@@ -392,7 +392,7 @@ def main():
     plot_calibration_fit()
     plot_target_band(rows, band)
     plot_axial_profile()
-    plot_readable()
+    # readable figures now come from the 3D model: plot_target_across.py
     if args.show:
         plt.show()
 
