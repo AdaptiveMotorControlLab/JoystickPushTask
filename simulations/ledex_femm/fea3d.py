@@ -141,7 +141,7 @@ class Model:
                 end = abs(c[2] - zlo) < 1e-6 or abs(c[2] - zhi) < 1e-6
                 f.name = "outer" if (on_plane or far or end) else "inner"
         self.mesh = Mesh(OCCGeometry(Glue(pieces)).GenerateMesh(maxh=maxh_air, grading=0.25))
-        self.rb, self.tpl = rb, tpl
+        self.rb, self.tpl, self.zt = rb, tpl, zt
 
     def solve(self, tol=1e-3, maxit=40, verbose=True):
         mesh = self.mesh

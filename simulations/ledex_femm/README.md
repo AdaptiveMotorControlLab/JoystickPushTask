@@ -107,6 +107,8 @@ Pull (g-force) of a washer column across the axis, tip to nearest rim, 0.58 A (1
 
 Across the axis the column pulls about 25-35 % less than the same number of coaxial washers once there are 5 or more (10 washers at 2 mm: 2.2 g vs 2.8 g), but more for one washer at 2-3 mm. Gains from extra washers flatten past 10. Uncertainty: about +-10 % from the nonlinear iteration near saturation at 0.58 A, plus the calibration extrapolation (+-40 %). Coaxial 20-washer 3D runs were not completed.
 
+Figures: `figures/readable/across_field_10washers_gap2mm.png` (|B| in two cut planes, 10 washers, 2 mm, at 0.074 / 0.31 / 0.58 A) and `figures/plots/across_vs_axial.png` (pull against washer count, across vs coaxial). Both come from `plot_fea3d.py`; the older FEMM field figures in `figures/readable/` show the coaxial ring layout.
+
 ## Model
 
 - Published: case 19.56 mm dia × 39.37 mm, M14 boss 9.52 mm, plunger 7.82 mm dia and 20.1 g,
