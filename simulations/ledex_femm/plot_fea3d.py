@@ -64,28 +64,30 @@ def main():
         side = sample(m, np.zeros_like(Ya), Ya, Zb)          # plane x = 0: column seen edge-on
         data[a] = (fz, xs, ys, zs, top, side, zt, zc, wro, ht)
         print("done", a, fz, flush=True)
-    fig, axs = plt.subplots(2, 3, figsize=(15, 9.5))
+    fig, axs = plt.subplots(2, 3, figsize=(16, 8.5), constrained_layout=True)
     im = None
     for j, a in enumerate(AMPS):
         fz, xs, ys, zs, top, side, zt, zc, wro, ht = data[a]
-        for i, (arr, ax_, lab) in enumerate([(top, xs, "washers face-on (plane y = 0)"),
-                                              (side, ys, "washers edge-on (plane x = 0)")]):
+        h = -zs[::-1]                      # horizontal axis = -z: solenoid body on the left, tip pointing right
+        for i, (arr, ax_, lab) in enumerate([(side, ys, "side view: tower of washers standing vertically"),
+                                              (top, xs, "view from above the tower: washers as rings")]):
             ax = axs[i, j]
-            im = ax.pcolormesh(ax_, zs, np.clip(arr, 0.005, VMAX), cmap="viridis", norm=LogNorm(0.005, VMAX), shading="auto")
+            im = ax.pcolormesh(h, ax_, np.clip(arr.T[:, ::-1], 0.005, VMAX), cmap="viridis",
+                               norm=LogNorm(0.005, VMAX), shading="auto")
             if i == 0:
-                ax.add_patch(Circle((0, zc), wro, fill=False, ec="w", lw=1.2))
-                ax.add_patch(Circle((0, zc), 1.6, fill=False, ec="w", lw=1.0, ls=":"))
-                ax.set_xlabel("x (mm)")
+                ax.add_patch(Rectangle((-zc - wro, -ht / 2), 2 * wro, ht, fill=False, ec="w", lw=1.2))
+                ax.set_ylabel("height up the tower (mm)")
             else:
-                ax.add_patch(Rectangle((-ht / 2, zc - wro), ht, 2 * wro, fill=False, ec="w", lw=1.2))
-                ax.set_xlabel("y, along the washer column (mm)")
-            ax.axhline(zt, color="w", lw=0.5, ls="--")
+                ax.add_patch(Circle((-zc, 0), wro, fill=False, ec="w", lw=1.2))
+                ax.add_patch(Circle((-zc, 0), 1.6, fill=False, ec="w", lw=1.0, ls=":"))
+                ax.set_ylabel("sideways (mm)")
+            ax.axvline(-zt, color="w", lw=0.5, ls="--")
             ax.set_aspect("equal")
-            ax.set_ylabel("z along solenoid axis (mm)")
-            ax.set_title("{:.3f} A, {} washers, 2 mm: {:.2f} g\n{}".format(a, N, fz, lab), fontsize=8.5)
+            ax.set_xlabel("distance along the solenoid axis (mm), tip to the right")
+            ax.set_title("{:.3f} A, {} washers, 2 mm: {:.2f} g\n{}".format(a, N, fz, lab), fontsize=9)
     cb = fig.colorbar(im, ax=axs, shrink=0.7, pad=0.02, extend="max")
     cb.set_label("|B| (T), log scale")
-    fig.suptitle("Ledex tip and a 10-washer column standing across the axis (3D model, white outline = washers, "
+    fig.suptitle("Ledex tip and a 10-washer tower standing across the axis (3D model; white outline = washers, "
                  "dashed line = plunger tip)", fontsize=11)
     fig.savefig(os.path.join(READ, "across_field_10washers_gap2mm.png"), dpi=140, bbox_inches="tight")
     plt.close(fig)
