@@ -40,9 +40,11 @@ measurements.** Check them with one scale measurement once the printed holder an
 | 5 mm | 0.018 g | 0.036 g | 0.10 g | 0.28 g | 0.52 g |
 
 Pull on ten stacked M3 washers (3.2 × 9 × 0.8 mm, mild steel) standing across the axis, plunger
-seated; 1 g = 9.81 mN. Best-fit calibration; the spread over the accepted calibration sets is in
-`figures/plots/target_force_band.png`. (The earlier FEMM five-washer ring gave about 0.96 g at 2 mm
-and 10 V, in `results/sweeps.csv`; it is not the real layout.)
+seated; 1 g = 9.81 mN. Best-fit calibration. Range over the best fit and 13 other accepted calibration sets (two more could
+not be meshed), 1 / 2 / 3 mm: 10 V 1.6-2.5 / 0.76-1.2 / 0.44-0.70 g; 0.58 A 2.2-5.6 / 1.1-2.2 /
+0.62-1.3 g; 1 V 0.15-0.23 / 0.07-0.11 / 0.04-0.06 g. The best fit sits at the top of each range, so the
+true pull is more likely below it than above (`figures/plots/target_force_band.png`). (The earlier FEMM five-washer ring gave about 0.96 g at 2 mm
+and 10 V, in `results/femm/femm_sweeps.csv`; it is not the real layout.)
 
 ![target force band](figures/plots/target_force_band.png)
 
@@ -77,7 +79,7 @@ and 10 V, in `results/sweeps.csv`; it is not the real layout.)
 - Uncertainty band: 134 sets fit within 1.2× the best error (`accepted_sets.csv`; seat gap
   0.52–1.0 mm, clearance 0.68–0.8 mm, steel scale 0.82–1.05, plates 1.5–2.8 mm, wall 0.8–1.6 mm,
   cone 30–42°). The 3D target force of the ten-washer tower was recomputed for 16 well-spread ones
-  (`sweep3d.py band`, rows with a numeric `set` in `results/fea3d_sweep.csv`) and gives the bars and
+  (`sweep3d.py band`, rows with a numeric `set` in `results/fea3d/force_sweep_3d.csv`) and gives the bars and
   shading in `force_vs_gap.png`, `force_vs_current.png` and `target_force_band.png`.
 
 ![calibration fit](figures/plots/calibration_fit.png)
@@ -140,7 +142,7 @@ saturation at 0.58 A, plus the calibration extrapolation (±40 %).
   the calibrated values.
 - `femm_run.py`: runs FEMM in parallel on Windows or on a Mac under Wine (Python 3.6+, standard
   library only). `python3 femm_run.py sweeps` (all sweeps and field grids; `--only <regex>`,
-  `--no-grids`), `summary` (`results/forces.csv`, `axial_B.csv` (field along the plunger outer edge r = 3.91 mm, not the slotted axis), `stroke.csv`), `maps` (FEMM
+  `--no-grids`), `summary` (`results/femm/femm_forces_5washers_coaxial.csv`, `femm_field_along_plunger_edge_no_target.csv` (along the plunger outer edge r = 3.91 mm, not the slotted axis), `femm_stroke_5washers_coaxial.csv`), `maps` (FEMM
   screenshots in `figures/femm/`, needs Pillow for PNG). `FEMM_WORKERS` sets the number of
   parallel FEMM processes.
 - `calibrate.py`: the datasheet fit (`screen`, `refine`, `explore`, `best`, `band`, or `all`);
@@ -148,23 +150,23 @@ saturation at 0.58 A, plus the calibration extrapolation (±40 %).
   vs datasheet per point, `best_params.json`, `accepted_sets.csv`, `target_band.csv`).
 - `fea3d.py`: the 3D model (see above); `python fea3d.py check` compares a coaxial stack with FEMM.
 - `sweep3d.py`: resumable 3D sweeps (`grid`, `stacks`, `stroke`, `band`, `axial`) written to
-  `results/fea3d_sweep.csv` (`set`, `n_washers`, `gap_mm`, `stroke_mm`, `current_A`, `force_g`; `set`
-  = `best` or the FEMM eval number of an accepted calibration set) and `results/axial_B3d.csv`.
-  Older `results/fea3d.csv` holds the first across-axis runs (best fit only).
+  `results/fea3d/force_sweep_3d.csv` (`set`, `n_washers`, `gap_mm`, `stroke_mm`, `current_A`, `force_g`; `set`
+  = `best` or the FEMM eval number of an accepted calibration set) and `results/fea3d/field_along_plunger_edge_no_target_3d.csv`.
+  Older `results/fea3d/force_first_runs_3d.csv` holds the first across-axis and coaxial runs (best fit only).
 - `plot_results.py`: makes `figures/plots/*.png` (numpy + matplotlib). The force, stroke, target and
   profile figures read the 3D CSVs; `calibration_fit.png` and `sensitivity.png` read the FEMM CSVs.
 - `plot_target_across.py`: makes `figures/magnetic_fields/*.png` from the 3D model (needs the
-  NGSolve venv; solved fields cached in `results/fieldcache3d_*.npz`).
-- `results/sweeps.csv`: one row per FEMM solve (coaxial layouts, used for the calibration and sensitivity figures). Columns: `case`, `target`,
+  NGSolve venv; solved fields cached in `results/fea3d/field_cut_3d_<nowasher|washers10_across_gap<G>mm>_<I>A.npz`).
+- `results/femm/femm_sweeps.csv`: one row per FEMM solve (coaxial layouts, used for the calibration and sensitivity figures). Columns: `case`, `target`,
   `target_id_mm`, `target_od_mm`, `target_t_mm` (inner/outer diameter, thickness; id 0 = solid
   disc), `protrude_mm`, `seat_mm`, `stroke_mm` (plunger held out from its seat), `bscale`,
   `tpl_mm`, `wall_mm`, `steel`, `target_mesh_mm`, `gap_mm` (tip to target face), `current_A`,
   `target_force_N`, `target_force_g`, `plunger_force_N` (axial force on the plunger, toward the
   seat), `clr_mm`, `conea_deg`. Cases: `baseline_gap*` (five washers, 11 gaps × 12 currents),
   `target_*` (other targets), `stroke_*`, `sens_*`.
-- `results/fieldgrid_<target>_<current>A.csv`: FEMM field grids (`r_mm, z_mm, Br_T, Bz_T, Bmag_T` on a
+- `results/femm/femm_fieldgrid_<nowasher|washers5_coaxial_gap<G>mm|washers10_coaxial_gap2mm>_<I>A.csv`: FEMM field grids (`r_mm, z_mm, Br_T, Bz_T, Bmag_T` on a
   0.25 mm grid) for the coaxial layouts; no longer plotted (the field maps now come from the 3D model).
-- `results/uncalibrated/`: the first model (9.5 mm protrusion, guessed internals), kept for
+- `results/femm/uncalibrated_first_model/` (same file names as above): the first model (9.5 mm protrusion, guessed internals), kept for
   comparison.
 - `figures/magnetic_fields/`: 3D field maps with a mT colour scale: `notarget_<I>A.png`,
   `target_gap{1,2,3}mm_<I>A.png` (ten washers across the axis) and `overview_magnetic_fields.png`

@@ -3,7 +3,7 @@
 Run with the NGSolve venv:  /tmp/ngenv/bin/python plot_target_across.py [current_A ...]
 Writes figures/magnetic_fields/: notarget_<I>A.png, target_gap{1,2,3}mm_<I>A.png (ten washers, rim 1/2/3 mm
 from the tip) and overview_magnetic_fields.png (4 rows x 5 currents; only when no currents are given).
-Default currents: 0.074 0.106 0.180 0.310 0.580 A. Solved fields are cached in results/fieldcache3d_*.npz.
+Default currents: 0.074 0.106 0.180 0.310 0.580 A. Solved fields are cached in results/fea3d/field_cut_3d_*.npz.
 """
 import os
 import sys
@@ -87,8 +87,8 @@ def draw(ax, xs, ys, mag, by, bz, a, tgt, gap=2.0):
 
 def solved(p, xs, ys, a, n, gap=2.0):
     """Field in the cut plane for n washers (0 = no target), cached on disk."""
-    path = os.path.join(HERE, "results", "fieldcache3d_{}_{:.3f}A.npz".format(
-        "notarget" if not n else "washers%d" % n + ("" if gap == 2.0 else "_gap%gmm" % gap), a))
+    case = "nowasher" if not n else "washers%d_across_gap%gmm" % (n, gap)
+    path = os.path.join(HERE, "results", "fea3d", "field_cut_3d_{}_{:.3f}A.npz".format(case, a))
     if os.path.exists(path):
         d = np.load(path)
         return d["mag"], d["by"], d["bz"], float(d["fz"]), d["tgt"]

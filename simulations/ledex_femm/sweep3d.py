@@ -3,9 +3,9 @@
 Run with the NGSolve venv:  /tmp/ngenv/bin/python sweep3d.py [group ...]
 Groups: grid (gap and current, 10 washers), stacks (stack height), stroke (plunger held out),
 band (the accepted calibration sets, for the uncertainty band), axial (|B| along the plunger edge).
-Results are appended to results/fea3d_sweep.csv (set,n_washers,gap_mm,stroke_mm,current_A,force_g);
+Results are appended to results/fea3d/force_sweep_3d.csv (set,n_washers,gap_mm,stroke_mm,current_A,force_g);
 set 'best' is the fitted model, others are accepted calibration sets (their FEMM eval number).
-Jobs already in the file (or in the older results/fea3d.csv, best set, no stroke) are skipped.
+Jobs already in the file (or in the older results/fea3d/force_first_runs_3d.csv, best set, no stroke) are skipped.
 """
 import csv
 import os
@@ -17,7 +17,7 @@ import numpy as np
 import fea3d
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-OUT = os.path.join(HERE, "results", "fea3d_sweep.csv")
+OUT = os.path.join(HERE, "results", "fea3d", "force_sweep_3d.csv")
 CURRENTS = [0.074, 0.106, 0.180, 0.310, 0.580]
 GAPS = [0.5, 1.0, 2.0, 3.0, 5.0]
 
@@ -28,7 +28,7 @@ def key(s, n, g, st, i):
 
 def done_jobs():
     d = {}
-    old = os.path.join(HERE, "results", "fea3d.csv")
+    old = os.path.join(HERE, "results", "fea3d", "force_first_runs_3d.csv")
     if os.path.exists(old):
         for r in csv.DictReader(open(old)):
             if r["kind"] == "across":
@@ -105,7 +105,7 @@ def run_group(group, budget_s):
 def axial():
     """|B| along the plunger outer edge (r = RP, plane x = 0) in front of the tip, no target."""
     p = fea3d.fitted()
-    out = os.path.join(HERE, "results", "axial_B3d.csv")
+    out = os.path.join(HERE, "results", "fea3d", "field_along_plunger_edge_no_target_3d.csv")
     zs = np.arange(0.0, 40.01, 0.25)
     rows = []
     for i in CURRENTS:
@@ -130,7 +130,7 @@ if __name__ == "__main__":
     budget = float(next((a for a in sys.argv[1:] if a.replace(".", "").isdigit()), 1300))
     for g in groups:
         if g == "axial":
-            if not os.path.exists(os.path.join(HERE, "results", "axial_B3d.csv")):
+            if not os.path.exists(os.path.join(HERE, "results", "fea3d", "field_along_plunger_edge_no_target_3d.csv")):
                 axial()
         elif not run_group(g, budget):
             break

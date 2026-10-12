@@ -3,8 +3,8 @@
 Stdlib only, Python 3.6+. One FEMM session per job; jobs run in parallel, each writing its own
 temporary CSV, which is merged afterwards (a crash loses at most one job).
 
-    python femm_run.py sweeps [--only REGEX] [--no-grids]   # results/sweeps.csv + results/fieldgrid_*.csv
-    python femm_run.py summary                              # results/forces.csv, stroke.csv, axial_B.csv
+    python femm_run.py sweeps [--only REGEX] [--no-grids]   # results/femm/femm_sweeps.csv + femm_fieldgrid_*.csv
+    python femm_run.py summary                              # results/femm/femm_forces_5washers_coaxial.csv, femm_stroke_..., femm_field_along_plunger_edge_...
     python femm_run.py maps                                 # FEMM screenshots in figures/femm/
 
 FEMM location: C:\\femm42\\bin\\femm.exe on Windows. Elsewhere set FEMM_WINE (path to the wine
@@ -24,7 +24,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 MAIN = os.path.join(HERE, "ledex_washer.lua")
-RES = os.path.join(HERE, "results")
+RES = os.path.join(HERE, "results", "femm")
 FEMM_DIR = os.path.join(HERE, "figures", "femm")
 WINDOWS = sys.platform.startswith("win")
 
@@ -176,7 +176,7 @@ def sweep_jobs(over=None):
 
 
 def run_sweeps(only=".*", grids=True, over=None, outfile=None):
-    outfile = outfile or os.path.join(RES, "sweeps.csv")
+    outfile = outfile or os.path.join(RES, "femm_sweeps.csv")
     jobs = [j for j in sweep_jobs(over) if re.search(only, j[0])]
     with ThreadPoolExecutor(WORKERS) as ex:
         parts = list(ex.map(lambda j: sweep_job(*j), jobs))
@@ -192,12 +192,12 @@ def run_sweeps(only=".*", grids=True, over=None, outfile=None):
         return
     grid_jobs = []
     for a in AMPS_KEY:
-        grid_jobs.append((-1, a, "fieldgrid_notarget_{:.3f}A".format(a)))
-        grid_jobs.append((2, a, "fieldgrid_washers5_gap2mm_{:.3f}A".format(a)))
+        grid_jobs.append((-1, a, "femm_fieldgrid_nowasher_{:.3f}A".format(a)))
+        grid_jobs.append((2, a, "femm_fieldgrid_washers5_coaxial_gap2mm_{:.3f}A".format(a)))
     for a in [0.310, 0.58]:
-        grid_jobs.append((1, a, "fieldgrid_washers5_gap1mm_{:.3f}A".format(a)))
+        grid_jobs.append((1, a, "femm_fieldgrid_washers5_coaxial_gap1mm_{:.3f}A".format(a)))
     for a in [0.074, 0.310, 0.58]:   # ten-washer stack (8 mm), the planned rig target
-        grid_jobs.append((2, a, "fieldgrid_washers10_gap2mm_{:.3f}A".format(a), dict(WT=8.0)))
+        grid_jobs.append((2, a, "femm_fieldgrid_washers10_coaxial_gap2mm_{:.3f}A".format(a), dict(WT=8.0)))
     grid_jobs = [j for j in grid_jobs if re.search(only, j[2])]
     with ThreadPoolExecutor(WORKERS) as ex:
         list(ex.map(lambda j: fieldgrid_job(j[0], j[1], os.path.join(RES, j[2] + ".csv"),
@@ -208,7 +208,7 @@ def run_summary(over=None):
     jobs = [dict(over or {}, MODE=m) for m in ("forces", "profile", "stroke")]
     with ThreadPoolExecutor(3) as ex:
         list(ex.map(lambda g: run_lua(g, g["MODE"]), jobs))
-    print("wrote results/forces.csv, axial_B.csv, stroke.csv")
+    print("wrote results/femm/femm_forces_5washers_coaxial.csv, femm_field_along_plunger_edge_no_target.csv, femm_stroke_5washers_coaxial.csv")
 
 
 def run_maps(over=None):

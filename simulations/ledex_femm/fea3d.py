@@ -11,7 +11,7 @@ on the target for either orientation:
 Setup (one time):  python3 -m venv /tmp/ngenv && /tmp/ngenv/bin/pip install ngsolve numpy scipy
 Run:               /tmp/ngenv/bin/python fea3d.py check         # axial stack vs FEMM
                    /tmp/ngenv/bin/python sweep3d.py             # the sweeps behind the figures (resumable)
-                   /tmp/ngenv/bin/python fea3d.py across        # first across/axial sweep, results/fea3d.csv
+                   /tmp/ngenv/bin/python fea3d.py across        # first across/axial sweep, results/fea3d/force_first_runs_3d.csv
 
 Method: A-formulation (H(curl), order 2, no gradients), quarter model (the field is tangent to the two
 mirror planes and to the outer box, so A x n = 0 on all of them), Picard iteration on the element-wise
@@ -242,7 +242,7 @@ def run(kind, n, gap, amps, p=None, **kw):
 if __name__ == "__main__":
     mode = sys.argv[1] if len(sys.argv) > 1 else "check"
     if mode == "across":
-        out = os.path.join(HERE, "results", "fea3d.csv")
+        out = os.path.join(HERE, "results", "fea3d", "force_first_runs_3d.csv")
         done = set()
         if os.path.exists(out):
             done = set(tuple(l.split(",")[:4]) for l in open(out).read().splitlines()[1:])

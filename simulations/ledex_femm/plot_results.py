@@ -4,9 +4,9 @@
     python plot_results.py --show     # also opens the figures
 
 Force and field figures come from the 3D model (washer tower standing across the axis):
-results/fea3d.csv and results/fea3d_sweep.csv (sweep3d.py) and results/axial_B3d.csv.
+results/fea3d/ (force_*_3d.csv from sweep3d.py and field_along_plunger_edge_no_target_3d.csv).
 calibration_fit.png and sensitivity.png stay on the 2D FEMM model: results/calibration/ and
-results/sweeps.csv. results/uncalibrated/ is the first model, kept for the record (not plotted).
+results/femm/femm_sweeps.csv. results/femm/uncalibrated_first_model/ is the first model, kept for the record (not plotted).
 """
 import argparse
 import csv
@@ -50,7 +50,7 @@ def read_csv(path, num=None):
     return rows
 
 
-def load_sweeps(path=os.path.join(RES, "sweeps.csv")):
+def load_sweeps(path=os.path.join(RES, "femm", "femm_sweeps.csv")):
     return read_csv(path, ["target_id_mm", "target_od_mm", "target_t_mm", "protrude_mm", "seat_mm",
                            "stroke_mm", "target_mesh_mm", "gap_mm", "current_A", "target_force_N",
                            "target_force_g", "plunger_force_N"])
@@ -151,12 +151,12 @@ LBL10 = "pull on the 10-washer tower (g-force)"
 def load3d():
     """3D results (washer tower across the axis): {(set, n, gap, stroke, current): force_g}."""
     d = {}
-    old = os.path.join(RES, "fea3d.csv")
+    old = os.path.join(RES, "fea3d", "force_first_runs_3d.csv")
     if os.path.exists(old):
         for r in read_csv(old):
             if r["kind"] == "across":
                 d[("best", int(r["n_washers"]), r["gap_mm"], 0.0, round(r["current_A"], 3))] = r["force_g"]
-    path = os.path.join(RES, "fea3d_sweep.csv")
+    path = os.path.join(RES, "fea3d", "force_sweep_3d.csv")
     if os.path.exists(path):
         for r in read_csv(path):
             s = r["set"] if isinstance(r["set"], str) else "%d" % r["set"]
@@ -204,9 +204,10 @@ def plot_force_vs_current(d):
         a, f = zip(*pts)
         line, = ax.plot(a, f, "o-", ms=3, label="gap {:g} mm".format(g))
         ba = [x for x in (0.074, 0.310, 0.580) if band3d(d, g, x)]
-        if len(ba) > 1:
-            ax.fill_between(ba, [band3d(d, g, x)[0] for x in ba], [band3d(d, g, x)[1] for x in ba],
-                            color=line.get_color(), alpha=0.2, lw=0)
+        if ba:
+            lo, hi = zip(*[band3d(d, g, x) for x in ba])
+            ax.errorbar(ba, [(l + h) / 2 for l, h in zip(lo, hi)], yerr=[[(h - l) / 2 for l, h in zip(lo, hi)]] * 2,
+                        fmt="none", ecolor=line.get_color(), capsize=3, lw=1.5, alpha=0.6)
     for a, v in COMMAND_V.items():
         ax.axvline(a, color="grey", lw=0.5, alpha=0.4)
         ax.text(a, 1.0, "{:g} V".format(v), transform=matplotlib.transforms.blended_transform_factory(ax.transData, ax.transAxes),
@@ -215,7 +216,7 @@ def plot_force_vs_current(d):
     ax.set_yscale("log")
     ax.set_xlabel("coil current (A); dashed = maximum at the current Imax setting")
     ax.set_ylabel(LBL10)
-    ax.set_title("Washer pull vs coil current (3D model; shading = accepted calibration fits)")
+    ax.set_title("Washer pull vs coil current (3D model; bars = accepted calibration fits)")
     ax.grid(True, which="both", alpha=0.3)
     ax.legend(fontsize=8)
     save(fig, "force_vs_current.png")
@@ -273,9 +274,10 @@ def plot_target_band(d):
     fig, axes = plt.subplots(1, 3, figsize=(13, 4.2), sharey=True)
     for ax, g in zip(axes, [1.0, 2.0, 3.0]):
         ba = [x for x in (0.074, 0.310, 0.580) if band3d(d, g, x)]
-        if len(ba) > 1:
-            ax.fill_between(ba, [band3d(d, g, a)[0] for a in ba], [band3d(d, g, a)[1] for a in ba],
-                            color="C0", alpha=0.25, lw=0, label="accepted fits (range)")
+        if ba:
+            lo, hi = zip(*[band3d(d, g, a) for a in ba])
+            ax.errorbar(ba, [(l + h) / 2 for l, h in zip(lo, hi)], yerr=[[(h - l) / 2 for l, h in zip(lo, hi)]] * 2,
+                        fmt="none", ecolor="C0", capsize=4, lw=2, alpha=0.5, label="accepted fits (range)")
         a, f = zip(*sorted((k[4], v) for k, v in d.items() if k[0] == "best" and k[1] == 10 and k[2] == g and k[3] == 0))
         ax.plot(a, f, "o-", color="C0", ms=3, label="best fit")
         ax.set_title("gap {:g} mm".format(g))
@@ -284,12 +286,14 @@ def plot_target_band(d):
         ax.grid(True, which="both", alpha=0.3)
     axes[0].set_ylabel(LBL10)
     axes[0].legend(fontsize=7)
-    fig.suptitle("Washer pull with the calibration uncertainty (3D model, 16 accepted calibration sets)")
+    nsets = len({k[0] for k in d if k[1] == 10 and k[2] == 2.0 and k[4] == 0.31 and k[3] == 0})
+    fig.suptitle("Washer pull with the calibration uncertainty (3D model, best fit + {} other accepted calibration sets)"
+                 .format(nsets - 1))
     save(fig, "target_force_band.png")
 
 
 def plot_axial_profile():
-    path = os.path.join(RES, "axial_B3d.csv")
+    path = os.path.join(RES, "fea3d", "field_along_plunger_edge_no_target_3d.csv")
     if not os.path.exists(path):
         return
     rows = read_csv(path)

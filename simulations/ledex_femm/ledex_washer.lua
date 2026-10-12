@@ -25,7 +25,7 @@ function default(name, value)
 end
 
 default("OUT", "C:/Users/Mathis_Lab_1/Documents/JoystickPushTask/simulations/ledex_femm/")
-default("RES", OUT .. "results/")
+default("RES", OUT .. "results/femm/")
 default("TMP", "C:/Users/Mathis_Lab_1/AppData/Local/Temp/ledex_femm/model.fem")
 
 -- command volts and the coil current measured at that command (0.58 A = rated, needs Imax raised)
@@ -267,7 +267,7 @@ function paramcols()
 end
 
 if MODE == "forces" then
-  fh = openfile(RES .. "forces.csv", "w")
+  fh = openfile(RES .. "femm_forces_5washers_coaxial.csv", "w")
   write(fh, "gap_mm,command_V,current_A,washer_force_N,washer_force_g,plunger_force_N\n")
   flush(fh)
   for g = 1, NG do
@@ -297,7 +297,7 @@ if MODE == "profile" then
     mo_close()
   end
   mi_close()
-  fh = openfile(RES .. "axial_B.csv", "w")
+  fh = openfile(RES .. "femm_field_along_plunger_edge_no_target.csv", "w")
   write(fh, "distance_from_tip_mm")
   for i = 1, NI do write(fh, format(",B_T_at_%.3fA", AMPS[i])) end
   write(fh, "\n")
@@ -313,7 +313,7 @@ if MODE == "stroke" then
   -- plunger held out from its seat; washer stack 2 mm in front of the (moved) tip
   local gap = 2
   local idx = {1, 4, 5}
-  fh = openfile(RES .. "stroke.csv", "w")
+  fh = openfile(RES .. "femm_stroke_5washers_coaxial.csv", "w")
   write(fh, "stroke_mm,command_V,current_A,washer_force_N,washer_force_g,plunger_force_N\n")
   flush(fh)
   for s = 1, NS do
