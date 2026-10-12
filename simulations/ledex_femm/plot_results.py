@@ -237,7 +237,7 @@ def plot_calibration_fit():
                  "RMS error of ln(model/datasheet): fit {:.2f}, held-out curve {:.2f}".format(
                      best["err_fit"], best["err_holdout"]), y=1.0)
     fig.legend(handles, labels, loc="upper center", bbox_to_anchor=(0.5, 0.95), ncol=2, fontsize=8, frameon=True)
-    fig.tight_layout(rect=(0, 0, 1, 0.93))
+    fig.subplots_adjust(top=0.84, hspace=0.12, wspace=0.18)
     save(fig, "calibration_fit.png")
 
 
