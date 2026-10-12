@@ -196,9 +196,12 @@ def run_sweeps(only=".*", grids=True, over=None, outfile=None):
         grid_jobs.append((2, a, "fieldgrid_washers5_gap2mm_{:.3f}A".format(a)))
     for a in [0.310, 0.58]:
         grid_jobs.append((1, a, "fieldgrid_washers5_gap1mm_{:.3f}A".format(a)))
+    for a in [0.074, 0.310, 0.58]:   # ten-washer stack (8 mm), the planned rig target
+        grid_jobs.append((2, a, "fieldgrid_washers10_gap2mm_{:.3f}A".format(a), dict(WT=8.0)))
     grid_jobs = [j for j in grid_jobs if re.search(only, j[2])]
     with ThreadPoolExecutor(WORKERS) as ex:
-        list(ex.map(lambda j: fieldgrid_job(j[0], j[1], os.path.join(RES, j[2] + ".csv"), over), grid_jobs))
+        list(ex.map(lambda j: fieldgrid_job(j[0], j[1], os.path.join(RES, j[2] + ".csv"),
+                                            dict(over or {}, **(j[3] if len(j) > 3 else {}))), grid_jobs))
 
 
 def run_summary(over=None):

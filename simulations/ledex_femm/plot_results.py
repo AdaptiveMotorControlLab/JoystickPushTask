@@ -301,6 +301,7 @@ def plot_axial_profile():
 
 
 XMIN, XMAX, YMAX = -5, 40, 14
+STACK_T = 8.0   # thickness of the target stack in the field figures: ten M3 washers, 0.8 mm each
 
 
 def draw_half_panel(ax, tag, gap, a, vmax=50.0):
@@ -321,15 +322,15 @@ def draw_half_panel(ax, tag, gap, a, vmax=50.0):
     ax.plot([XMIN, -tpl, -tpl], [rki, rki, rb], **kw)                          # case wall, front plate
     if gap is not None:
         x2 = PROTRUDE + gap
-        ax.add_patch(plt.Rectangle((x2, 1.6), 4, 2.9, fill=False, ec="c", lw=1.2))
-        ax.text(x2 + 2, 5.0, "target", color="c", fontsize=7, ha="center", va="bottom")
+        ax.add_patch(plt.Rectangle((x2, 1.6), STACK_T, 2.9, fill=False, ec="c", lw=1.2))
+        ax.text(x2 + STACK_T / 2, 5.0, "target", color="c", fontsize=7, ha="center", va="bottom")
     ax.text(LBOSS / 2, RBOSS + 0.3, "boss", color="c", fontsize=7, ha="center", va="bottom")
     ax.text(XMIN + 0.3, RO + 0.3, "body", color="c", fontsize=7, ha="left", va="bottom")
     ax.axhline(0, color="grey", lw=0.6, ls=":")
     ax.set_aspect("equal")
     ax.set_xlim(XMIN, XMAX)
     ax.set_ylim(0, YMAX)
-    ax.set_title(("No target, " if gap is None else "Target 2 mm from tip, ") + current_label(a), fontsize=9)
+    ax.set_title(("No target, " if gap is None else "10 washers at 2 mm, ") + current_label(a), fontsize=9)
     ax.set_xlabel("position along the axis (mm)", fontsize=7)
     ax.set_ylabel("distance from axis (mm)", fontsize=8)
     return im
@@ -344,14 +345,14 @@ def style_colorbar(cb):
 
 NOTE = ("Side view, cut through the solenoid axis (bottom edge, dotted); only the half above the axis is drawn because the\n"
         "part is round: spin it around the bottom edge to get the full shape.\n0 mm = front face of the solenoid body, "
-        "plunger tip (23.8 mm out) points right. White lines = field direction; cyan = body, boss, plunger, target.")
+        "plunger tip (23.8 mm out) points right. Target = stack of ten M3 washers (8 mm thick) 2 mm from the tip.\nWhite lines = field direction; cyan = body, boss, plunger, target.")
 
 
 def plot_readable():
     """Readable field figures in figures/readable/: one overview (half sections) and one PNG per panel."""
     top = [0.074, 0.106, 0.180, 0.310, 0.580]
     bottom = [0.074, 0.310, 0.580]
-    panels = [("notarget", None, a) for a in top] + [("washers5_gap2mm", 2, a) for a in bottom]
+    panels = [("notarget", None, a) for a in top] + [("washers10_gap2mm", 2, a) for a in bottom]
     if not all(os.path.exists(os.path.join(RES, "fieldgrid_{}_{:.3f}A.csv".format(t, a))) for t, _, a in panels):
         return
     os.makedirs(READABLE, exist_ok=True)
@@ -363,7 +364,8 @@ def plot_readable():
     for j, p in enumerate(panels[5:]):
         im = draw_half_panel(fig.add_subplot(gs[1, j]), *p)
     style_colorbar(fig.colorbar(im, cax=fig.add_subplot(gs[:, 5]), extend="max"))
-    fig.suptitle("Ledex field around the plunger tip (calibrated model)\n" + NOTE, fontsize=10)
+    fig.suptitle("Ledex field around the plunger tip (calibrated model)", fontsize=12, y=0.97)
+    fig.text(0.5, 0.01, NOTE, ha="center", va="bottom", fontsize=8)
     save(fig, "overview_readable.png", READABLE)
     for tag, gap, a in panels:
         fig, ax = plt.subplots(figsize=(10, 4))

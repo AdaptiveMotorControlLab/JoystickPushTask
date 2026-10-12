@@ -126,11 +126,12 @@ Caveats:
   seat), `clr_mm`, `conea_deg`. Cases: `baseline_gap*` (five washers, 11 gaps × 12 currents),
   `target_*` (other targets), `stroke_*`, `sens_*`.
 - `results/fieldgrid_<target>_<current>A.csv`: `r_mm, z_mm, Br_T, Bz_T, Bmag_T` on a 0.25 mm grid,
-  r 0–20 mm, z −45 to 5 mm (no target at five currents; washers at 2 mm at five currents; washers
-  at 1 mm at 0.31 and 0.58 A).
+  r 0–20 mm, z −45 to 5 mm (no target at five currents; five washers at 2 mm at five currents; five
+  washers at 1 mm at 0.31 and 0.58 A; ten washers at 2 mm at 0.074, 0.31 and 0.58 A).
 - `results/uncalibrated/`: the first model (9.5 mm protrusion, guessed internals), kept for
   comparison.
-- `figures/readable/`: field maps with a mT colour scale (overview plus one PNG per panel);
+- `figures/readable/`: field maps with a mT colour scale (overview plus one PNG per panel); the
+  target panels show the planned rig target, ten M3 washers 2 mm from the tip;
   `figures/plots/femm/`: raw FEMM screenshots (colour scale 0–0.05 T).
 - Command voltage to current (minimum `Imax`): 0.5 V 0.053, 1 V 0.074, 2 V 0.106, 3 V 0.121,
   4 V 0.147, 5 V 0.180, 6 V 0.201, 8 V 0.273, 10 V 0.310 A; 0.40–0.58 A need `Imax` raised.
