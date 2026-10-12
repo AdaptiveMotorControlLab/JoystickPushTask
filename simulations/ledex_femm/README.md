@@ -20,6 +20,10 @@ printed holder and a gap jig are available.
   fades within a few millimetres of the object moving away from the Ledex.
 - A bigger solid steel target helps: at 2 mm and 10 V a 16 × 6 mm disc gives ~2.3 g
   (2.3 × the washers), a 12 × 4 mm disc ~1.4 g. One washer gives only ~0.28 g.
+- Taller washer stacks help with diminishing returns (2 mm, 10 V; 0.58 A in brackets): 5 washers
+  (4 mm, ~1.8 g) 0.96 g (2.0), 10 (~3.5 g) 1.6 g (3.3), 20 (~7 g) 2.5 g (5.1), 40 (~14 g) 3.4 g
+  (7.1); the far washers sit in a weaker field and the stack is modelled as solid, so real stacks
+  pull somewhat less. A 16 × 6 mm disc matches 20 washers at a lower volume.
 - The seated plunger gives the strongest target pull; holding the plunger out from its seat
   lowers it (stroke sweep).
 

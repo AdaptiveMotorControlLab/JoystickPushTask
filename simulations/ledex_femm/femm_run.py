@@ -153,6 +153,9 @@ def sweep_jobs(over=None):
         jobs.append(("baseline_gap{:g}".format(g), "washers5_M3", o, [g], AMPS_FINE))
     targets = [("target_washers1", "washers1_M3", dict(WRI=1.6, WRO=4.5, WT=0.8)),
                ("target_washers3", "washers3_M3", dict(WRI=1.6, WRO=4.5, WT=2.4)),
+               ("target_washers10", "washers10_M3", dict(WRI=1.6, WRO=4.5, WT=8.0)),
+               ("target_washers20", "washers20_M3", dict(WRI=1.6, WRO=4.5, WT=16.0)),
+               ("target_washers40", "washers40_M3", dict(WRI=1.6, WRO=4.5, WT=32.0)),
                ("target_disc8x4", "disc_8x4_solid", dict(WRI=0, WRO=3.91, WT=4.0)),
                ("target_disc9x4", "disc_9x4_solid", dict(WRI=0, WRO=4.5, WT=4.0)),
                ("target_disc12x4", "disc_12x4_solid", dict(WRI=0, WRO=6.0, WT=4.0)),
