@@ -125,7 +125,8 @@ def main():
             plt.close(fig)
             print("done", name, "{:.2f} g".format(fz), flush=True)
     if len(amps) == len(AMPS):
-        fig, axs = plt.subplots(4, 5, figsize=(20, 15), sharex=True, sharey=True, constrained_layout=True)
+        fig, axs = plt.subplots(4, 5, figsize=(20, 10.5), sharex=True, sharey=True, constrained_layout=True)
+        fig.set_constrained_layout_pads(h_pad=0.02, hspace=0.0)
         im = None
         for r, (n, gap) in enumerate(cases):
             for j, a in enumerate(AMPS):
