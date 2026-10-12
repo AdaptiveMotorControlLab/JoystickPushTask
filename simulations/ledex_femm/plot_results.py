@@ -238,7 +238,8 @@ def plot_targets(d):
     axes[0].set_ylabel("pull on the washer tower (g-force)")
     axes[1].legend(fontsize=7, loc="center left", bbox_to_anchor=(1.02, 0.5),
                    title="M3 washers in the tower\n(0.8 mm thick each)", title_fontsize=7)
-    fig.suptitle("Pull on washer towers of different height standing across the axis (3D model, plunger seated)")
+    fig.suptitle("Pull on washer towers of different height standing across the axis (3D model, plunger seated)\n"
+                 "x axis = gap from the plunger tip to the nearest washer rim (not fixed at 2 mm)")
     save(fig, "targets.png")
 
 
