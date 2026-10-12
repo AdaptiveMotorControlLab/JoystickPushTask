@@ -141,7 +141,7 @@ saturation at 0.58 A, plus the calibration extrapolation (±40 %).
 - `femm_run.py`: runs FEMM in parallel on Windows or on a Mac under Wine (Python 3.6+, standard
   library only). `python3 femm_run.py sweeps` (all sweeps and field grids; `--only <regex>`,
   `--no-grids`), `summary` (`results/forces.csv`, `axial_B.csv` (field along the plunger outer edge r = 3.91 mm, not the slotted axis), `stroke.csv`), `maps` (FEMM
-  screenshots in `figures/plots/femm/`, needs Pillow for PNG). `FEMM_WORKERS` sets the number of
+  screenshots in `figures/femm/`, needs Pillow for PNG). `FEMM_WORKERS` sets the number of
   parallel FEMM processes.
 - `calibrate.py`: the datasheet fit (`screen`, `refine`, `explore`, `best`, `band`, or `all`);
   writes `results/calibration/` (`fit_log.csv` one row per parameter set, `fit_points.csv` model
@@ -169,7 +169,7 @@ saturation at 0.58 A, plus the calibration extrapolation (±40 %).
 - `figures/magnetic_fields/`: 3D field maps with a mT colour scale: `notarget_<I>A.png`,
   `target_gap{1,2,3}mm_<I>A.png` (ten washers across the axis) and `overview_magnetic_fields.png`
   (rows: no target, 1, 2, 3 mm; columns: five currents). `figures/plots/`: force, stroke, field
-  profile and calibration figures. `figures/plots/femm/`: raw FEMM screenshots of the coaxial layouts
+  profile and calibration figures. `figures/femm/`: raw FEMM screenshots (`field_nowasher_*`; `washers5_coaxial_gap2mm_*` = five washers stacked on the axis, 2 mm) of the coaxial layouts
   (colour scale 0–0.05 T), kept for the record.
 - Command voltage to current (minimum `Imax`): 0.5 V 0.053, 1 V 0.074, 2 V 0.106, 3 V 0.121,
   4 V 0.147, 5 V 0.180, 6 V 0.201, 8 V 0.273, 10 V 0.310 A; 0.40–0.58 A need `Imax` raised.

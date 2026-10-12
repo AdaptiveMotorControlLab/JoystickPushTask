@@ -5,7 +5,7 @@ temporary CSV, which is merged afterwards (a crash loses at most one job).
 
     python femm_run.py sweeps [--only REGEX] [--no-grids]   # results/sweeps.csv + results/fieldgrid_*.csv
     python femm_run.py summary                              # results/forces.csv, stroke.csv, axial_B.csv
-    python femm_run.py maps                                 # FEMM screenshots in figures/plots/femm/
+    python femm_run.py maps                                 # FEMM screenshots in figures/femm/
 
 FEMM location: C:\\femm42\\bin\\femm.exe on Windows. Elsewhere set FEMM_WINE (path to the wine
 binary) and WINEPREFIX; the defaults match the Mac install described in README.md.
@@ -25,7 +25,7 @@ from concurrent.futures import ThreadPoolExecutor
 HERE = os.path.dirname(os.path.abspath(__file__))
 MAIN = os.path.join(HERE, "ledex_washer.lua")
 RES = os.path.join(HERE, "results")
-FEMM_DIR = os.path.join(HERE, "figures", "plots", "femm")
+FEMM_DIR = os.path.join(HERE, "figures", "femm")
 WINDOWS = sys.platform.startswith("win")
 
 WINE = os.environ.get("FEMM_WINE", os.path.expanduser(
@@ -216,8 +216,8 @@ def run_maps(over=None):
     os.makedirs(FEMM_DIR, exist_ok=True)
     maps = [(-1, 0.074, "field_nowasher_1V_0.074A"), (-1, 0.106, "field_nowasher_2V_0.106A"),
             (-1, 0.180, "field_nowasher_5V_0.180A"), (-1, 0.310, "field_nowasher_10V_0.310A"),
-            (-1, 0.580, "field_nowasher_rated_0.580A"), (2, 0.074, "washer_gap2mm_1V_0.074A"),
-            (2, 0.310, "washer_gap2mm_10V_0.310A"), (2, 0.580, "washer_gap2mm_rated_0.580A")]
+            (-1, 0.580, "field_nowasher_rated_0.580A"), (2, 0.074, "washers5_coaxial_gap2mm_1V_0.074A"),
+            (2, 0.310, "washers5_coaxial_gap2mm_10V_0.310A"), (2, 0.580, "washers5_coaxial_gap2mm_rated_0.580A")]
     tmp = tempfile.mkdtemp(prefix="ledex_maps_")
     for gap, amps, name in maps:   # sequential: FEMM bitmap export is fragile
         bmp = os.path.join(tmp, name + ".bmp")
