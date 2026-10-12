@@ -38,6 +38,9 @@ measurements.** Check them with one scale measurement once the printed holder an
 | 2 mm | 0.075 g | 0.15 g | 0.44 g | 1.2 g | 2.2 g |
 | 3 mm | 0.043 g | 0.089 g | 0.26 g | 0.68 g | 1.3 g |
 | 5 mm | 0.018 g | 0.036 g | 0.10 g | 0.28 g | 0.52 g |
+| 6 mm | 0.012 g | 0.025 g | 0.070 g | 0.19 g | 0.35 g |
+| 8 mm | 0.006 g | 0.012 g | 0.035 g | 0.094 g | 0.18 g |
+| 10 mm | 0.003 g | 0.007 g | 0.019 g | 0.051 g | 0.097 g |
 
 Pull on ten stacked M3 washers (3.2 × 9 × 0.8 mm, mild steel) standing across the axis, plunger
 seated; 1 g = 9.81 mN. Best-fit calibration. Range over the best fit and 13 other accepted calibration sets (two more could
@@ -122,6 +125,40 @@ Pull (g-force) of a washer tower across the axis, tip to nearest rim, 0.58 A (10
 Gains from extra washers flatten past 10. Uncertainty: about ±10 % from the nonlinear iteration near
 saturation at 0.58 A, plus the calibration extrapolation (±40 %).
 
+## Joystick lever: how far the tower moves per push
+
+`lever.py` treats the shaft as a rigid lever about the thumbstick pivot and turns a push at the cube
+handle into tower motion, gap and resistance (`results/lever/lever_table.csv`,
+`figures/plots/lever_target_motion.png`, `figures/plots/lever_force_vs_push.png`).
+
+- Base: APEM TS-1D1S00A-1294 Hall thumbstick (Mathis 2017, Digi-Key 679-2501-ND), castle cap removed,
+  printed shaft screwed onto the lever stub. APEM's STEP model (outer envelope only) puts the cap
+  bottom about 13.5 mm and the cap's dome centre about 8 mm above the panel; the pivot itself is not
+  published. Pivot depth below the shaft base is therefore taken as 5 / 10 / 20 mm (low / mid / high).
+- From the CAD: ten M3 washers seat on the cone at 11.5-19.5 mm above the shaft base; the cube handle
+  spans 87.4-97.4 mm (push taken at 92.4 mm). The three cube holes change the result by < 0.02 mm.
+- The tower moves 0.21-0.32 of the push (rigid rotation, not small-angle):
+
+| push at the cube | 1 mm | 2 mm | 5 mm | 10 mm | 15 mm |
+| --- | --- | --- | --- | --- | --- |
+| tower moves (pivot 5 / 10 / 20 mm) | 0.21 / 0.25 / 0.32 | 0.42 / 0.50 / 0.63 | 1.1 / 1.25 / 1.6 | 2.1 / 2.5 / 3.2 | 3.2 / 3.8 / 4.8 mm |
+| tilt (pivot 10 mm) | 0.6° | 1.1° | 2.8° | 5.6° | 8.4° |
+
+- Resistance at the handle = tower pull × (tower height / handle height above the pivot), about a
+  quarter of the tower pull. Pivot 10 mm, 0.58 A (10 V in brackets): home gap 1 mm 0.91 g (0.49) at
+  1 mm push, 0.46 (0.25) at 5 mm, 0.14 (0.07) at 15 mm; home gap 2 mm 0.46 (0.25), 0.27 (0.15),
+  0.09 (0.05) g. For comparison, APEM's 3.1 N operating force at the cap top scales to roughly
+  30-60 g at the cube, and Mathis 2017 quote a 10-20 g spring, so the magnet adds a few percent of
+  the spring force at most.
+- Assumptions: rigid shaft, no play in the stub or the 1D constrainer, push = forward travel of the
+  cube face at mid-height, coil current constant. The tower tilt (up to ~9°, top washer ~1.2 mm
+  further than the bottom one at 15 mm) and its ~0.1 mm drop are not in the force model.
+- Rig check that replaces the pivot guess: push the cube 10 mm against a ruler and measure how far
+  the shaft moves at the washer height (calipers). With ratio r = tower move / push, the pivot depth
+  is (92.4 r − 15.5) / (1 − r) mm. Also note: the lever geometry gives ~5.6° for a 10 mm push, i.e.
+  ~0.56 V if the 0-5 V output spans the full 50° travel, against the provisional 0.30 V eyeball
+  reading in `calibration/joystick-volts-mm.md`; the ruler check settles both.
+
 ## Model
 
 - Published: case 19.56 mm dia × 39.37 mm, M14 boss 9.52 mm, plunger 7.82 mm dia and 20.1 g,
@@ -149,7 +186,8 @@ saturation at 0.58 A, plus the calibration extrapolation (±40 %).
   writes `results/calibration/` (`fit_log.csv` one row per parameter set, `fit_points.csv` model
   vs datasheet per point, `best_params.json`, `accepted_sets.csv`, `target_band.csv`).
 - `fea3d.py`: the 3D model (see above); `python fea3d.py check` compares a coaxial stack with FEMM.
-- `sweep3d.py`: resumable 3D sweeps (`grid`, `stacks`, `stroke`, `band`, `axial`) written to
+- `lever.py`: joystick lever (see above; numpy + matplotlib, reads the 3D CSVs).
+- `sweep3d.py`: resumable 3D sweeps (`grid`, `far` (gaps 6-10 mm), `stacks`, `stroke`, `band`, `axial`) written to
   `results/fea3d/force_sweep_3d.csv` (`set`, `n_washers`, `gap_mm`, `stroke_mm`, `current_A`, `force_g`; `set`
   = `best` or the FEMM eval number of an accepted calibration set) and `results/fea3d/field_along_plunger_edge_no_target_3d.csv`.
   Older `results/fea3d/force_first_runs_3d.csv` holds the first across-axis and coaxial runs (best fit only).

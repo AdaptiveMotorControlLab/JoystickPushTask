@@ -1,7 +1,7 @@
 """Resumable 3D sweeps (washer tower standing across the axis) for the summary figures.
 
 Run with the NGSolve venv:  /tmp/ngenv/bin/python sweep3d.py [group ...]
-Groups: grid (gap and current, 10 washers), stacks (stack height), stroke (plunger held out),
+Groups: grid (gap and current, 10 washers), far (gaps 6-10 mm), stacks (stack height), stroke (plunger held out),
 band (the accepted calibration sets, for the uncertainty band), axial (|B| along the plunger edge).
 Results are appended to results/fea3d/force_sweep_3d.csv (set,n_washers,gap_mm,stroke_mm,current_A,force_g);
 set 'best' is the fitted model, others are accepted calibration sets (their FEMM eval number).
@@ -48,6 +48,8 @@ def jobs_for(group):
     J = []
     if group == "grid":
         J += [("best", 10, g, 0, i) for g in GAPS for i in CURRENTS]
+    if group == "far":
+        J += [("best", 10, g, 0, i) for g in (6.0, 8.0, 10.0) for i in CURRENTS]
     if group == "stacks":
         J += [("best", n, g, 0, i) for n in (1, 5, 10, 20, 40) for g in (1.0, 2.0, 3.0, 5.0) for i in (0.31, 0.58)]
     if group == "stroke":
