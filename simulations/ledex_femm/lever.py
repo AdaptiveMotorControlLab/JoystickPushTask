@@ -2,16 +2,15 @@
 
     python lever.py            # writes results/lever/lever_table.csv and figures/plots/lever_*.png
 
-Geometry (x = push direction, z = up along the shaft at rest, origin at the shaft base):
-- Thumbstick: APEM TS-1D1S00A-1294 (Mathis 2017 base, Digi-Key 679-2501-ND), castle cap removed, printed
-  shaft screwed onto the lever stub. The pivot is inside the body and not given by APEM (their STEP is the
-  outer envelope only), so it is a parameter: PIVOT_DEPTHS below the shaft base.
-- Shaft (mechanical/3d-print/joystick/joystick_89mm.step): cone r 4 -> 1.5 mm over z 0-12, tip at z 89.
-  M3 washers (ID 3.2) seat where the cone radius is 1.6 mm (z 11.5); ten 0.8 mm washers span z 11.5-19.5.
-- Cube handle (mechanical/3d-print/joystick-handle-cube/joystick_handle_cube.step): 1.6 mm deep holes at
-  y 0.55 / 4.25 / 7.95 mm, so it spans z 87.4-97.4; the push face is 2.05 / 5.75 / 9.45 mm from the shaft axis.
-- The Ledex sits on the mouse side, axis horizontal at tower height, tip facing the washer rims (OD 9 mm),
-  so a forward push opens the gap and the pull opposes the push.
+Geometry (x = push direction, z = up along the shaft at rest, origin at the shaft base) comes from
+rig_geometry.py (measured joystick component, holder and printed parts):
+- The pivot is inside the component body and not modelled: mid-body is 20.8 mm below the shaft base,
+  component z 2-10 gives 16.6-24.6 mm (PIVOT_DEPTHS).
+- Shaft: cone r 4 -> 1.5 mm over z 0-12, tip at z 89. M3 washers (ID 3.2) seat where the cone radius is 1.6 mm
+  (z 11.5); ten 0.8 mm washers span z 11.5-19.5.
+- Cube handle: push face 2.05 / 5.75 / 9.45 mm from the shaft axis (three holes), contact at z 92.4.
+- The Ledex sits on the mouse side, axis horizontal at the tower centre, tip facing the washer rims (OD 9 mm),
+  so a forward push opens the gap and the pull opposes the push. rig_forces.py covers other Ledex heights.
 Force on the tower comes from the 3D model (results/fea3d, best fit, 10 washers, plunger seated), interpolated
 linearly in log(force) vs log(gap). Tower tilt is reported but its effect on the force is not modelled.
 """
@@ -24,30 +23,15 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 from plot_results import HERE, RES, current_label, load3d, save
+from rig_geometry import (HANDLE_Z, HOLES, PIVOT_DEPTH, PIVOT_DEPTHS, WASHER_RO, WASHER_SEAT, WASHER_T, N_WASHERS,
+                          rotate, tilt_for_push)
 
-PIVOT_DEPTHS = (5.0, 10.0, 20.0)       # pivot below the shaft base (mm): low / mid / high estimate
-TOWER = (11.5, 19.5)                   # ten M3 washers on the cone (z, mm)
+TOWER = (WASHER_SEAT, WASHER_SEAT + N_WASHERS * WASHER_T)   # ten M3 washers on the cone (z, mm)
 TOWER_Z = sum(TOWER) / 2
-WASHER_RO = 4.5
-HANDLE_Z = (87.4 + 97.4) / 2           # cube mid-height (push contact)
-HOLES = (("hole y 0.55", 2.05), ("hole y 4.25", 5.75), ("hole y 7.95", 9.45))  # (name, push-face offset mm)
 HOME_GAPS = (1.0, 2.0)
 CURRENTS = (0.074, 0.106, 0.180, 0.310, 0.580)
 TABLE_PUSHES = (1.0, 2.0, 5.0, 10.0, 15.0)
 OUT_CSV = os.path.join(RES, "lever", "lever_table.csv")
-
-
-def rotate(px, pz, d_p, th):
-    """Point (px, pz) of the rigid shaft after a tilt th (rad) toward +x about the pivot at (0, -d_p)."""
-    h = pz + d_p
-    return px * np.cos(th) + h * np.sin(th), -d_p - px * np.sin(th) + h * np.cos(th)
-
-
-def tilt_for_push(push, d_p, face):
-    """Tilt that moves the push-face point at cube mid-height forward by push (mm); exact, not small-angle."""
-    th = np.linspace(0, np.radians(30), 30001)
-    x, _ = rotate(-face, HANDLE_Z, d_p, th)
-    return np.interp(push, x - x[0], th)
 
 
 def geometry(push, d_p, face):
@@ -101,7 +85,7 @@ def write_table(curves):
 
 
 PUSH = np.linspace(0, 15, 151)
-DP_COLOR = {5.0: "tab:green", 10.0: "tab:blue", 20.0: "tab:red"}
+DP_COLOR = dict(zip(PIVOT_DEPTHS, ("tab:green", "tab:blue", "tab:red")))
 HOLE_STYLE = {"hole y 0.55": "-", "hole y 4.25": "--", "hole y 7.95": ":"}
 
 
@@ -111,11 +95,11 @@ def plot_motion():
         g = geometry(PUSH, d_p, HOLES[1][1])
         for name, face in HOLES:
             ax.plot(PUSH, geometry(PUSH, d_p, face)["target_dx_mm"], HOLE_STYLE[name], color=DP_COLOR[d_p],
-                    label="pivot {:g} mm below the shaft base (tilt {:.1f} deg at 15 mm)".format(
+                    label="pivot {:.1f} mm below the shaft base (tilt {:.1f} deg at 15 mm)".format(
                         d_p, g["tilt_deg"][-1]) if name == HOLES[0][0] else None)
         for g0, ls in zip(HOME_GAPS, ("-", "--")):
             bx.plot(PUSH, g0 + g["target_dx_mm"], ls, color=DP_COLOR[d_p],
-                    label="pivot {:g} mm, home gap {:g} mm".format(d_p, g0))
+                    label="pivot {:.1f} mm, home gap {:g} mm".format(d_p, g0))
     ax.set_xlabel("push: forward travel of the cube face at mid-height (mm)")
     ax.set_ylabel("washer tower moves away from the plunger tip (mm)")
     ax.set_title("Tower displacement (centre of the 10-washer tower)")
@@ -128,8 +112,8 @@ def plot_motion():
     bx.set_title("Gap during the push")
     bx.grid(alpha=0.3)
     bx.legend(fontsize=7, loc="upper left")
-    fig.suptitle("Joystick as a rigid lever about the thumbstick pivot (tower at z 11.5-19.5 mm, push at z 92.4 mm "
-                 "above the shaft base)")
+    fig.suptitle("Joystick as a rigid lever about the thumbstick pivot (tower at z {:g}-{:g} mm, push at z {:g} mm "
+                 "above the shaft base)".format(TOWER[0], TOWER[1], HANDLE_Z))
     save(fig, "lever_target_motion.png")
 
 
@@ -143,8 +127,9 @@ def plot_force(curves):
             ft = force_at(curves, a, g0 + g["target_dx_mm"])
             vals[d_p] = (ft, ft * g["arm_target"] / g["arm_handle"])
         for ax, k in zip(axes, (0, 1)):
-            ax.fill_between(PUSH, vals[5.0][k], vals[20.0][k], color="tab:red", alpha=alpha, lw=0)
-            ax.plot(PUSH, vals[10.0][k], ls, color="tab:red", label="home gap {:g} mm".format(g0))
+            lo, hi = vals[PIVOT_DEPTHS[0]][k], vals[PIVOT_DEPTHS[2]][k]
+            ax.fill_between(PUSH, np.minimum(lo, hi), np.maximum(lo, hi), color="tab:red", alpha=alpha, lw=0)
+            ax.plot(PUSH, vals[PIVOT_DEPTH][k], ls, color="tab:red", label="home gap {:g} mm".format(g0))
     axes[0].set_ylabel("pull on the 10-washer tower (g-force)")
     axes[1].set_ylabel("resistance felt at the cube handle (g-force)")
     axes[0].set_title("Force on the washer tower")
@@ -153,8 +138,8 @@ def plot_force(curves):
         ax.set_yscale("log")
         ax.grid(True, which="both", alpha=0.3)
         ax.set_xlabel("push at the cube handle (mm), middle cube hole")
-    axes[0].legend(fontsize=8, title="line = pivot 10 mm below shaft base;\nshading = pivot 5-20 mm",
-                   title_fontsize=7)
+    axes[0].legend(fontsize=8, title="line = pivot {:.1f} mm below shaft base (mid-body);\nshading = pivot "
+                   "{:.1f}-{:.1f} mm".format(PIVOT_DEPTH, PIVOT_DEPTHS[0], PIVOT_DEPTHS[2]), title_fontsize=7)
     fig.suptitle("Ledex resistance vs push at {} (3D model, best fit, plunger seated)".format(current_label(a)))
     save(fig, "lever_force_vs_push.png")
 

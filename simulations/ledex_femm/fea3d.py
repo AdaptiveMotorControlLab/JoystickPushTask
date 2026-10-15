@@ -76,17 +76,24 @@ def reluctivity(b, tab):
 
 
 def prof(pts, ang=90):
-    """Solid of revolution (quarter by default: x >= 0, y >= 0) from an (r, z) polygon."""
+    """Solid of revolution from an (r, z) polygon: quarter (x >= 0, y >= 0) for ang 90, half (x >= 0) for 180."""
     v = [Pnt(r, 0, z) for r, z in pts]
     w = Wire([Segment(v[i], v[(i + 1) % len(v)]) for i in range(len(v))])
-    return Face(w).Revolve(Axis(Pnt(0, 0, 0), Z), ang)
+    s = Face(w).Revolve(Axis(Pnt(0, 0, 0), Z), ang)
+    return s.Rotate(Axis(Pnt(0, 0, 0), Z), -90) if ang == 180 else s
 
 
 class Model:
     def __init__(self, p, kind, n_washers, gap, amps, rbox=62.0, zlo=-62.0, zhi=80.0, wri=1.6, wro=4.5,
-                 maxh_tip=0.45, maxh_air=9.0, order=2, maxh_pl=0.7, stroke=0.0):
+                 maxh_tip=0.45, maxh_air=9.0, order=2, maxh_pl=0.7, stroke=0.0, yoff=0.0, half=False):
+        """yoff: across tower shifted along its own axis (y) by yoff from the solenoid axis; it breaks the y = 0
+        mirror plane, so the model becomes a half (x >= 0) model (half=True forces that at yoff = 0)."""
         self.p, self.kind, self.n, self.gap, self.amps = p, kind, n_washers, gap, amps
         self.order = order
+        self.yoff = yoff
+        self.half = half or yoff != 0
+        ang = 180 if self.half else 90
+        self.sym = 2 if self.half else 4
         seat, clr, tpl, wall, conea = p["SEAT"], p["CLR"], p["TPL"], p["WALL"], p["CONEA"]
         rb, rki = RP + clr, RO - wall
         rci, rco = rb + BOB, rki - 0.1
@@ -102,12 +109,12 @@ class Model:
         ht = 0.8 * n_washers
         # the same profiles as ledex_washer.lua, revolved over 90 degrees
         steel1 = prof([(0, za), (RTIP, za), (RP, zs), (rb, zs), (rb, LEN - tpl), (rki, LEN - tpl), (rki, tpl),
-                       (RO, tpl), (RO, LEN), (0, LEN)])
-        steel2 = prof([(rb, -LBOSS), (RBOSS, -LBOSS), (RBOSS, 0), (RO, 0), (RO, tpl), (rki, tpl), (rb, tpl)])
-        coil = prof([(rci, tpl + 0.1), (rco, tpl + 0.1), (rco, LEN - tpl - 0.1), (rci, LEN - tpl - 0.1)])
+                       (RO, tpl), (RO, LEN), (0, LEN)], ang)
+        steel2 = prof([(rb, -LBOSS), (RBOSS, -LBOSS), (RBOSS, 0), (RO, 0), (RO, tpl), (rki, tpl), (rb, tpl)], ang)
+        coil = prof([(rci, tpl + 0.1), (rco, tpl + 0.1), (rco, LEN - tpl - 0.1), (rci, LEN - tpl - 0.1)], ang)
         sp = stroke      # plunger held out from its seat: it moves away from the body, steel stays put
         plunger = prof([(0, zt - sp + SLOTD), (SLOTR, zt - sp + SLOTD), (SLOTR, zt - sp), (RP, zt - sp),
-                        (RP, zcone - sp), (RTIP, zapex - sp), (0, zapex - sp)])
+                        (RP, zcone - sp), (RTIP, zapex - sp), (0, zapex - sp)], ang)
         zt = zt - sp                                          # the target follows the tip
         steel1.mat("steel"); steel2.mat("steel"); coil.mat("coil"); plunger.mat("plunger")
         solids = [steel1, steel2, coil, plunger]
@@ -116,15 +123,22 @@ class Model:
                 w2 = zt - gap
                 target = prof([(wri, w2 - ht), (wro, w2 - ht), (wro, w2), (wri, w2)])
                 self.tgeo = ("axial", w2 - ht / 2, ht / 2, wro)
-            else:   # across: axis along y, centred on the solenoid axis, rim facing the tip
+            elif not self.half:   # across: axis along y, centred on the solenoid axis, rim facing the tip
                 zc = zt - gap - wro
                 c = Cylinder(Pnt(0, 0, zc), Y, r=wro, h=ht / 2) - Cylinder(Pnt(0, -1, zc), Y, r=wri, h=ht / 2 + 2)
                 c = c.Rotate(Axis(Pnt(0, 0, zc), Y), 45)         # keep the cylinder seam off the mirror plane
                 target = c * Box(Pnt(0, 0, zc - wro - 1), Pnt(wro + 1, ht / 2 + 1, zc + wro + 1))
                 self.tgeo = ("across", zc, ht / 2, wro)
+            else:                 # across, whole tower, centre at y = yoff
+                zc = zt - gap - wro
+                y0 = yoff - ht / 2
+                c = Cylinder(Pnt(0, y0, zc), Y, r=wro, h=ht) - Cylinder(Pnt(0, y0 - 1, zc), Y, r=wri, h=ht + 2)
+                c = c.Rotate(Axis(Pnt(0, 0, zc), Y), 45)
+                target = c * Box(Pnt(0, y0 - 1, zc - wro - 1), Pnt(wro + 1, y0 + ht + 1, zc + wro + 1))
+                self.tgeo = ("across", zc, ht / 2, wro)
             target.mat("target")
             solids.append(target)
-        domain = prof([(0, zlo), (rbox, zlo), (rbox, zhi), (0, zhi)])
+        domain = prof([(0, zlo), (rbox, zlo), (rbox, zhi), (0, zhi)], ang)
         air = domain
         for s_ in solids:
             air = air - s_
@@ -139,7 +153,7 @@ class Model:
         for q in pieces:      # mirror planes (x = 0, y = 0) and the far boundary: B tangent, A x n = 0
             for f in q.faces:
                 c = f.center
-                on_plane = abs(c[0]) < 1e-6 or abs(c[1]) < 1e-6
+                on_plane = abs(c[0]) < 1e-6 or (abs(c[1]) < 1e-6 and not self.half)
                 far = math.hypot(c[0], c[1]) > rbox - 0.5 and abs(c[2] - 0.5 * (zlo + zhi)) < 0.5 * (zhi - zlo)
                 end = abs(c[2] - zlo) < 1e-6 or abs(c[2] - zhi) < 1e-6
                 f.name = "outer" if (on_plane or far or end) else "inner"
@@ -213,7 +227,8 @@ class Model:
         else:
             rho = sqrt(x * x + (z - zc) * (z - zc))
             ax = IfPos(rho - ro, rho - ro, 0)
-            az = IfPos(y - h, y - h, 0)
+            ay = sqrt((y - self.yoff) * (y - self.yoff) + 1e-12) if self.half else y
+            az = IfPos(ay - h, ay - h, 0)
         dist = sqrt(ax * ax + az * az)
         t = IfPos(dist - d1, IfPos(d2 - dist, (dist - d1) / (d2 - d1), 1), 0)
         phi_cf = 1 - t * t * (3 - 2 * t)
@@ -226,7 +241,7 @@ class Model:
         bg = B * g
         tz = (bz * bg - 0.5 * (B * B) * g[2]) / MU0           # T_zj d_j(phi); B^2/mu0 in 1e-3 N/mm^2
         fz = -Integrate(tz, mesh, VOL, order=6)               # x 1e-3 gives N
-        return float(fz) * 1e-3 * 4 / 9.81e-3                  # quarter model x4, N -> g-force
+        return float(fz) * 1e-3 * self.sym / 9.81e-3           # quarter x4 or half x2, N -> g-force
 
 
 def run(kind, n, gap, amps, p=None, **kw):
