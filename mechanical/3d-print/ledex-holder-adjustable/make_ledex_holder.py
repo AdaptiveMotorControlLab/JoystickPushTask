@@ -8,8 +8,9 @@ simulations/ledex_femm/rig_geometry.py. Frames (mm; X along the push, +X toward 
 - upright, base: X from the Ledex body face, Z from the breadboard top.
 - gauges, collar, link: their own frames (see README).
 Adjustments: distance (X) by the base's two M6 slots along X (33 mm travel, works on 25 mm and 1 inch grids);
-lateral (Y) by the upright's two M4 slots on the base (+-12.75 mm); height (Z) by the carriage's two M3 screws in
-the upright's vertical slots (Ledex axis 30-70 mm above the breadboard, tick every 1 mm).
+lateral (Y) by the upright's two M4 slots on the base (+-12.75 mm); height (Z) by the carriage's four M3 screws
+(above and below the case, captive nuts in the carriage) in the upright's two long vertical slots (Ledex axis
+38-78 mm above the breadboard, tick every 1 mm). Holes and slots carry the print allowances in FIT.
 """
 import os
 import sys
@@ -23,17 +24,28 @@ sys.path.insert(0, os.path.join(HERE, "..", "..", "..", "simulations", "ledex_fe
 import rig_geometry as rg  # noqa: E402
 
 LX = rg.LEDEX
-BOSS_HOLE_R = 7.25            # M14 boss clearance
-M3_R, M4_R, M6_SLOT_W = 1.7, 2.25, 7.0
-M4_NUT_AF, M4_NUT_T = 7.3, 3.5
+# Print fit (FDM, mm diameters unless noted). The cube's 3.4 mm holes only just pass the 3.0 mm shaft tip, so small
+# holes print ~0.3-0.4 mm undersize; these allowances assume that. Print fit_test.stl first and adjust here.
+FIT = dict(shaft_bore=3.7,    # collar on the 3 mm shaft: slides down, the M2 set screw takes up the play
+           pin_hole=2.9,      # printed holes for the 2.5 mm pins (free to turn)
+           bar_t=1.8,         # link bar thickness; the plunger's tip slot is 2.5 +-0.3 mm
+           fork_gap=2.6,      # collar fork around the bar
+           boss_hole=14.8,    # M14 boss
+           m2_pilot=1.8,      # M2 set screw cuts its own thread
+           m3_hole=3.6, m4_hole=4.5,
+           m3_nut_af=5.9, m3_nut_t=2.6, m4_nut_af=7.5)
+BOSS_HOLE_R = FIT["boss_hole"] / 2
+M3_R, M4_R, M6_SLOT_W = FIT["m3_hole"] / 2, FIT["m4_hole"] / 2, 7.0
+M4_NUT_AF, M4_NUT_T = FIT["m4_nut_af"], 3.5
 M6_HEAD_W, M6_HEAD_T = 11.5, 6.5
 PLATE_T = rg.PLATE_T
-CAR_HALF_H = 13.0             # carriage half-height (Z) around the axis
-FLANGE_Y = (11.0, 15.0)       # carriage side flange, outside the case (r 9.78)
-WALL_Y = (15.4, 20.4)         # upright wall
+CAR_HALF_H = 20.0             # carriage half-height (Z) around the axis
+FLANGE_Y = (11.0, 16.0)       # carriage side flange, outside the case (r 9.78)
+WALL_Y = (16.4, 21.4)         # upright wall
 WALL_X = (-38.0, 6.0)
-SCREW_X = (-5.0, -25.0)       # carriage screws through the upright slots
-H_RANGE = (30.0, 70.0)        # Ledex axis height above the breadboard
+SCREW_X = (-4.0, -17.0)       # carriage screws (X from the face), clear of the cradle at X -30..-22
+SCREW_DZ = 14.5               # screw rows above and below the axis, beside the case: reachable with the Ledex fitted
+H_RANGE = (38.0, 78.0)        # Ledex axis height above the breadboard (carriage clears the upright's foot)
 BASE_T, FOOT_T = 10.0, 6.0
 BASE_X, BASE_Y = (-40.0, 8.0), (-24.0, 24.0)
 M6_SLOT_Y = 12.6              # two slots along X at Y +-12.6 (25 mm and 1 inch grids both fit in 7 mm slots)
@@ -41,14 +53,14 @@ M6_SLOT_X = (-36.0, 4.0)
 NUT_X = (-25.0, -1.0)         # M4 nut pockets in the base (Y = 0), under the upright's lateral slots
 FOOT_Y = (-22.0, 30.0)
 LAT_SLOT = 12.75              # lateral travel either way
-COLLAR_H, COLLAR_R, BORE_R = 6.0, 4.5, 1.55
-PIN_R = rg.PIN_D / 2 + 0.05   # 2.5 mm pin (or M2.5 screw), as the plunger's 2.5/2.6 mm cross hole
-LINK_T, LINK_W = 2.0, 5.0     # the plunger's tip slot is 2.5 +-0.3 mm wide
+COLLAR_H, COLLAR_R, BORE_R = rg.COLLAR_H, 4.5, FIT["shaft_bore"] / 2
+PIN_R = FIT["pin_hole"] / 2   # 2.5 mm pins (or M2.5 screws)
+LINK_T, LINK_W = FIT["bar_t"], 5.0
 REF_DIR = os.path.join(HERE, "..", "ledex-195224-model")
 
 LAYOUTS = {
-    # plunger link at the highest link height, 3 mm stroke at neutral
-    "link": dict(H=rg.SHAFT_BASE + 18.0, face=-rg.ATTACH_R - rg.LINK + rg.PIN_FROM_TIP - LX["protrude"] - 3.0),
+    # plunger link at the recommended link height, 3 mm stroke at neutral
+    "link": dict(H=rg.SHAFT_BASE + rg.LINK_Z_REC, face=-rg.ATTACH_R - rg.LINK + rg.PIN_FROM_TIP - LX["protrude"] - 3.0),
     # washer tower centred on the axis, 1 mm gap at neutral
     "washers": dict(H=rg.world_z(rg.WASHER_SEAT + rg.N_WASHERS * rg.WASHER_T / 2),
                     face=-rg.WASHER_RO - 1.0 - LX["protrude"]),
@@ -88,15 +100,22 @@ def hex_prism(cx, cy, z0, af, h):
 
 
 # ------------------------------------------------------------------ parts
+def hex_y(cx, cz, y0, af, h):
+    """Hex prism along +Y from y0 (nut pocket), centred on (cx, cz)."""
+    return hex_prism(0, 0, 0, af, h).Rotate(Axis(Pnt(0, 0, 0), X), -90).Move((cx, y0, cz))
+
+
 def carriage():
     h = CAR_HALF_H
     plate = box(0, PLATE_T, -16, FLANGE_Y[1], -h, h)
     flange = box(-30, PLATE_T, FLANGE_Y[0], FLANGE_Y[1], -h, h)
-    cradle = box(-28, -20, -10, FLANGE_Y[1], -h, -6) - cyl((-40, 0, 0), (1, 0, 0), LX["case_r"] + 0.15, 40)
+    cradle = box(-30, -22, -10, FLANGE_Y[1], -h, -6) - cyl((-40, 0, 0), (1, 0, 0), LX["case_r"] + 0.15, 40)
     s = plate + flange + cradle
     s = s - cyl((-1, 0, 0), (1, 0, 0), BOSS_HOLE_R, PLATE_T + 2)
     for x in SCREW_X:
-        s = s - cyl((x, FLANGE_Y[0] - 1, 0), (0, 1, 0), M3_R, 10)
+        for z in (-SCREW_DZ, SCREW_DZ):
+            s = s - cyl((x, FLANGE_Y[0] - 1, z), (0, 1, 0), M3_R, 10)
+            s = s - hex_y(x, z, FLANGE_Y[0] - 0.01, FIT["m3_nut_af"], FIT["m3_nut_t"])
     notch = box(-31, -30, FLANGE_Y[0] - 1, FLANGE_Y[1] + 1, -0.6, 0.6).Rotate(Axis(Pnt(-30, 0, 0), Y), 45)
     return s - notch
 
@@ -105,16 +124,17 @@ def upright():
     x0, x1 = WALL_X
     z0 = BASE_T
     foot = box(x0, x1, FOOT_Y[0], FOOT_Y[1], z0, z0 + FOOT_T)
-    top = H_RANGE[1] + CAR_HALF_H + 5
+    top = H_RANGE[1] + SCREW_DZ + M3_R + 4
     wall = box(x0, x1, WALL_Y[0], WALL_Y[1], z0 + FOOT_T, top)
     s = foot + wall
+    rib_h = 50.0
     for xr in (x0, x1 - 4):                       # two ribs on the outside
-        rib = box(xr, xr + 4, WALL_Y[1] - 1, FOOT_Y[1], z0 + FOOT_T, z0 + FOOT_T + 30)
-        cut = box(xr - 1, xr + 5, WALL_Y[1], FOOT_Y[1] + 30, z0 + FOOT_T, z0 + FOOT_T + 60).Rotate(
-            Axis(Pnt(0, WALL_Y[1], z0 + FOOT_T + 30), X), -np.degrees(np.arctan2(FOOT_Y[1] - WALL_Y[1], 30)))
+        rib = box(xr, xr + 4, WALL_Y[1] - 1, FOOT_Y[1], z0 + FOOT_T, z0 + FOOT_T + rib_h)
+        cut = box(xr - 1, xr + 5, WALL_Y[1], FOOT_Y[1] + 60, z0 + FOOT_T, z0 + FOOT_T + 2 * rib_h).Rotate(
+            Axis(Pnt(0, WALL_Y[1], z0 + FOOT_T + rib_h), X), -np.degrees(np.arctan2(FOOT_Y[1] - WALL_Y[1], rib_h)))
         s = s + (rib - cut)
-    for x in SCREW_X:                             # height slots (Ledex axis H_RANGE)
-        s = s - slot((x, WALL_Y[0] - 1, H_RANGE[0]), (x, WALL_Y[0] - 1, H_RANGE[1]), M3_R, "y", 7)
+    for x in SCREW_X:                             # one long slot per screw column, both rows ride in it
+        s = s - slot((x, WALL_Y[0] - 1, H_RANGE[0] - SCREW_DZ), (x, WALL_Y[0] - 1, H_RANGE[1] + SCREW_DZ), M3_R, "y", 7)
     for x in NUT_X:                               # lateral slots onto the base's M4 nuts
         s = s - slot((x, -LAT_SLOT, z0 - 1), (x, LAT_SLOT, z0 - 1), M4_R, "z", FOOT_T + 2)
     for zt in np.arange(H_RANGE[0], H_RANGE[1] + 0.1, 1.0):   # height scale beside the carriage's rear edge
@@ -148,7 +168,7 @@ def stroke_gauge(s0):
     """Fork against the boss front face; its far end is flush with the plunger tip at stroke s0."""
     length = LX["protrude"] - LX["boss_len"] + s0
     s = box(0, length, -9, 9, 0, 2.0) + box(-12, 0, -9, 9, 0, 2.0)
-    s = s - box(-1, length + 1, -4.1, 4.1, -1, 3)
+    s = s - box(-1, length + 1, -4.2, 4.2, -1, 3)
     for i in range(int(round(s0))):
         s = s - box(-10 + 2.5 * i, -9 + 2.5 * i, 7.5, 10, -1, 3)
     return s
@@ -186,16 +206,17 @@ def cone_solid(x_base, length, r_base, r_apex):
 
 
 def collar():
-    """Split collar for the 3 mm shaft; clevis pin ATTACH_R on the -X (home) side, axis along Y.
-    The clamp ear points along +Y: on the +X side it would hit the constrainer's far wall near a 15 mm push."""
+    """Ring on the 3 mm shaft with a fork on the -X (home) side, pin ATTACH_R off the axis along Y, held by one
+    M2 set screw on +Y (on +X anything sticking out hits the constrainer's far wall near a 15 mm push)."""
     h = COLLAR_H / 2
+    r_ax = rg.ATTACH_R
     s = cyl((0, 0, -h), (0, 0, 1), COLLAR_R, COLLAR_H)
-    s = s + box(-3, 3, 2.5, 8.5, -h, h) + box(-rg.ATTACH_R - 3.5, -2.5, -3.5, 3.5, -h, h)
+    s = s + box(-r_ax - 3.5, -2.5, -3.5, 3.5, -h, h)                       # fork lug
+    s = s + box(-2.5, 2.5, 2.0, 6.5, -h, h)                                # set-screw boss
     s = s - cyl((0, 0, -h - 1), (0, 0, 1), BORE_R, COLLAR_H + 2)
-    s = s - box(-0.4, 0.4, 0, 9, -h - 1, h + 1)
-    s = s - cyl((-4, 6, 0), (1, 0, 0), 1.1, 8)
-    s = s - box(-rg.ATTACH_R - 4, -3.2, -LINK_T / 2 - 0.15, LINK_T / 2 + 0.15, -h - 1, h + 1)
-    s = s - cyl((-rg.ATTACH_R, -4, 0), (0, 1, 0), PIN_R, 8)
+    s = s - box(-r_ax - 4, -r_ax + LINK_W / 2 + 0.5, -FIT["fork_gap"] / 2, FIT["fork_gap"] / 2, -h - 1, h + 1)
+    s = s - cyl((-r_ax, -4, 0), (0, 1, 0), PIN_R, 8)
+    s = s - cyl((0, 0, 0), (0, 1, 0), FIT["m2_pilot"] / 2, 8)
     return s
 
 
@@ -206,6 +227,22 @@ def link():
     for x in (0, L):
         s = s - cyl((x, -2, 0), (0, 1, 0), PIN_R, 4)
     return s
+
+
+def fit_test():
+    """Strip printed flat: shaft holes 3.4-3.9, pin holes 2.7-3.1, fork slots 2.2-2.8 (edge comb), bar tabs
+    1.6/1.8/2.0 thick; sizes grow left to right (+X), the cut corner marks the small end."""
+    t = 4.0
+    s = box(0, 64, 0, 22, 0, t)
+    for i, d in enumerate(np.arange(3.4, 3.95, 0.1)):
+        s = s - cyl((5 + 9 * i, 5, -1), (0, 0, 1), d / 2, t + 2)
+    for i, d in enumerate(np.arange(2.7, 3.15, 0.1)):
+        s = s - cyl((5 + 9 * i, 12, -1), (0, 0, 1), d / 2, t + 2)
+    for i, w in enumerate(np.arange(2.2, 2.85, 0.1)):
+        s = s - box(5 + 9 * i - w / 2, 5 + 9 * i + w / 2, 16, 23, -1, t + 1)
+    for j, bt in enumerate((1.6, 1.8, 2.0)):
+        s = s + box(63, 76, 1 + 7 * j, 6 + 7 * j, 0, bt)
+    return s - box(-1, 3, -1, 3, -1, t + 1).Rotate(Axis(Pnt(0, 0, 0), Z), 45)
 
 
 PARTS = {
@@ -221,9 +258,10 @@ PARTS = {
     "stroke_gauge_4mm": lambda: stroke_gauge(4.0),
     "link_collar": collar,
     "link_bar": link,
+    "fit_test": fit_test,
 }
 REFERENCE = {"ledex_body": ledex_body, "ledex_plunger": ledex_plunger}
-PIN_LEN = 10.0                # plunger pin along Y; must stay inside the arch (+-8 mm)
+PIN_LEN = 10.0                # plunger pin along Y; must stay inside the window (+-8 mm)
 
 
 # ------------------------------------------------------------------ export
@@ -325,7 +363,9 @@ def motion_report(lay="link", n=9):
     fixed = {nm: crop(rg.part_mesh(nm), lo, hi) for nm in ("holder", "constrainer", "component")}
     fixed["ledex"] = rg.read_stl(os.path.join(REF_DIR, "ledex_body.stl")) + np.array([p["face"], 0, p["H"]])
     trees = {nm: cKDTree(surface_points(t, 0.5)) for nm, t in fixed.items() if len(t)}
-    pairs = [("plunger", "collar"), ("plunger", "shaft"), ("pin", "collar"), ("pin", "shaft"), ("link", "shaft")]
+    pairs = [("plunger", "collar"), ("plunger", "shaft"), ("pin", "collar"), ("pin", "shaft"), ("link", "shaft"),
+             ("link", "collar"), ("link", "plunger")]
+    fit_pairs = {("link", "collar"), ("link", "plunger")}     # the bar sits in the fork and the tip slot by design
     pushes = np.linspace(rg.stop_push(rg.PIVOT_DEPTH), 15.0, n)
     worst = {}
     for push in pushes:
@@ -334,7 +374,8 @@ def motion_report(lay="link", n=9):
         pts = {nm: surface_points(t, 0.4) for nm, t in parts.items()}
         for a, b in pairs:
             d = cKDTree(pts[b]).query(pts[a], distance_upper_bound=5.0)[0].min()
-            worst[(a, b)] = min(worst.get((a, b), (np.inf,))[0], d), push
+            if d < worst.get((a, b), (np.inf,))[0]:
+                worst[(a, b)] = d, push
         for a in ("plunger", "pin", "link", "collar"):
             for b, tr in trees.items():
                 if (a, b) == ("plunger", "ledex"):
@@ -345,9 +386,10 @@ def motion_report(lay="link", n=9):
     print("moving parts, push {:.2f} to 15 mm (smallest gap, at push):".format(pushes[0]))
     ok = True
     for (a, b), (d, at) in sorted(worst.items(), key=lambda kv: kv[1][0]):
+        need = 0.25 if (a, b) in fit_pairs else 0.5
         if np.isfinite(d):
-            print("  {:8s} - {:12s} {:5.2f} mm at {:5.2f}".format(a, b, d, at))
-        ok &= d >= 0.5
+            print("  {:8s} - {:12s} {:5.2f} mm at {:5.2f}{}".format(a, b, d, at, "  (sliding fit)" if need < 0.5 else ""))
+        ok &= d >= need
     print("  (all other pairs > 5 mm)")
     print("moving clearances OK" if ok else "MOVING CLEARANCE PROBLEM")
     return ok

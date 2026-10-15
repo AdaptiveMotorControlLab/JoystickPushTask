@@ -4,8 +4,8 @@
 
 Geometry (x = push direction, z = up along the shaft at rest, origin at the shaft base) comes from
 rig_geometry.py (measured joystick component, holder and printed parts):
-- The pivot is inside the component body and not modelled: mid-body is 20.8 mm below the shaft base,
-  component z 2-10 gives 16.6-24.6 mm (PIVOT_DEPTHS).
+- The pivot is inside the component body and not modelled: mid-body is 23.5 mm below the shaft base,
+  component z 2-10 gives 19.3-27.3 mm (PIVOT_DEPTHS).
 - Shaft: cone r 4 -> 1.5 mm over z 0-12, tip at z 89. M3 washers (ID 3.2) seat where the cone radius is 1.6 mm
   (z 11.5); ten 0.8 mm washers span z 11.5-19.5.
 - Cube handle: push face 2.05 / 5.75 / 9.45 mm from the shaft axis (three holes), contact at z 92.4.

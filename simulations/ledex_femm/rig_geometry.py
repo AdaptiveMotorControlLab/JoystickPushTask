@@ -11,11 +11,12 @@ joystick-1d-axis-constrainer):
 - Holder: base 86 x 31.8 x 5 mm (long side along Y), corner posts, top frame z 20.41-25.41 with a 25.3 mm hole.
 - Component: body 25.3 mm dia x 11.53 mm drops through the hole, flange (29.75 mm) rests on the frame -> body
   bottom at Z 13.88; stub top at component z 29.3.
-- Shaft: 5 mm bore 2.7 mm deep on the stub -> shaft base at Z 40.48; cone r 4 -> 1.5 over 12 mm; 89 mm long.
+- Shaft: its 5 mm x 2.7 mm bottom bore holds a glued screw head; the screw goes into the stub and the cone sits
+  directly on the stub top -> shaft base at Z 43.18; cone r 4 -> 1.5 over 12 mm; 89 mm long.
 - Cube handle: middle hole, push face 5.75 mm from the shaft axis, contact at shaft z 92.4 (cube z 87.4-97.4).
 - Constrainer: lower 10 mm is a socket (inner 32 mm) over the frame -> spans Z 15.41-71.41; walls 6 mm above the
   socket (inner +-13); top plate Z 68.41-71.41 with the 4 mm slot from X -2 to 17; home wall has an arch 16 mm wide
-  (straight to Z 55.41, radius 8, top Z 63.41).
+  (straight to Z 55.41, radius 8, top Z 63.41), cut square to Z 68.41 in the window revision.
 - Pivot: inside the body, not modelled; mid-body (component z 5.77) by default, component z 2-10 tested.
 """
 import csv
@@ -38,8 +39,7 @@ COMP_BODY_H, COMP_BODY_D, COMP_FLANGE_D, COMP_TOP = 11.53, 25.3, 29.75, 29.3
 COMP_Z0 = HOLDER_TOP - COMP_BODY_H   # body bottom above the breadboard
 
 # ------------------------------------------------------------------ shaft and cube (lever coordinates)
-SHAFT_BORE = 2.7
-SHAFT_BASE = COMP_Z0 + COMP_TOP - SHAFT_BORE
+SHAFT_BASE = COMP_Z0 + COMP_TOP                 # cone seated on the stub top (screw in the bore)
 SHAFT_LEN = 89.0
 SHAFT_R = 1.5
 SHAFT_CONE = ((0.0, 4.0), (12.0, 1.5))   # (z, r) on the shaft
@@ -102,15 +102,15 @@ PLATE_T = 5.0                                 # carriage plate the boss passes t
 CLEARANCE = 1.0                               # minimum gap kept between moving or adjustable parts and the CAD
 
 # ------------------------------------------------------------------ plunger link (collar on the 3 mm shaft)
-ATTACH_R = 5.0                                # collar pin from the shaft axis, home side (room for a printed collar)
-LINK = 10.0                                   # pin-to-pin link length
+ATTACH_R = 6.0                                # collar pin from the shaft axis, home side (room for the link end in the fork)
+LINK = 14.0                                   # pin-to-pin link length
 PIN_FROM_TIP = LEDEX["hole_from_tip"]         # the plunger's own cross hole
 PIN_D = 2.5                                   # pin through the plunger cross hole and the collar clevis
 COLLAR_H = 6.0
 LINK_Z_MIN = SHAFT_CONE[1][0] + COLLAR_H / 2  # collar (pin at its mid-height) on the straight 3 mm part of the shaft
 LINK_Z_MAX = min(WINDOW_TOP - LEDEX["plunger_r"],                  # plunger under the window top
                  WINDOW_TOP - COLLAR_H / 2) - CLEARANCE - SHAFT_BASE  # collar under the cavity ceiling
-LINK_Z_REC = 18.0                             # recommended link height (shaft z): ~5 mm under the window top
+LINK_Z_REC = 17.5                             # recommended link height (shaft z): middle of the allowed range
 
 
 def world_z(z_shaft):

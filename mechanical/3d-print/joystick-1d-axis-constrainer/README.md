@@ -15,9 +15,9 @@ to one movement axis.
 (53 mm); the width, the top plate and its 1D slot are unchanged (646 mm³ removed).
 
 On the rig this is world Z 55.4-68.4. With the plunger link at its recommended height (Ledex axis
-Z 58.5) the plunger now passes 4.1 mm from the window instead of 1 mm under the arch, and the 10 mm
-link pin's ends stay 3 mm from the sides. The link height can now go up to 23 mm above the shaft base
-(was 18).
+Z 60.7) the plunger passes ≥ 3.8 mm from the window (under the original arch it would not fit at that
+height), and the 10 mm link pin's ends stay 3 mm from the sides. The link can sit up to 20.3 mm above
+the shaft base (the plunger 1 mm under the window top).
 
 Rerun with the NGSolve venv (`/tmp/ngenv/bin/python make_ledex_window.py`) after changing the
 original or the window size in `simulations/ledex_femm/rig_geometry.py`.
