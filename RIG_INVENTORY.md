@@ -461,7 +461,9 @@ add a small transistor/MOSFET driver if the tone is weak or the line is loaded.
 - [x] Ordered 25/09/26: Hydraulik-Kompetenz PVA 1.6 0–10 V (CHF 260) as the Ledex coil driver. Not the 4–20 mA SKU. Bürkert Type 8605 / `316532` stays the ~2 December spare unless cancelled
 - [x] PVA driver installed (1 A fuse in the 12 V lead) and AO0 terminal 22 wired; coil current vs AO0 measured 11/10/26
 - [x] Adjustable Ledex holder (slotted base, upright, carriage), gauges and plunger-link parts generated 15/10/26 (`mechanical/3d-print/ledex-holder-adjustable/`); the washer target is rejected
-- [ ] Print/fit the adjustable holder and plunger link and force-calibrate with a gram scale at the cube
+- [x] Ledex body and plunger modelled from the datasheet drawing (factory 2.5/2.6 mm cross hole 4.76 mm from the tip, nothing to drill); constrainer window revision for the link (`joystick-1d-axis-constrainer/make_ledex_window.py`)
+- [ ] Caliper-check the plunger (slot width, cross hole, seated protrusion, length) and the M14 nut
+- [ ] Print/fit the window constrainer, adjustable holder and plunger link and force-calibrate with a gram scale at the cube
 - [x] `Water_Dev1`: `Dev1/port0/line0`, digital line output, on-demand, not inverted in NI-MAX
 - [x] `frame counter_Dev1`: `Dev1/ctr0`, rising edges from `PFI8`
 - [x] `MyPulseOutputTask`: `Dev1/ctr1` output on `PFI13`, continuous 50 Hz pulse train

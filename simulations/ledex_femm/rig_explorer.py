@@ -29,17 +29,22 @@ from plot_results import COMMAND_V, HERE, save
 
 OUT_FIG = rf.OUT_FIG
 HOLDER_DIR = os.path.join(rg.CAD, "ledex-holder-adjustable")
+REF_DIR = os.path.join(rg.CAD, "ledex-195224-model")
 LX = rg.LEDEX
-NUT_R = 12.7                     # M14 thin nut, 22 mm across flats (corner radius)
+NUT_R = 12.7                     # M14 thin nut, 22 mm across flats (corner radius; assumed, the nut is not drawn)
+PIN_LEN = 10.0
+CHEEK_Y = 2.3                    # side view cuts the plunger through one cheek of its tip slot (slot is +-1.25)
 PIVOT_RANGE = (rg.PIVOT_DEPTHS[0], rg.PIVOT_DEPTHS[-1])
 
 # name, source, frame, colour, opacity
 MESHES = [
     ("joystick holder", "holder", "static", "#9e9e9e", 1.0),
     ("joystick component", "component", "static", "#454545", 1.0),
-    ("1D constrainer", "constrainer", "static", "#4f8fd6", 0.35),
+    ("1D constrainer (window revision)", "constrainer", "static", "#4f8fd6", 0.35),
     ("shaft", "shaft", "moving", "#e0b050", 1.0),
     ("cube handle", "cube", "moving", "#e07b39", 1.0),
+    ("Ledex body (datasheet model)", "ledex_body", "ledex", "#5a5a5a", 0.55),
+    ("plunger (datasheet model)", "ledex_plunger", "plunger", "#c8c8c8", 1.0),
     ("Ledex carriage", "ledex_holder_carriage", "ledex", "#f39c12", 1.0),
     ("Ledex upright", "ledex_holder_upright", "upright", "#27ae60", 1.0),
     ("Ledex base", "ledex_holder_base", "base", "#c0392b", 1.0),
@@ -51,6 +56,8 @@ MESHES = [
 def mesh(src):
     if src in rg.PARTS:
         return rg.part_mesh(src)
+    if src.startswith("ledex_") and not src.startswith("ledex_holder"):
+        return rg.read_stl(os.path.join(REF_DIR, src + ".stl"))
     return rg.read_stl(os.path.join(HOLDER_DIR, src + ".stl"))
 
 
@@ -66,12 +73,12 @@ def enc_f32(a):
 # ---------------------------------------------------------------- data for the browser
 def browser_data(wf, tab):
     G = dict(SHAFT_BASE=rg.SHAFT_BASE, HANDLE_Z=rg.HANDLE_Z, FACE=rg.FACE, ATTACH_R=rg.ATTACH_R, LINK=rg.LINK,
-             PIN_FROM_TIP=rg.PIN_FROM_TIP, protrude=LX["protrude"], plunger_r=LX["plunger_r"], case_r=LX["case_r"],
+             PIN_FROM_TIP=rg.PIN_FROM_TIP, PIN_D=rg.PIN_D, PIN_LEN=PIN_LEN, protrude=LX["protrude"], plunger_r=LX["plunger_r"], case_r=LX["case_r"],
              case_len=LX["case_len"], boss_r=LX["boss_r"], boss_len=LX["boss_len"], NUT_T=rg.NUT_T, NUT_R=NUT_R,
              PLATE_T=rg.PLATE_T, WASHER_RO=rg.WASHER_RO, WASHER_RI=rg.WASHER_RI, WASHER_T=rg.WASHER_T,
              N_WASHERS=rg.N_WASHERS, WASHER_SEAT=rg.WASHER_SEAT, TOWER_Z=rf.TOWER_Z, SLOT_HOME_X=rg.SLOT_HOME_X,
              SLOT_FAR_X=rg.SLOT_FAR_X, SLOT_Z=rg.SLOT_Z, ARCH_HALF_W=rg.ARCH_HALF_W, ARCH_BOTTOM=rg.ARCH_BOTTOM,
-             ARCH_SPRING=rg.ARCH_SPRING, ARCH_R=rg.ARCH_R, CON_OUTER=rg.CON_OUTER, CLEARANCE=rg.CLEARANCE,
+             WINDOW_TOP=rg.WINDOW_TOP, CON_OUTER=rg.CON_OUTER, CLEARANCE=rg.CLEARANCE,
              LINK_Z_MIN=rg.LINK_Z_MIN, LINK_Z_MAX=rg.LINK_Z_MAX, H_MIN=rf.H_RANGE[0], H_MAX=rf.H_RANGE[1],
              CONTACT_MIN=rf.CONTACT_MIN, S_MIN=rf.STROKE_RANGE[0], S_MAX=rf.STROKE_RANGE[1], MAX_PUSH=rf.MAX_PUSH,
              PIVOT=rg.PIVOT_DEPTH, PIVOT_MIN=PIVOT_RANGE[0], PIVOT_MAX=PIVOT_RANGE[1], g=pl.G,
@@ -159,8 +166,8 @@ function makePhys(D, dec){
   function checks(opt, H, face, dp){
     const r = G.plunger_r + G.CLEARANCE;
     const out = [
-      ['plunger through the arch', r <= G.ARCH_HALF_W && H - r >= G.ARCH_BOTTOM && H <= G.ARCH_SPRING + G.ARCH_R - r,
-       `axis Z ${H.toFixed(1)} in ${(G.ARCH_BOTTOM + r).toFixed(1)}-${(G.ARCH_SPRING + G.ARCH_R - r).toFixed(1)}`],
+      ['plunger through the window', r <= G.ARCH_HALF_W && H - r >= G.ARCH_BOTTOM && H + r <= G.WINDOW_TOP,
+       `axis Z ${H.toFixed(1)} in ${(G.ARCH_BOTTOM + r).toFixed(1)}-${(G.WINDOW_TOP - r).toFixed(1)}`],
       ['nut clear of the constrainer', face + G.PLATE_T + G.NUT_T <= -G.CON_OUTER - G.CLEARANCE,
        `nut front X ${(face + G.PLATE_T + G.NUT_T).toFixed(1)} (wall ${(-G.CON_OUTER).toFixed(0)})`],
       ['holder height range', H >= G.H_MIN && H <= G.H_MAX, `${G.H_MIN}-${G.H_MAX} mm`]];
@@ -170,7 +177,7 @@ function makePhys(D, dec){
       out.push(['no contact at the home stop', g >= G.CONTACT_MIN, `gap at the stop ${g.toFixed(2)} mm`]);
     } else {
       const za = H - G.SHAFT_BASE, lo = link(us, H, face, 0, dp).stroke, hi = link(G.MAX_PUSH, H, face, 0, dp).stroke;
-      out.push(['collar on the straight shaft, plunger under the arch', za >= G.LINK_Z_MIN - 1e-9 && za <= G.LINK_Z_MAX + 1e-9,
+      out.push(['collar on the straight shaft, plunger under the window top', za >= G.LINK_Z_MIN - 1e-9 && za <= G.LINK_Z_MAX + 1e-9,
                 `link z ${za.toFixed(1)} in ${G.LINK_Z_MIN.toFixed(1)}-${G.LINK_Z_MAX.toFixed(1)}`]);
       out.push(['stroke in the datasheet range', lo >= G.S_MIN && hi <= G.S_MAX,
                 `${lo.toFixed(2)}-${hi.toFixed(2)} mm (stop to ${G.MAX_PUSH} mm push)`]);
@@ -302,8 +309,10 @@ function mat(color, opacity){ const m = new THREE.MeshStandardMaterial({color, t
   side: THREE.DoubleSide, flatShading: true, depthWrite: opacity >= 1, metalness: 0.1, roughness: 0.7}); mats.push(m); return m; }
 const pivotG = new THREE.Group(), rotG = new THREE.Group(); pivotG.add(rotG); scene.add(pivotG);
 const ledG = new THREE.Group(), uprG = new THREE.Group(), baseG = new THREE.Group(), linkG = new THREE.Group();
-const collarG = new THREE.Group(); rotG.add(collarG); scene.add(ledG, uprG, baseG, linkG);
-const frames = {static: scene, moving: rotG, ledex: ledG, upright: uprG, base: baseG, collar: collarG, link: linkG};
+const collarG = new THREE.Group(), plungerG = new THREE.Group(); rotG.add(collarG); ledG.add(plungerG);
+scene.add(ledG, uprG, baseG, linkG);
+const frames = {static: scene, moving: rotG, ledex: ledG, plunger: plungerG, upright: uprG, base: baseG, collar: collarG,
+                link: linkG};
 const toggles = [];
 function addToggle(name, color, objs){ const id = 't' + toggles.length; toggles.push(objs);
   $('parts').insertAdjacentHTML('beforeend', `<label><input type="checkbox" id="${id}" checked> <span class="sw" style="background:${color}"></span>${name}</label><br>`);
@@ -315,13 +324,15 @@ for (const p of D.meshes){
   const m = new THREE.Mesh(g, mat(p.color, p.opacity)); m.userData.on = true; m.userData.opt = p.opt;
   frames[p.frame].add(m); addToggle(p.name, p.color, [m]);
 }
-// Ledex body (local: X from the body face, Z from the axis)
+// nut (assumed size) in the Ledex frame (X from the body face, Z from the axis); pins along Y
 function cylX(r, x0, x1, color, opacity, seg){ const g = new THREE.CylinderGeometry(r, r, x1 - x0, seg || 48);
   g.rotateZ(-Math.PI / 2); g.translate((x0 + x1) / 2, 0, 0); const m = new THREE.Mesh(g, mat(color, opacity)); m.userData.on = true; return m; }
-const caseM = cylX(G.case_r, -G.case_len, 0, '#5a5a5a', 0.55), bossM = cylX(G.boss_r, 0, G.boss_len, '#7a7a7a', 1);
-const nutM = cylX(G.NUT_R, G.PLATE_T, G.PLATE_T + G.NUT_T, '#a0a0a0', 1, 6);
-const plungerM = cylX(G.plunger_r, -40, 0, '#c8c8c8', 1); ledG.add(caseM, bossM, nutM, plungerM);
-addToggle('Ledex coil, boss, nut', '#5a5a5a', [caseM, bossM, nutM]); addToggle('plunger', '#c8c8c8', [plungerM]);
+function pinY(x, len){ const g = new THREE.CylinderGeometry(G.PIN_D / 2, G.PIN_D / 2, len, 24); g.translate(x, 0, 0);
+  const m = new THREE.Mesh(g, mat('#303030', 1)); m.userData.on = true; m.userData.opt = 'link'; return m; }
+const nutM = cylX(G.NUT_R, G.PLATE_T, G.PLATE_T + G.NUT_T, '#a0a0a0', 1, 6); ledG.add(nutM);
+addToggle('M14 nut (assumed size)', '#a0a0a0', [nutM]);
+const tipPin = pinY(G.protrude - G.PIN_FROM_TIP, G.PIN_LEN), collarPin = pinY(-G.ATTACH_R, 9);
+plungerG.add(tipPin); collarG.add(collarPin); addToggle('link pins', '#303030', [tipPin, collarPin]);
 // washer tower on the shaft
 const towerG = new THREE.Group(); rotG.add(towerG); const wm = mat('#b9b9b9', 1);
 for (let i = 0; i < G.N_WASHERS; i++){
@@ -366,7 +377,7 @@ function draw(){
   const s = P.state(o, u, H, face, a, dp, mu), Zp = G.SHAFT_BASE - dp;
   pivotG.position.set(0, 0, Zp); rotG.position.set(0, 0, -Zp); pivotG.rotation.y = s.th; pivotM.position.set(0, 0, Zp);
   ledG.position.set(face, Y, H); uprG.position.set(face, Y, 0); baseG.position.set(face, 0, 0);
-  plungerM.position.x = s.tip - face;
+  plungerG.position.x = (o === 'link' ? s.tip : face + G.protrude) - face - G.protrude;
   collarG.position.set(0, 0, G.SHAFT_BASE + (o === 'link' ? s.za : 0));
   if (o === 'link'){ linkG.position.set(s.sx, 0, G.SHAFT_BASE + s.sz);
     linkG.rotation.set(0, Math.atan2(-(s.za - s.sz), s.px - s.sx), 0); }
@@ -466,6 +477,11 @@ def placed_parts(opt, push, d_p=rg.PIVOT_DEPTH):
     r = rf.REC[opt]
     H, face = r["H"], r["face"]
     th = float(rg.tilt_for_push(push, d_p))
+    if opt == "washers":
+        tip = face + LX["protrude"]
+    else:
+        k = pl.kinematics(push, d_p, rg.shaft_z(H), rf.link_settings(H, face)[1])
+        tip = float(k["pin_x"][0]) + rg.PIN_FROM_TIP
     out = []
     for name, src, frame, color, opacity in MESHES:
         if src in ("link_collar", "link_bar") and opt != "link":
@@ -475,6 +491,8 @@ def placed_parts(opt, push, d_p=rg.PIVOT_DEPTH):
             t = rg.tilt_world(t, d_p, th)
         elif frame == "ledex":
             t = t + np.array([face, 0, H])
+        elif frame == "plunger":
+            t = t + np.array([tip - LX["protrude"], 0, H])
         elif frame in ("upright", "base"):
             t = t + np.array([face, 0, 0])
         elif frame == "collar":
@@ -487,16 +505,12 @@ def placed_parts(opt, push, d_p=rg.PIVOT_DEPTH):
             x, z = t[..., 0] * c - t[..., 2] * s_, t[..., 0] * s_ + t[..., 2] * c
             t = np.stack([x + sx, t[..., 1], z + rg.world_z(sz)], -1)
         out.append((name, t, color, opacity))
-    if opt == "washers":
-        tip = face + LX["protrude"]
-    else:
-        k = pl.kinematics(push, d_p, rg.shaft_z(H), rf.link_settings(H, face)[1])
-        tip = float(k["pin_x"][0]) + rg.PIN_FROM_TIP
-    solids = [("coil", face - LX["case_len"], face, LX["case_r"], "#5a5a5a"),
-              ("boss", face, face + LX["boss_len"], LX["boss_r"], "#7a7a7a"),
-              ("nut", face + rg.PLATE_T, face + rg.PLATE_T + rg.NUT_T, NUT_R * 0.866, "#a0a0a0"),
-              ("plunger", tip - 40, tip, LX["plunger_r"], "#c8c8c8")]
-    return out, solids, H, face, th
+    solids = [("nut", face + rg.PLATE_T, face + rg.PLATE_T + rg.NUT_T, NUT_R * 0.866, "#a0a0a0")]
+    pins = []
+    if opt == "link":
+        cx, cz = rg.rotate(-rg.ATTACH_R, rg.shaft_z(H), d_p, th)
+        pins = [(tip - rg.PIN_FROM_TIP, H), (float(cx), float(rg.world_z(cz)))]
+    return out, solids, pins, H, face, th
 
 
 def side_view(path):
@@ -504,9 +518,9 @@ def side_view(path):
     for row, opt in enumerate(("washers", "link")):
         for col, push in enumerate((0.0, 15.0)):
             ax = axes[row, col]
-            parts, solids, H, face, th = placed_parts(opt, push)
+            parts, solids, pins, H, face, th = placed_parts(opt, push)
             for name, t, color, _ in parts:
-                seg = rg.slice_mesh(t, 1, 0.0)
+                seg = rg.slice_mesh(t, 1, CHEEK_Y if name.startswith("plunger") else 0.0)
                 if len(seg):
                     ax.plot(seg[:, :, 0].T, seg[:, :, 2].T, color=color, lw=0.8)
                 if name == "Ledex upright":
@@ -514,6 +528,8 @@ def side_view(path):
                     ax.plot(seg[:, :, 0].T, seg[:, :, 2].T, color=color, lw=0.5, alpha=0.4, ls="--")
             for name, x0, x1, r, color in solids:
                 ax.add_patch(plt.Rectangle((x0, H - r), x1 - x0, 2 * r, fc=color, ec="k", lw=0.5, alpha=0.5))
+            for x, z in pins:
+                ax.add_patch(plt.Circle((x, z), rg.PIN_D / 2, fc="#303030", ec="none"))
             if opt == "washers":
                 for sgn in (-1, 1):
                     for i in range(rg.N_WASHERS):
@@ -534,8 +550,8 @@ def side_view(path):
                 ax.set_xlabel("X (mm, push direction; joystick axis at neutral = 0)")
             if col == 0:
                 ax.set_ylabel("Z above the breadboard (mm)")
-    fig.suptitle("Section at Y = 0 through the rig CAD (dashed: upright wall at Y 17.9; magenta: pivot %.1f mm below "
-                 "the shaft base)" % rg.PIVOT_DEPTH)
+    fig.suptitle("Section at Y = 0 through the rig CAD (plunger at Y %.1f, through a slot cheek; dashed: upright wall "
+                 "at Y 17.9; magenta: pivot %.1f mm below the shaft base)" % (CHEEK_Y, rg.PIVOT_DEPTH))
     fig.tight_layout()
     save(fig, os.path.basename(path), os.path.dirname(path))
     plt.close(fig)
@@ -555,7 +571,7 @@ def assembly_png(path):
     fig = plt.figure(figsize=(15, 7))
     for k, opt in enumerate(("washers", "link")):
         ax = fig.add_subplot(1, 2, k + 1, projection="3d")
-        parts, solids, H, face, th = placed_parts(opt, 0.0)
+        parts, solids, pins, H, face, th = placed_parts(opt, 0.0)
         light = np.array([-0.4, -0.6, 0.7]) / np.linalg.norm([-0.4, -0.6, 0.7])
         for name, t, color, opacity in parts + [(n, cyl_tris(x0, x1, r, H), c, 0.8) for n, x0, x1, r, c in solids]:
             n = np.cross(t[:, 1] - t[:, 0], t[:, 2] - t[:, 0])

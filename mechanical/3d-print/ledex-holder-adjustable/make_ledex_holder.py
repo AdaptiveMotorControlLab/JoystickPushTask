@@ -42,8 +42,9 @@ NUT_X = (-25.0, -1.0)         # M4 nut pockets in the base (Y = 0), under the up
 FOOT_Y = (-22.0, 30.0)
 LAT_SLOT = 12.75              # lateral travel either way
 COLLAR_H, COLLAR_R, BORE_R = 6.0, 4.5, 1.55
-PIN_R = 1.05                  # 2 mm pin or M2 screw
-LINK_T, LINK_W = 2.3, 4.0     # fits the plunger's 2.5 mm tip slot
+PIN_R = rg.PIN_D / 2 + 0.05   # 2.5 mm pin (or M2.5 screw), as the plunger's 2.5/2.6 mm cross hole
+LINK_T, LINK_W = 2.0, 5.0     # the plunger's tip slot is 2.5 +-0.3 mm wide
+REF_DIR = os.path.join(HERE, "..", "ledex-195224-model")
 
 LAYOUTS = {
     # plunger link at the highest link height, 3 mm stroke at neutral
@@ -153,14 +154,46 @@ def stroke_gauge(s0):
     return s
 
 
+def ledex_body():
+    """Reference model (not for printing), Ledex frame: X from the body face, axis on X. Leads at the rear, down."""
+    tpl = 1.58
+    s = cyl((-LX["case_len"], 0, 0), (1, 0, 0), LX["case_r"], LX["case_len"])
+    s = s + cyl((0, 0, 0), (1, 0, 0), LX["boss_r"], LX["boss_len"])
+    s = s - cyl((-LX["case_len"] + tpl, 0, 0), (1, 0, 0), LX["plunger_r"] + 0.1, LX["case_len"] - tpl + LX["boss_len"] + 1)
+    for y in (-1.2, 1.2):
+        s = s + cyl((-LX["case_len"] + 2.5, y, -LX["case_r"] + 1), (0, 0, -1), 1.1, 15)
+    return s
+
+
+def ledex_plunger():
+    """Reference plunger, seated (energised), Ledex frame; slot plane XZ, cross hole along Y."""
+    lcyl, conel, _ = rg.plunger_dims()
+    tip = LX["protrude"]
+    rp, w = LX["plunger_r"], LX["tip_slot_w"]
+    s = cyl((tip - lcyl, 0, 0), (1, 0, 0), rp, lcyl)
+    s = s + cone_solid(tip - lcyl, conel, rp, LX["cone_flat_r"])
+    s = s - box(tip - LX["tip_slot_d"], tip + 1, -w / 2, w / 2, -rp - 1, rp + 1)
+    s = s - cyl((tip - LX["hole_from_tip"], -rp - 1, 0), (0, 1, 0), LX["hole_d"] / 2, 2 * rp + 2)
+    return s
+
+
+def cone_solid(x_base, length, r_base, r_apex):
+    """Truncated cone along -X from x_base (radius r_base) to x_base - length (radius r_apex)."""
+    from netgen.occ import Face, Wire, Segment, Pnt as P3
+    pts = [P3(x_base, 0, 0), P3(x_base, 0, r_base), P3(x_base - length, 0, r_apex), P3(x_base - length, 0, 0)]
+    w = Wire([Segment(pts[i], pts[(i + 1) % 4]) for i in range(4)])
+    return Face(w).Revolve(Axis(Pnt(0, 0, 0), X), 360)
+
+
 def collar():
-    """Split collar for the 3 mm shaft; clevis pin ATTACH_R on the -X (home) side, axis along Y."""
+    """Split collar for the 3 mm shaft; clevis pin ATTACH_R on the -X (home) side, axis along Y.
+    The clamp ear points along +Y: on the +X side it would hit the constrainer's far wall near a 15 mm push."""
     h = COLLAR_H / 2
     s = cyl((0, 0, -h), (0, 0, 1), COLLAR_R, COLLAR_H)
-    s = s + box(2.5, 8.5, -3, 3, -h, h) + box(-rg.ATTACH_R - 3.5, -2.5, -3.5, 3.5, -h, h)
+    s = s + box(-3, 3, 2.5, 8.5, -h, h) + box(-rg.ATTACH_R - 3.5, -2.5, -3.5, 3.5, -h, h)
     s = s - cyl((0, 0, -h - 1), (0, 0, 1), BORE_R, COLLAR_H + 2)
-    s = s - box(0, 9, -0.4, 0.4, -h - 1, h + 1)
-    s = s - cyl((6, -4, 0), (0, 1, 0), 1.1, 8)
+    s = s - box(-0.4, 0.4, 0, 9, -h - 1, h + 1)
+    s = s - cyl((-4, 6, 0), (1, 0, 0), 1.1, 8)
     s = s - box(-rg.ATTACH_R - 4, -3.2, -LINK_T / 2 - 0.15, LINK_T / 2 + 0.15, -h - 1, h + 1)
     s = s - cyl((-rg.ATTACH_R, -4, 0), (0, 1, 0), PIN_R, 8)
     return s
@@ -189,6 +222,8 @@ PARTS = {
     "link_collar": collar,
     "link_bar": link,
 }
+REFERENCE = {"ledex_body": ledex_body, "ledex_plunger": ledex_plunger}
+PIN_LEN = 10.0                # plunger pin along Y; must stay inside the arch (+-8 mm)
 
 
 # ------------------------------------------------------------------ export
@@ -233,16 +268,22 @@ def surface_points(T, step=0.6):
     return np.vstack(pts)
 
 
+def crop(T, lo, hi):
+    """Triangles with at least one vertex inside the box lo..hi (world mm)."""
+    inside = ((T >= np.asarray(lo)) & (T <= np.asarray(hi))).all(axis=2).any(axis=1)
+    return T[inside]
+
+
 def clearance_report():
     from scipy.spatial import cKDTree
-    rig = {n: rg.part_mesh(n) for n in ("holder", "constrainer", "component")}
+    rig = {n: crop(rg.part_mesh(n), (-80, -40, 0), (20, 40, 90)) for n in ("holder", "constrainer", "component")}
     trees = {n: cKDTree(surface_points(t)) for n, t in rig.items()}
     ok = True
     for lay, p in LAYOUTS.items():
         line = []
         for name in ("ledex_holder_carriage", "ledex_holder_upright", "ledex_holder_base"):
             pts = surface_points(placed(name, p["H"], p["face"]))
-            d = min(trees[n].query(pts)[0].min() for n in trees)
+            d = min(trees[n].query(pts, distance_upper_bound=20.0)[0].min() for n in trees)
             line.append("{} {:.1f} mm".format(name.split("_")[-1], d))
             ok &= d >= rg.CLEARANCE
         nut_front = p["face"] + PLATE_T + rg.NUT_T
@@ -253,7 +294,78 @@ def clearance_report():
     return ok
 
 
+def link_parts(push, H, face, d_p=rg.PIVOT_DEPTH):
+    """World triangles of the moving link-layout parts at a push (mm at the cube, from neutral)."""
+    import plunger_link as pl
+    z_a = H - rg.SHAFT_BASE
+    s0 = -rg.ATTACH_R - rg.LINK + rg.PIN_FROM_TIP - LX["protrude"] - face
+    k = pl.kinematics(push, d_p, z_a, s0)
+    th = np.radians(k["tilt_deg"][0])
+    sx, sz, px = k["collar_x"][0], k["collar_z"][0], k["pin_x"][0]
+    stroke = k["stroke_mm"][0]
+    ref = lambda n: rg.read_stl(os.path.join(REF_DIR, n + ".stl"))
+    out = {"plunger": ref("ledex_plunger") + np.array([face + stroke, 0, H])}
+    pin = triangles(cyl((0, -PIN_LEN / 2, 0), (0, 1, 0), rg.PIN_D / 2, PIN_LEN), 0.4)
+    out["pin"] = pin + np.array([px, 0, H])
+    col = rg.read_stl(os.path.join(HERE, "link_collar.stl")) + np.array([0, 0, rg.SHAFT_BASE + z_a])
+    out["collar"] = rg.tilt_world(col, d_p, th)
+    out["shaft"] = rg.tilt_world(rg.part_mesh("shaft"), d_p, th)
+    phi = np.arctan2(sz - z_a, sx - px)
+    t = rg.read_stl(os.path.join(HERE, "link_bar.stl"))
+    x, z = t[..., 0] * np.cos(phi) - t[..., 2] * np.sin(phi), t[..., 0] * np.sin(phi) + t[..., 2] * np.cos(phi)
+    out["link"] = np.stack([x + px, t[..., 1], z + H], axis=-1)
+    return out, stroke
+
+
+def motion_report(lay="link", n=9):
+    """Smallest gaps between the moving link parts and everything they must not touch, home stop to 15 mm."""
+    from scipy.spatial import cKDTree
+    p = LAYOUTS[lay]
+    lo, hi = (-60, -20, p["H"] - 20), (15, 20, p["H"] + 20)
+    fixed = {nm: crop(rg.part_mesh(nm), lo, hi) for nm in ("holder", "constrainer", "component")}
+    fixed["ledex"] = rg.read_stl(os.path.join(REF_DIR, "ledex_body.stl")) + np.array([p["face"], 0, p["H"]])
+    trees = {nm: cKDTree(surface_points(t, 0.5)) for nm, t in fixed.items() if len(t)}
+    pairs = [("plunger", "collar"), ("plunger", "shaft"), ("pin", "collar"), ("pin", "shaft"), ("link", "shaft")]
+    pushes = np.linspace(rg.stop_push(rg.PIVOT_DEPTH), 15.0, n)
+    worst = {}
+    for push in pushes:
+        parts, stroke = link_parts(push, p["H"], p["face"])
+        parts["shaft"] = crop(parts["shaft"], lo, hi)
+        pts = {nm: surface_points(t, 0.4) for nm, t in parts.items()}
+        for a, b in pairs:
+            d = cKDTree(pts[b]).query(pts[a], distance_upper_bound=5.0)[0].min()
+            worst[(a, b)] = min(worst.get((a, b), (np.inf,))[0], d), push
+        for a in ("plunger", "pin", "link", "collar"):
+            for b, tr in trees.items():
+                if (a, b) == ("plunger", "ledex"):
+                    continue
+                d = tr.query(pts[a], distance_upper_bound=5.0)[0].min()
+                if d < worst.get((a, b), (np.inf,))[0]:
+                    worst[(a, b)] = d, push
+    print("moving parts, push {:.2f} to 15 mm (smallest gap, at push):".format(pushes[0]))
+    ok = True
+    for (a, b), (d, at) in sorted(worst.items(), key=lambda kv: kv[1][0]):
+        if np.isfinite(d):
+            print("  {:8s} - {:12s} {:5.2f} mm at {:5.2f}".format(a, b, d, at))
+        ok &= d >= 0.5
+    print("  (all other pairs > 5 mm)")
+    print("moving clearances OK" if ok else "MOVING CLEARANCE PROBLEM")
+    return ok
+
+
 def main():
+    if sys.argv[1:] == ["check"]:
+        clearance_report()
+        motion_report()
+        return
+    os.makedirs(REF_DIR, exist_ok=True)
+    for name, make in REFERENCE.items():
+        shape = make()
+        shape.WriteStep(os.path.join(REF_DIR, name + ".step"))
+        T = triangles(shape, 0.5)
+        write_stl(os.path.join(REF_DIR, name + ".stl"), T)
+        vol = np.einsum("ij,ij->i", T[:, 0], np.cross(T[:, 1], T[:, 2])).sum() / 6
+        print("{:24s} {:6d} tris  steel mass {:.1f} g".format(name, len(T), vol * LX["steel_g_mm3"]))
     for name, make in PARTS.items():
         shape = make()
         shape.WriteStep(os.path.join(HERE, name + ".step"))
@@ -263,6 +375,7 @@ def main():
         bb = T.reshape(-1, 3)
         print("{:24s} {:6d} tris  size {} mm".format(name, len(T), np.round(bb.max(0) - bb.min(0), 1)))
     clearance_report()
+    motion_report()
 
 
 if __name__ == "__main__":

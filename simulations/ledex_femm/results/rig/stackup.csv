@@ -6,7 +6,7 @@ pivot (mid-body; tested component z 2-10),19.64,world Z
 shaft base,40.48,world Z
 constrainer bottom (socket ledge rests on the frame top),15.41,world Z
 washer tower (10 x M3 on the cone),51.98,"world Z, to 59.98"
-arch top (home wall opening),63.41,world Z
+window top (home wall opening),68.41,world Z
 constrainer slot plate,68.41,"world Z, to 71.41"
 cube push contact,132.88,world Z
 pivot depth below the shaft base,20.84,mm (16.60-24.60)

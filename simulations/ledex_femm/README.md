@@ -146,7 +146,7 @@ shaft base.
 | shaft base | 40.48 |
 | constrainer (socket ledge on the frame top) | 15.41-71.41 |
 | washer tower (10 × M3 on the shaft cone) | 51.98-59.98 |
-| arch in the constrainer's home wall (Y ±8, top) | 63.41 |
+| window in the constrainer's home wall (Y ±8, square top; the original arch top was 63.41) | 68.41 |
 | constrainer slot plate | 68.41-71.41 |
 | cube push contact | 132.88 |
 
@@ -155,8 +155,11 @@ shaft base.
 - The constrainer slot runs from Y −2 to 17 (4 mm wide). Its home end stops the shaft at **−1.13 mm at
   the cube** (home side of the vertical, i.e. of the spring's neutral); its far end allows 35.2 mm. A
   15 mm push tilts the shaft 7.6°.
-- Ledex placement limits: the plunger (+1 mm) passes through the arch, so its axis must be at Z
-  30.3-58.5; the M14 nut must stay 1 mm clear of the constrainer's outer wall (X −19), so the body face
+- Constrainer: the model uses the window revision
+  (`mechanical/3d-print/joystick-1d-axis-constrainer/make_ledex_window.py`): the home-wall arch is cut
+  square up to the cavity ceiling, same 16 mm width, so the plunger and the link pin have room.
+- Ledex placement limits: the plunger (+1 mm) passes through the window, so its axis must be at Z
+  30.3-63.5; the M14 nut must stay 1 mm clear of the constrainer's outer wall (X −19), so the body face
   must be at X ≤ −28.5; the Ledex holder covers axis heights 30-70.
 
 ![section at Y = 0](figures/rig/side_view.png)
@@ -218,9 +221,15 @@ the plunger out of the coil and the coil pulls it back, so the resistance oppose
   reads up to 1.9× high at long stroke). The same scale is used at all currents.
 - Kinematics: rigid shaft rotating about the pivot; the plunger pin stays on the Ledex axis. The handle
   force is the plunger pull × 0.343 (link height over the cube height above the pivot).
+- Plunger end (datasheet drawing F34, model in `mechanical/3d-print/ledex-195224-model/`): the pull end
+  has a 2.5 × 9.5 mm slot across its diameter and a factory 2.5/2.6 mm cross hole through both cheeks
+  4.76 mm from the tip; the link bar (2.0 × 5 mm) goes in the slot and the pin through that hole, so
+  nothing is drilled. The slot is turned vertical (pin along Y).
 - Link height: the collar (6 mm) must sit on the straight 3 mm part of the shaft (pin at shaft z ≥ 15)
-  and the plunger must pass 1 mm under the top of the constrainer's arch (z ≤ 18.0). **Recommended: link
-  at shaft z 18 (Ledex axis Z 58.5), home stroke s0 = 3 mm at neutral (body face X −38.8)**; never 0:
+  and the plunger must pass 1 mm under the window top (z ≤ 23.0). Height barely matters for force
+  (10 V, s0 3 mm: z 15 / 18 / 23 give 35 / 38 / 43 gf at neutral and 11.1-11.4 gf at 15 mm), so the link
+  stays low with room above. **Recommended: link at shaft z 18 (Ledex axis Z 58.5), home stroke s0 = 3 mm
+  at neutral (body face X −37.05)**; never 0:
   seated, the plunger holds with 12.8 N. A 15 mm push takes the stroke from 3.0 to 8.2 mm; the link tilts
   by at most 1.8°.
 - Magnet resistance at the cube handle (gf, pivot 20.8 mm; a pivot at 16.6 / 24.6 mm gives −7 / +6 % at
@@ -255,8 +264,8 @@ the plunger out of the coil and the coil pulls it back, so the resistance oppose
   neutral in ~58 ms, a Mathis-like spring (10 gf at home, 20 gf at 15 mm) in ~32 ms; with 10 V on the
   magnet speeds the return (~30 ms) and then holds the handle on the stop. Without preload the handle
   stops wherever friction catches it after the bounce, so preload matters more than stiffness.
-- Assumptions to confirm on the rig: pivot depth, collar pin 5 mm off axis and plunger pin 3 mm from the
-  tip (a 2 mm cross-hole through the tip slot's cheeks), rigid link with free pins, no residual magnetism
+- Assumptions to confirm on the rig: pivot depth, collar pin 5 mm off axis, the plunger's cross hole at
+  4.76 mm from the tip (datasheet ± 0.30), rigid link with free pins, no residual magnetism
   at 0 V, coil current constant during a push. Not modelled: the link's weight and the extra friction of
   the side load (the link stays within 1.8°, so the side load is < 4 % of the pull).
 - Bench checks before relying on these numbers:
@@ -276,16 +285,16 @@ the plunger out of the coil and the coil pulls it back, so the resistance oppose
 ## Washer target vs plunger link on the measured rig (15 Oct 2026)
 
 `rig_forces.py` places both options with the same two holder settings, the Ledex body face X (distance)
-and axis height Z, and keeps only layouts that fit: plunger through the arch, nut clear of the
+and axis height Z, and keeps only layouts that fit: plunger through the window, nut clear of the
 constrainer, holder range, and for the washers no contact at the home stop (gap ≥ 0.3 mm there), for the
-link the collar and arch limits and a stroke within 0.75-12.5 mm from the home stop to a 15 mm push.
+link the collar and window limits and a stroke within 0.75-12.5 mm from the home stop to a 15 mm push.
 Washer pull comes from a new 3D sweep with the tower centre moved along its own vertical axis
 (`sweep3d.py offset`, 7 gaps × 6 offsets at 0.31 A, scaled to other currents by the centred sweep).
 
 - The tower is 8 mm tall, so offsets up to ~4 mm cost little (10 V, 1 mm gap: 2.4 / 2.2 / 2.0 / 1.8 /
-  0.81 / 0.16 g at 0 / 2 / 4 / 6 / 8 / 11 mm offset). The tower centre is at Z 56.0, inside the arch range.
+  0.81 / 0.16 g at 0 / 2 / 4 / 6 / 8 / 11 mm offset). The tower centre is at Z 56.0, inside the window range.
 - Recommended layouts (stars in `design_maps.png`): washers at Z 56.0, face X −29.3 (1 mm gap at
-  neutral, 0.64 mm at the home stop); link at Z 58.5, face X −38.8 (link z 18, 3 mm home stroke).
+  neutral, 0.64 mm at the home stop); link at Z 58.5, face X −37.05 (link z 18, 3 mm home stroke).
 
 | push at the cube | 0 mm | 1 mm | 2 mm | 5 mm | 10 mm | 15 mm |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -301,11 +310,14 @@ Resistance at the cube (gf, pivot 20.8 mm; 16.6 / 24.6 mm: washers −8 / +7 %, 
 - **The plunger link wins by ~50× at neutral and ~175× at 15 mm.** The strongest feasible washer
   layout (gap 0.7 mm, face X −29.0) still gives only 1.2 gf at 10 V; the washer force also falls ~12×
   over a 15 mm push against ~3.4× for the link. Use the plunger link; the washer target stays rejected.
-- The strongest feasible link layout (face X −37.0, home stroke 1.2 mm) gives 83 gf at 10 V at neutral
-  but falls to 23 gf at 10 mm; 3 mm keeps a margin from the 0.75 mm datasheet limit and a flatter curve.
+- The strongest feasible link layout on the 1 mm design grid (face X −36.0, Z 62.0: link z 21.5, home
+  stroke 1.95 mm) gives 65 gf at 10 V at neutral but falls to 19 gf at 10 mm; 3 mm keeps a margin from
+  the 0.75 mm datasheet limit and a flatter curve.
 - Holder: `mechanical/3d-print/ledex-holder-adjustable/` (slotted base along X, lateral slots, vertical
   slots with a 1 mm scale, stroke and gap gauges, link collar and bar). Both layouts clear the
-  joystick holder, component and constrainer (link ≥ 13 mm, washers ≥ 4.3 mm).
+  joystick holder, component and constrainer (link ≥ 11.4 mm, washers ≥ 4.3 mm). Moving link parts,
+  home stop to 15 mm: ≥ 1.0 mm (link end to shaft inside the clevis; plunger tip to collar 1.4 mm; pin,
+  collar and plunger to the constrainer ≥ 3 mm).
 
 ![options](figures/rig/options_force_vs_push.png)
 

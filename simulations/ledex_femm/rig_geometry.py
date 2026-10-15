@@ -65,17 +65,38 @@ SLOT_Z = sum(CON_TOP) / 2 - SHAFT_BASE        # slot mid-plane on the shaft (lev
 SLOT_HOME_X = SLOT[0] + SHAFT_R               # shaft centre at the home stop (X at the slot)
 SLOT_FAR_X = SLOT[1] - SHAFT_R
 ARCH_HALF_W, ARCH_R = 8.0, 8.0
-ARCH_SPRING = CON_Z0 + 40.0                   # straight sides end, semicircle centre (world Z)
-ARCH_TOP = ARCH_SPRING + ARCH_R
-ARCH_BOTTOM = HOLDER_TOP                      # the holder frame fills the arch below this
+ARCH_SPRING = CON_Z0 + 40.0                   # original part: straight sides end, semicircle centre (world Z)
+ARCH_BOTTOM = HOLDER_TOP                      # the holder frame fills the opening below this
+# Revision used here: the arch is cut square up to the cavity ceiling (make_ledex_window.py), same width.
+CON_WINDOW_FILE = "joystick_1d_axis_constrainer_38x38x56_ledex_window"
+WINDOW_TOP = CON_TOP[0]
+ARCH_TOP = WINDOW_TOP
 
 # ------------------------------------------------------------------ washers (target option)
 WASHER_RI, WASHER_RO, WASHER_T, N_WASHERS = 1.6, 4.5, 0.8, 10
 WASHER_SEAT = 11.5                            # shaft z where the cone radius equals WASHER_RI
 
 # ------------------------------------------------------------------ Ledex 195224-230 (datasheet)
+# Ledex 195224-230 from the datasheet drawing (page F34, energised = seated): pull end 19.05 + 4.76 = 23.81 mm beyond
+# the body face; tip slot 2.5 +-0.3 wide, 9.5 +-0.3 deep, across the whole diameter; cross hole 2.5/2.6 mm through
+# both cheeks, 4.76 +-0.30 from the tip. Cone half-angle and apex flat as calibrated in FEMM (best_params.json).
 LEDEX = dict(case_r=9.78, case_len=39.37, boss_r=7.0, boss_len=9.52, plunger_r=3.91, protrude=23.81,
-             tip_slot_w=2.5, tip_slot_d=9.5, plunger_g=20.1)
+             tip_slot_w=2.5, tip_slot_d=9.5, hole_from_tip=4.76, hole_d=2.55, plunger_g=20.1,
+             cone_half_deg=37.52, cone_flat_r=1.0, steel_g_mm3=7.85e-3)
+
+
+def plunger_dims(L=LEDEX):
+    """(cylinder length, cone length, total length) in mm, from the plunger mass (as in ledex_washer.lua)."""
+    rp, rt = L["plunger_r"], L["cone_flat_r"]
+    conel = (rp - rt) / np.tan(np.radians(L["cone_half_deg"]))
+    vcone = np.pi / 3 * conel * (rp * rp + rp * rt + rt * rt)
+    w = L["tip_slot_w"]
+    vslot = w * 2 * np.sqrt(rp * rp - (w / 2) ** 2) * L["tip_slot_d"]
+    vhole = np.pi * (L["hole_d"] / 2) ** 2 * (2 * rp - w)
+    lcyl = (L["plunger_g"] / L["steel_g_mm3"] - vcone + vslot + vhole) / (np.pi * rp * rp)
+    return float(lcyl), float(conel), float(lcyl + conel)
+
+
 NUT_T = 3.5                                   # M14 x 1.5 thin mounting nut (assumed; check the supplied nut)
 PLATE_T = 5.0                                 # carriage plate the boss passes through
 CLEARANCE = 1.0                               # minimum gap kept between moving or adjustable parts and the CAD
@@ -83,10 +104,13 @@ CLEARANCE = 1.0                               # minimum gap kept between moving 
 # ------------------------------------------------------------------ plunger link (collar on the 3 mm shaft)
 ATTACH_R = 5.0                                # collar pin from the shaft axis, home side (room for a printed collar)
 LINK = 10.0                                   # pin-to-pin link length
-PIN_FROM_TIP = 3.0                            # cross pin in the plunger's pull-end slot, from the tip (to confirm)
+PIN_FROM_TIP = LEDEX["hole_from_tip"]         # the plunger's own cross hole
+PIN_D = 2.5                                   # pin through the plunger cross hole and the collar clevis
 COLLAR_H = 6.0
 LINK_Z_MIN = SHAFT_CONE[1][0] + COLLAR_H / 2  # collar (pin at its mid-height) on the straight 3 mm part of the shaft
-LINK_Z_MAX = ARCH_SPRING + ARCH_R - LEDEX["plunger_r"] - CLEARANCE - SHAFT_BASE   # plunger passes under the arch top
+LINK_Z_MAX = min(WINDOW_TOP - LEDEX["plunger_r"],                  # plunger under the window top
+                 WINDOW_TOP - COLLAR_H / 2) - CLEARANCE - SHAFT_BASE  # collar under the cavity ceiling
+LINK_Z_REC = 18.0                             # recommended link height (shaft z): ~5 mm under the window top
 
 
 def world_z(z_shaft):
@@ -134,9 +158,9 @@ def shaft_radius(z):
 
 
 def arch_clear(z_axis, r):
-    """True where a disc of radius r centred on the axis (Y = 0, world Z z_axis) passes through the arch."""
+    """True where a disc of radius r centred on the axis (Y = 0, world Z z_axis) passes through the window."""
     z_axis = np.asarray(z_axis, float)
-    return (r <= ARCH_HALF_W) & (z_axis - r >= ARCH_BOTTOM) & (z_axis <= ARCH_SPRING + ARCH_R - r)
+    return (r <= ARCH_HALF_W) & (z_axis - r >= ARCH_BOTTOM) & (z_axis + r <= WINDOW_TOP)
 
 
 # ------------------------------------------------------------------ CAD meshes
@@ -161,7 +185,7 @@ def _swap(t, dx=0.0, dz=0.0):
 PARTS = {
     "holder": ("joystick-holder/joystick_holder.stl", lambda t: _swap(t), False),
     "component": ("joystick-component/joystick_component.stl", lambda t: _swap(t, dz=COMP_Z0), False),
-    "constrainer": ("joystick-1d-axis-constrainer/joystick_1d_axis_constrainer_38x38x56.stl",
+    "constrainer": ("joystick-1d-axis-constrainer/" + CON_WINDOW_FILE + ".stl",
                     lambda t: _swap(t, dz=CON_Z0), False),
     "shaft": ("joystick/joystick_89mm.stl", lambda t: t + np.array([0.0, 0.0, SHAFT_BASE]), True),
     "cube": ("joystick-handle-cube/joystick_handle_cube.stl",
@@ -209,7 +233,7 @@ def stackup():
         ("shaft base", SHAFT_BASE, "world Z"),
         ("constrainer bottom (socket ledge rests on the frame top)", CON_Z0, "world Z"),
         ("washer tower (10 x M3 on the cone)", world_z(WASHER_SEAT), "world Z, to %.2f" % world_z(WASHER_SEAT + 8)),
-        ("arch top (home wall opening)", ARCH_TOP, "world Z"),
+        ("window top (home wall opening)", WINDOW_TOP, "world Z"),
         ("constrainer slot plate", CON_TOP[0], "world Z, to %.2f" % CON_TOP[1]),
         ("cube push contact", world_z(HANDLE_Z), "world Z"),
         ("pivot depth below the shaft base", d, "mm (%.2f-%.2f)" % (PIVOT_DEPTHS[0], PIVOT_DEPTHS[2])),

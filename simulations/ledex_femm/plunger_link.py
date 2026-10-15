@@ -43,7 +43,7 @@ PIN_FRICTION_GF = 0.5            # allowance for the two link pins, gf at the pl
 MU = (0.15, 0.3, 0.4)            # plunger in its nylon bearing (dry nylon on steel)
 ATTACH_Z = (rg.LINK_Z_MIN, round((rg.LINK_Z_MIN + rg.LINK_Z_MAX) / 2, 1), round(rg.LINK_Z_MAX, 1))
 HOME_STROKES = (1.5, 2.0, 3.0, 4.0, 5.0)
-REC = dict(z_a=ATTACH_Z[-1], s0=3.0, d_p=PIVOT_DEPTH)
+REC = dict(z_a=rg.LINK_Z_REC, s0=3.0, d_p=PIVOT_DEPTH)
 PLA = 1.24e-3                    # g / mm^3 (solid print; scale by the infill if printed hollow)
 SAFETY = 2.0                     # spring preload / friction at home
 RESTITUTION = 0.3                # bounce at the home stop (PLA on PLA)
