@@ -188,7 +188,7 @@ handle into tower motion, gap and resistance (`results/lever/lever_table.csv`,
   printed shaft screwed onto the lever stub. Heights from the measured component and holder
   (section above); pivot 23.5 mm below the shaft base (19.3-27.3).
 - Ten M3 washers seat on the cone at 11.5-19.5 mm above the shaft base; the cube handle spans
-  87.4-97.4 mm (push taken at 92.4 mm). The three cube holes change the result by < 0.02 mm.
+  87.4-97.4 mm (push taken at 92.4 mm). The three cube holes change the result by < 0.02 mm; the models use the front hole (`CUBE_HOLE` in `rig_geometry.py`, push face 2.05 mm from the shaft axis), which changed the forces by < 1 %.
 - The tower moves about a third of the push (rigid rotation, not small-angle):
 
 | push at the cube | 1 mm | 2 mm | 5 mm | 10 mm | 15 mm |

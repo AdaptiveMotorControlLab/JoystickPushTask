@@ -23,7 +23,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 from plot_results import HERE, RES, current_label, load3d, save
-from rig_geometry import (HANDLE_Z, HOLES, PIVOT_DEPTH, PIVOT_DEPTHS, WASHER_RO, WASHER_SEAT, WASHER_T, N_WASHERS,
+from rig_geometry import (FACE, HANDLE_Z, HOLES, PIVOT_DEPTH, PIVOT_DEPTHS, WASHER_RO, WASHER_SEAT, WASHER_T, N_WASHERS,
                           rotate, tilt_for_push)
 
 TOWER = (WASHER_SEAT, WASHER_SEAT + N_WASHERS * WASHER_T)   # ten M3 washers on the cone (z, mm)
@@ -92,7 +92,7 @@ HOLE_STYLE = {"hole y 0.55": "-", "hole y 4.25": "--", "hole y 7.95": ":"}
 def plot_motion():
     fig, (ax, bx) = plt.subplots(1, 2, figsize=(12.5, 4.6))
     for d_p in PIVOT_DEPTHS:
-        g = geometry(PUSH, d_p, HOLES[1][1])
+        g = geometry(PUSH, d_p, FACE)
         for name, face in HOLES:
             ax.plot(PUSH, geometry(PUSH, d_p, face)["target_dx_mm"], HOLE_STYLE[name], color=DP_COLOR[d_p],
                     label="pivot {:.1f} mm below the shaft base (tilt {:.1f} deg at 15 mm)".format(
@@ -107,7 +107,7 @@ def plot_motion():
             transform=ax.transAxes, ha="right", va="bottom", fontsize=7)
     ax.grid(alpha=0.3)
     ax.legend(fontsize=8, loc="upper left")
-    bx.set_xlabel("push (mm), middle cube hole")
+    bx.set_xlabel("push (mm), front cube hole")
     bx.set_ylabel("gap between plunger tip and washer rims (mm)")
     bx.set_title("Gap during the push")
     bx.grid(alpha=0.3)
@@ -119,7 +119,7 @@ def plot_motion():
 
 def plot_force(curves):
     fig, axes = plt.subplots(1, 2, figsize=(12.5, 4.6), sharex=True)
-    face, a = HOLES[1][1], 0.580
+    face, a = FACE, 0.580
     for g0, ls, alpha in zip(HOME_GAPS, ("-", "--"), (0.18, 0.09)):
         vals = {}
         for d_p in PIVOT_DEPTHS:
@@ -137,7 +137,7 @@ def plot_force(curves):
     for ax in axes:
         ax.set_yscale("log")
         ax.grid(True, which="both", alpha=0.3)
-        ax.set_xlabel("push at the cube handle (mm), middle cube hole")
+        ax.set_xlabel("push at the cube handle (mm), front cube hole")
     axes[0].legend(fontsize=8, title="line = pivot {:.1f} mm below shaft base (mid-body);\nshading = pivot "
                    "{:.1f}-{:.1f} mm".format(PIVOT_DEPTH, PIVOT_DEPTHS[0], PIVOT_DEPTHS[2]), title_fontsize=7)
     fig.suptitle("Ledex resistance vs push at {} (3D model, best fit, plunger seated)".format(current_label(a)))
@@ -150,7 +150,7 @@ def main():
     plot_motion()
     plot_force(curves)
     for d_p in PIVOT_DEPTHS:
-        g = geometry(np.array(TABLE_PUSHES), d_p, HOLES[1][1])
+        g = geometry(np.array(TABLE_PUSHES), d_p, FACE)
         print("pivot {:g} mm: push {} -> tower {} mm, tilt {} deg".format(
             d_p, TABLE_PUSHES, np.round(g["target_dx_mm"], 2), np.round(g["tilt_deg"], 1)))
 
