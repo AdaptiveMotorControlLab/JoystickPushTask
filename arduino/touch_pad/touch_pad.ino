@@ -13,21 +13,26 @@ const uint8_t PIN_LED = LED_BUILTIN;
 
 // Sensing
 const uint8_t N_SAMPLES = 20;          // samples per capacitiveSensorRaw() call
-const uint8_t AVG_LEN = 4;             // moving-average length
 const uint16_t TARE_READINGS = 64;
 const unsigned long CS_TIMEOUT_MS = 10; // keeps the loop responsive if the pad is shorted
+
+// Mains rejection: a mouse on the pad picks up 50 Hz hum. Readings are averaged over exactly
+// one mains period (two half-windows of DECISION_US), so the hum cancels; a new touch decision
+// is made every half-window. Set DECISION_US to 8333 on 60 Hz mains.
+const unsigned long DECISION_US = 10000;
+const unsigned long DECISION_MS = DECISION_US / 1000;
 
 // Sensitivity: the pot sets the ON threshold (in raw counts above baseline) on an
 // exponential scale between these limits. Clockwise = more sensitive (lower threshold).
 const float THR_MIN = 20.0;
 const float THR_MAX = 5000.0;
-const float OFF_FRACTION = 0.7;        // OFF threshold = 0.7 x ON (hysteresis)
-const uint8_t DEBOUNCE_ON = 3;
-const uint8_t DEBOUNCE_OFF = 3;
+const float OFF_FRACTION = 0.5;        // OFF threshold = 0.5 x ON (hysteresis)
+const unsigned long TOUCH_HOLD_MS = 20;   // above ON for this long before D2 goes HIGH
+const unsigned long RELEASE_HOLD_MS = 40; // below OFF for this long before D2 goes LOW
 
-// Baseline tracking (only while released)
-const float DRIFT_ALPHA = 0.0005;      // slow upward/downward drift
-const float DROP_ALPHA = 0.05;         // fast follow when the reading falls below baseline
+// Baseline tracking (only while released), per decision step
+const float DRIFT_ALPHA = 0.0025;      // slow upward/downward drift (~4 s)
+const float DROP_ALPHA = 0.22;         // fast follow when the reading falls below baseline (~40 ms)
 
 // Pot smoothing and serial output
 const unsigned long POT_INTERVAL_MS = 20;
@@ -37,9 +42,16 @@ const unsigned long FAULT_BLINK_MS = 50;
 
 CapacitiveSensor cs(PIN_SEND, PIN_PAD);
 
-long avgBuf[AVG_LEN];
-uint8_t avgIdx = 0;
-long avgSum = 0;
+struct HalfWindow {
+  long sum;
+  uint16_t n;
+  long lo;
+  long hi;
+};
+
+HalfWindow cur;
+HalfWindow prev;
+unsigned long halfStartUs = 0;
 
 float baseline = 0;
 float potFiltered = 0;
@@ -48,8 +60,8 @@ float offThr = THR_MAX * OFF_FRACTION;
 
 bool touched = false;
 bool fault = false;
-uint8_t aboveCount = 0;
-uint8_t belowCount = 0;
+bool pending = false;          // switch condition currently met, waiting for the hold time
+unsigned long pendingSince = 0;
 bool printing = true;
 
 unsigned long lastPot = 0;
@@ -73,17 +85,24 @@ void updateThresholds() {
   offThr = onThr * OFF_FRACTION;
 }
 
-void resetAverage(long value) {
-  for (uint8_t i = 0; i < AVG_LEN; i++) avgBuf[i] = value;
-  avgSum = value * AVG_LEN;
-  avgIdx = 0;
+void clearHalf(HalfWindow &h) {
+  h.sum = 0;
+  h.n = 0;
+  h.lo = 2147483647L;
+  h.hi = 0;
 }
 
-long pushAverage(long value) {
-  avgSum += value - avgBuf[avgIdx];
-  avgBuf[avgIdx] = value;
-  avgIdx = (avgIdx + 1) % AVG_LEN;
-  return avgSum / AVG_LEN;
+void addReading(HalfWindow &h, long raw) {
+  h.sum += raw;
+  h.n++;
+  if (raw < h.lo) h.lo = raw;
+  if (raw > h.hi) h.hi = raw;
+}
+
+void resetWindow() {
+  clearHalf(cur);
+  clearHalf(prev);
+  halfStartUs = micros();
 }
 
 // The pad must be untouched during tare.
@@ -103,10 +122,9 @@ void tare() {
   digitalWrite(PIN_LED, LOW);
   fault = (n == 0);
   baseline = fault ? 0 : (float)sum / n;
-  resetAverage((long)baseline);
+  resetWindow();
   touched = false;
-  aboveCount = 0;
-  belowCount = 0;
+  pending = false;
 }
 
 void handleSerial() {
@@ -118,6 +136,48 @@ void handleSerial() {
     } else if (c == 'p' || c == 'P') {
       printing = !printing;
     }
+  }
+}
+
+void decide(unsigned long now, long avg, long ripple) {
+  float delta = avg - baseline;
+  bool wantSwitch = touched ? (delta < offThr) : (delta > onThr);
+
+  if (wantSwitch) {
+    if (!pending) {
+      pending = true;
+      pendingSince = now;
+    }
+    if (now - pendingSince >= (touched ? RELEASE_HOLD_MS : TOUCH_HOLD_MS)) {
+      touched = !touched;
+      pending = false;
+    }
+  } else {
+    pending = false;
+  }
+
+  if (!touched && delta <= onThr) {
+    float alpha = (delta < 0) ? DROP_ALPHA : DRIFT_ALPHA;
+    baseline += alpha * delta;
+  }
+  setOutput(touched);
+
+  if (printing && now - lastPrint >= PRINT_INTERVAL_MS) {
+    lastPrint = now;
+    Serial.print(F("raw:"));
+    Serial.print(avg);
+    Serial.print(F(",baseline:"));
+    Serial.print((long)baseline);
+    Serial.print(F(",delta:"));
+    Serial.print((long)delta);
+    Serial.print(F(",ripple:"));
+    Serial.print(ripple);
+    Serial.print(F(",on_thr:"));
+    Serial.print((long)onThr);
+    Serial.print(F(",off_thr:"));
+    Serial.print((long)offThr);
+    Serial.print(F(",state:"));
+    Serial.println(touched ? (long)onThr : 0L);
   }
 }
 
@@ -147,8 +207,7 @@ void loop() {
   if (raw < 0) {
     fault = true;
     touched = false;
-    aboveCount = 0;
-    belowCount = 0;
+    pending = false;
     digitalWrite(PIN_OUT, LOW);
     if (now - lastBlink >= FAULT_BLINK_MS) {
       lastBlink = now;
@@ -163,49 +222,22 @@ void loop() {
   }
   if (fault) {
     fault = false;
-    resetAverage(raw);
+    resetWindow();
   }
 
-  long avg = pushAverage(raw);
-  float delta = avg - baseline;
+  addReading(cur, raw);
 
-  if (!touched) {
-    if (delta > onThr) {
-      belowCount = 0;
-      if (++aboveCount >= DEBOUNCE_ON) {
-        touched = true;
-        aboveCount = 0;
-      }
-    } else {
-      aboveCount = 0;
-      float alpha = (delta < 0) ? DROP_ALPHA : DRIFT_ALPHA;
-      baseline += alpha * delta;
-    }
-  } else {
-    if (delta < offThr) {
-      if (++belowCount >= DEBOUNCE_OFF) {
-        touched = false;
-        belowCount = 0;
-      }
-    } else {
-      belowCount = 0;
-    }
-  }
-  setOutput(touched);
+  unsigned long nowUs = micros();
+  if (nowUs - halfStartUs < DECISION_US) return;
+  halfStartUs += DECISION_US;
+  if (nowUs - halfStartUs >= DECISION_US) halfStartUs = nowUs;  // fell behind (serial, tare)
 
-  if (printing && now - lastPrint >= PRINT_INTERVAL_MS) {
-    lastPrint = now;
-    Serial.print(F("raw:"));
-    Serial.print(avg);
-    Serial.print(F(",baseline:"));
-    Serial.print((long)baseline);
-    Serial.print(F(",delta:"));
-    Serial.print((long)delta);
-    Serial.print(F(",on_thr:"));
-    Serial.print((long)onThr);
-    Serial.print(F(",off_thr:"));
-    Serial.print((long)offThr);
-    Serial.print(F(",state:"));
-    Serial.println(touched ? (long)onThr : 0L);
-  }
+  long sum = prev.sum + cur.sum;
+  uint16_t n = prev.n + cur.n;
+  long lo = min(prev.lo, cur.lo);
+  long hi = max(prev.hi, cur.hi);
+  prev = cur;
+  clearHalf(cur);
+
+  decide(millis(), sum / n, hi - lo);
 }
