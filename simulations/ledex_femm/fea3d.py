@@ -2,8 +2,9 @@
 
 The calibrated 2D FEMM model (ledex_washer.lua, results/calibration/best_params.json) is axisymmetric,
 so it cannot represent a washer stack that runs ACROSS the solenoid axis. This script rebuilds the
-same device in 3D (same geometry, same fitted parameters, same 1010 B-H curve) and computes the pull
-on the target for either orientation:
+same device in 3D (same fitted parameters, same 1010 B-H curve; body and plunger from ledex_geometry.py,
+with the real slotted and cross-drilled tip of the drawing instead of FEMM's axisymmetric stand-ins)
+and computes the pull on the target for either orientation:
 
     axial   stack along the solenoid axis (what the 2D model does; used to check 3D against FEMM)
     across  stack perpendicular to the axis, centred on it, the tip facing the washer rims
@@ -29,13 +30,21 @@ import numpy as np
 from ngsolve import *
 from netgen.occ import *
 
+import ledex_geometry as lg
+
 HERE = os.path.dirname(os.path.abspath(__file__))
+if os.environ.get("FEA3D_THREADS"):  # NGSolve's pool ignores OMP_NUM_THREADS; cap it when running several sweeps
+    SetNumThreads(int(os.environ["FEA3D_THREADS"]))
 MU0 = 4e-7 * math.pi * 1e3           # T mm / A (lengths in mm, H in A/mm, B in T)
 TURNS = 1491
 
-# published geometry (mm), as in ledex_washer.lua
-PROTRUDE, PMASS, RP, RO, LEN, LBOSS, RBOSS, RTIP = 23.81, 20.1, 3.91, 9.78, 39.37, 9.52, 6.6, 1.0
-SLOTR, SLOTD, BOB = 2.43, 9.5, 0.5
+# published geometry (mm), from ledex_geometry.py (the same dimensions as the reference CAD and FEMM)
+LX = lg.LEDEX
+PROTRUDE, RP, RO, LEN, LBOSS, RTIP = (LX[k] for k in ("protrude", "plunger_r", "case_r", "case_len", "boss_len",
+                                                      "cone_flat_r"))
+RBOSS, BOB = 6.6, 0.5                # boss: mean of the M14 major and minor radius (as in FEMM); bobbin wall
+SLOTW, SLOTD, HOLED, HOLEZ = LX["tip_slot_w"], LX["tip_slot_d"], LX["hole_d"], LX["hole_from_tip"]
+SLOTR = lg.axisym_tip()[0]           # FEMM's stand-in for the slot (tip="axisym" only)
 # 1010 steel B-H table (FEMM library)
 BH_B = [0, 0.211862, 0.265665, 0.332377, 0.414377, 0.513811, 0.631899, 0.767784, 0.917018,
         1.070353, 1.214255, 1.334637, 1.422981, 1.480634, 1.517214, 1.544515, 1.571296, 1.602049,
@@ -85,9 +94,13 @@ def prof(pts, ang=90):
 
 class Model:
     def __init__(self, p, kind, n_washers, gap, amps, rbox=62.0, zlo=-62.0, zhi=80.0, wri=1.6, wro=4.5,
-                 maxh_tip=0.45, maxh_air=9.0, order=2, maxh_pl=0.7, stroke=0.0, yoff=0.0, half=False):
+                 maxh_tip=0.45, maxh_air=9.0, order=2, maxh_pl=0.7, stroke=0.0, yoff=0.0, half=False,
+                 tip="drawing"):
         """yoff: across tower shifted along its own axis (y) by yoff from the solenoid axis; it breaks the y = 0
-        mirror plane, so the model becomes a half (x >= 0) model (half=True forces that at yoff = 0)."""
+        mirror plane, so the model becomes a half (x >= 0) model (half=True forces that at yoff = 0).
+        tip: "drawing" = the real tip, slot across the diameter (|x| < 1.25, i.e. the cheeks either side of the
+        tower; on the rig the slot is vertical) and the cross hole along x; "axisym" = FEMM's stand-in (slot as an
+        axial hole of the same cross-section, no cross hole), the model used before 15 Oct 2026."""
         self.p, self.kind, self.n, self.gap, self.amps = p, kind, n_washers, gap, amps
         self.order = order
         self.yoff = yoff
@@ -97,11 +110,7 @@ class Model:
         seat, clr, tpl, wall, conea = p["SEAT"], p["CLR"], p["TPL"], p["WALL"], p["CONEA"]
         rb, rki = RP + clr, RO - wall
         rci, rco = rb + BOB, rki - 0.1
-        conel = (RP - RTIP) / math.tan(math.radians(conea))
-        vcone = math.pi / 3 * conel * (RP * RP + RP * RTIP + RTIP * RTIP)
-        vslot = 2.5 * 2 * math.sqrt(RP * RP - 1.5625) * 9.5
-        vhole = math.pi * 1.25 ** 2 * (2 * RP - 2.5)
-        lcyl = (PMASS / 7.85e-3 - vcone + vslot + vhole) / (math.pi * RP * RP)
+        lcyl, conel, _ = lg.plunger_dims(cone_half_deg=conea)
         zt = -PROTRUDE
         zcone = zt + lcyl
         zapex = zcone + conel
@@ -113,8 +122,13 @@ class Model:
         steel2 = prof([(rb, -LBOSS), (RBOSS, -LBOSS), (RBOSS, 0), (RO, 0), (RO, tpl), (rki, tpl), (rb, tpl)], ang)
         coil = prof([(rci, tpl + 0.1), (rco, tpl + 0.1), (rco, LEN - tpl - 0.1), (rci, LEN - tpl - 0.1)], ang)
         sp = stroke      # plunger held out from its seat: it moves away from the body, steel stays put
-        plunger = prof([(0, zt - sp + SLOTD), (SLOTR, zt - sp + SLOTD), (SLOTR, zt - sp), (RP, zt - sp),
-                        (RP, zcone - sp), (RTIP, zapex - sp), (0, zapex - sp)], ang)
+        if tip == "axisym":
+            plunger = prof([(0, zt - sp + SLOTD), (SLOTR, zt - sp + SLOTD), (SLOTR, zt - sp), (RP, zt - sp),
+                            (RP, zcone - sp), (RTIP, zapex - sp), (0, zapex - sp)], ang)
+        else:
+            plunger = prof([(0, zt - sp), (RP, zt - sp), (RP, zcone - sp), (RTIP, zapex - sp), (0, zapex - sp)], ang)
+            plunger = plunger - Box(Pnt(-1, -RP - 1, zt - sp - 1), Pnt(SLOTW / 2, RP + 1, zt - sp + SLOTD))
+            plunger = plunger - Cylinder(Pnt(-1, 0, zt - sp + HOLEZ), X, r=HOLED / 2, h=RP + 2)
         zt = zt - sp                                          # the target follows the tip
         steel1.mat("steel"); steel2.mat("steel"); coil.mat("coil"); plunger.mat("plunger")
         solids = [steel1, steel2, coil, plunger]

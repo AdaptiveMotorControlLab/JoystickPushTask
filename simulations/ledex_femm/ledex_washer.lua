@@ -2,10 +2,10 @@
 -- attracting a steel target (default: five stacked M3 washers, 3.2 x 9 x 0.8 mm, mild steel)
 -- placed on the axis in front of the protruding pull end.
 --
--- Published (datasheet pages F18/F34, drawing in the energised = seated state): body 19.56 mm
--- dia x 39.37 mm; M14 x 1.5 boss 9.52 mm long on the plunger side; plunger 7.82 mm dia, pull end
--- 19.05 + 4.76 = 23.81 mm beyond the body face; 2.5 mm wide x 9.5 mm deep slot and 2.5 mm cross
--- hole at the pull end; plunger mass 20.1 g; 1491 turns (30 AWG, 20.7 ohm).
+-- Published (datasheet pages F18/F34, drawing in the energised = seated state; the shared values are in
+-- ledex_geometry.py): body 19.56 mm dia x 39.37 mm; M14 x 1.5 boss 9.52 mm long on the plunger side;
+-- plunger 7.82 mm dia, pull end 19.05 + 4.76 = 23.81 mm beyond the body face; 2.5 mm wide x 9.5 mm
+-- deep slot and 2.5/2.6 mm cross hole at the pull end; plunger mass 20.1 g; 1491 turns (30 AWG, 20.7 ohm).
 -- Measured: coil current per AO command (Checkpoint 4).
 -- Derived: plunger length (and so the seat position) from the plunger mass.
 -- Calibrated against the datasheet force-stroke curves (see calibrate.py): seat gap, radial
@@ -36,18 +36,25 @@ GAPS = {1, 2, 3, 5}
 NG = 4
 TURNS = 1491
 
--- published geometry (mm)
+-- published geometry (mm); femm_run.py passes these from ledex_geometry.py (the defaults are the same values)
 default("PROTRUDE", 23.81)  -- seated pull end beyond the body face (19.05 + 4.76)
 default("STROKE", 0)        -- plunger held out from its seat, mm (0 = fully seated)
 default("PMASS", 20.1)      -- plunger mass, g (sets the plunger length)
-default("SLOTR", 2.43)      -- tip slot 2.5 x 9.5 mm as an equal-area axial hole (0 = no slot)
+default("RP", 3.91)         -- plunger radius (7.82 mm dia)
+default("RO", 9.78)         -- case outer radius (19.56 mm dia)
+default("LEN", 39.37)       -- case body length
+default("LBOSS", 9.52)      -- M14 boss length, plunger side
+RBOSS = 6.6                 -- M14 x 1.5 boss, mean of major and minor radius
+default("RTIP", 1.0)        -- radius of the flat at the cone apex (assumed)
+-- tip slot (2.5 wide x 9.5 deep across the diameter) and cross hole (2.55 dia, 4.76 from the tip, through both
+-- cheeks); axisymmetric stand-ins: the slot as an axial hole of the same cross-section (SLOTR, 0 = no slot), the
+-- cross hole as an outer groove of the same width and volume (HOLER, 0 = no groove)
+default("SLOTW", 2.5)
 default("SLOTD", 9.5)
-RP    = 3.91        -- plunger radius (7.82 mm dia)
-RO    = 9.78        -- case outer radius (19.56 mm dia)
-LEN   = 39.37       -- case body length
-LBOSS = 9.52        -- M14 boss length, plunger side
-RBOSS = 6.6         -- M14 x 1.5 boss, mean of major and minor radius
-RTIP  = 1.0         -- radius of the flat at the cone apex (assumed)
+default("SLOTR", sqrt(SLOTW * 2 * sqrt(RP * RP - SLOTW * SLOTW / 4) / 3.14159265))
+default("HOLED", 2.55)
+default("HOLEZ", 4.76)
+default("HOLER", sqrt(RP * RP - (HOLED / 2) * (HOLED / 2) * (2 * RP - SLOTW) / HOLED))
 -- unpublished, calibrated against the datasheet force-stroke curves (results/calibration/)
 default("CONEA", 37.52)     -- cone half-angle from the axis, degrees (uncalibrated guess was 30)
 default("SEAT", 1.0)        -- axial gap between plunger cone and stop (built-in spacer), mm
@@ -73,8 +80,8 @@ RCO = RKI - 0.1     -- coil outer radius
 -- plunger length from its mass: cylinder + cone, minus slot and cross hole (FEMM trig is in radians)
 CONEL = (RP - RTIP) / tan(CONEA * 3.14159265 / 180)
 VCONE = 3.14159265 / 3 * CONEL * (RP * RP + RP * RTIP + RTIP * RTIP)
-VSLOT = 2.5 * 2 * sqrt(RP * RP - 1.5625) * 9.5
-VHOLE = 3.14159265 * 1.25 * 1.25 * (2 * RP - 2.5)
+VSLOT = SLOTW * 2 * sqrt(RP * RP - SLOTW * SLOTW / 4) * SLOTD
+VHOLE = 3.14159265 * (HOLED / 2) * (HOLED / 2) * (2 * RP - SLOTW)
 LCYL = (PMASS / 7.85e-3 - VCONE + VSLOT + VHOLE) / (3.14159265 * RP * RP)
 default("ZCONE", -PROTRUDE + LCYL)   -- where the plunger cone starts (seated)
 
@@ -198,7 +205,17 @@ function build(gap, amps)
     seg(0, ZT, RP, ZT)
     tinsert(axis, ZT)
   end
-  seg(RP, ZT, RP, ZCP)
+  if HOLER > 0 and HOLER < RP then
+    local g1 = ZT + HOLEZ - HOLED / 2
+    local g2 = ZT + HOLEZ + HOLED / 2
+    seg(RP, ZT, RP, g1)
+    seg(RP, g1, HOLER, g1)
+    seg(HOLER, g1, HOLER, g2)
+    seg(HOLER, g2, RP, g2)
+    seg(RP, g2, RP, ZCP)
+  else
+    seg(RP, ZT, RP, ZCP)
+  end
   seg(RP, ZCP, RTIP, ZAPEX)
   seg(RTIP, ZAPEX, 0, ZAPEX)
 

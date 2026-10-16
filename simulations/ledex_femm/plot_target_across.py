@@ -20,18 +20,20 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 READ = os.path.join(HERE, "figures", "magnetic_fields")
 N, GAPS = 10, (1.0, 2.0, 3.0)
 AMPS = [0.074, 0.106, 0.180, 0.310, 0.580]
-PROTRUDE, RP, RO, LBOSS, RBOSS, SLOTD = 23.81, 3.91, 9.78, 9.52, 6.6, 9.5
+PROTRUDE, RP, RO, LBOSS, RBOSS, SLOTD = fea3d.PROTRUDE, fea3d.RP, fea3d.RO, fea3d.LBOSS, fea3d.RBOSS, fea3d.SLOTD
 XMIN, XMAX, YMAX = -5, 40, 14
 
 NOTE = ("Side view, cut through the solenoid axis (horizontal, dotted) and the axis of the washer tower (vertical).\n"
         "0 mm = front face of the solenoid body, plunger tip (23.8 mm out) points right. Target = ten M3 washers "
         "(8 mm tall, 9 mm across) standing\non top of each other across the axis, rim 1, 2 or 3 mm from the tip (see panel title).\n"
-        "White lines = field direction; cyan = body, boss, plunger, washers (dotted = hole).")
+        "White lines = field direction; cyan = body, boss, plunger, washers (dotted = washer hole). The cut runs "
+        "through the plunger's tip slot,\nso the last 9.5 mm of the plunger are its two cheeks in front of and "
+        "behind the cut (dotted).")
 
 
 NOTE_NT = ("Side view, cut through the solenoid axis (horizontal, dotted).\n"
            "0 mm = front face of the solenoid body, plunger tip (23.8 mm out) points right; no target.\n"
-           "White lines = field direction; cyan = body, boss, plunger.")
+           "White lines = field direction; cyan = body, boss, plunger (dotted = the slot's cheeks, outside the cut).")
 
 
 def sample(m, xs, ys):
@@ -63,7 +65,8 @@ def draw(ax, xs, ys, mag, by, bz, a, tgt, gap=2.0):
     tpl = GEOM["TPL"]
     kw = dict(color="c", lw=0.9)
     for s in (1, -1):
-        ax.plot([XMIN, PROTRUDE, PROTRUDE], [s * RP, s * RP, 0], **kw)
+        ax.plot([XMIN, PROTRUDE - SLOTD, PROTRUDE - SLOTD], [s * RP, s * RP, 0], **kw)
+        ax.plot([PROTRUDE - SLOTD, PROTRUDE, PROTRUDE], [s * RP, s * RP, 0], color="c", lw=0.7, ls=":")
         ax.plot([XMIN, LBOSS, LBOSS, 0, 0, XMIN], [s * rb, s * rb, s * RBOSS, s * RBOSS, s * RO, s * RO], **kw)
         ax.plot([XMIN, -tpl, -tpl], [s * rki, s * rki, s * rb], **kw)
     if tgt is not None:

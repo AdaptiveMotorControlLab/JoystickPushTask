@@ -5,10 +5,12 @@ Groups: grid (gap and current, 10 washers), far (gaps 6-10 mm), stacks (stack he
 band (the accepted calibration sets, for the uncertainty band), axial (|B| along the plunger edge),
 offset (10 washers, Ledex axis offset vertically from the tower centre; half model, 0.31 A; written to
 results/fea3d/force_offset_3d.csv: set,n_washers,gap_mm,yoff_mm,current_A,force_g). part=i/n runs every n-th
-offset job starting at i, so several processes can share the sweep.
+job of a group starting at i, so several processes can share a sweep. When running several processes, set
+FEA3D_THREADS (e.g. 2 each on 12 cores); NGSolve otherwise starts a full thread pool in every process.
 Results are appended to results/fea3d/force_sweep_3d.csv (set,n_washers,gap_mm,stroke_mm,current_A,force_g);
 set 'best' is the fitted model, others are accepted calibration sets (their FEMM eval number).
-Jobs already in the file (or in the older results/fea3d/force_first_runs_3d.csv, best set, no stroke) are skipped.
+Jobs already in the file are skipped. All runs use the drawing's tip (fea3d.Model tip="drawing"); the earlier
+results with FEMM's axisymmetric tip stand-in are kept in results/fea3d/axisym_tip/.
 """
 import csv
 import os
@@ -31,11 +33,6 @@ def key(s, n, g, st, i):
 
 def done_jobs():
     d = {}
-    old = os.path.join(HERE, "results", "fea3d", "force_first_runs_3d.csv")
-    if os.path.exists(old):
-        for r in csv.DictReader(open(old)):
-            if r["kind"] == "across":
-                d[key("best", r["n_washers"], float(r["gap_mm"]), 0, float(r["current_A"]))] = float(r["force_g"])
     if os.path.exists(OUT):
         for r in csv.DictReader(open(OUT)):
             d[key(r["set"], r["n_washers"], float(r["gap_mm"]), float(r["stroke_mm"]), float(r["current_A"]))] = float(r["force_g"])
@@ -87,10 +84,10 @@ def solve(p, n, g, st, i):
     return None
 
 
-def run_group(group, budget_s):
+def run_group(group, budget_s, part=(0, 1)):
     t0 = time.time()
     d = done_jobs()
-    todo = [j for j in jobs_for(group) if key(*j) not in d]
+    todo = [j for k, j in enumerate(jobs_for(group)) if k % part[1] == part[0] and key(*j) not in d]
     print(group, len(todo), "jobs to do", flush=True)
     if not os.path.exists(OUT):
         open(OUT, "w").write("set,n_washers,gap_mm,stroke_mm,current_A,force_g\n")
@@ -172,8 +169,13 @@ if __name__ == "__main__":
     part = next((a[5:] for a in sys.argv[1:] if a.startswith("part=")), "0/1")
     part = tuple(int(v) for v in part.split("/"))
     args = [a for a in sys.argv[1:] if not a.startswith("part=")]
-    groups = [a for a in args if not a.replace(".", "").isdigit()] or ["grid", "stacks", "stroke", "band", "axial"]
-    budget = float(next((a for a in args if a.replace(".", "").isdigit()), 1300))
+    def number(a):
+        try:
+            return float(a)
+        except ValueError:
+            return None
+    groups = [a for a in args if number(a) is None] or ["grid", "stacks", "stroke", "band", "axial"]
+    budget = next((number(a) for a in args if number(a) is not None), 1300.0)
     for g in groups:
         if g == "offset":
             if not run_offset(part, budget):
@@ -181,5 +183,5 @@ if __name__ == "__main__":
         elif g == "axial":
             if not os.path.exists(os.path.join(HERE, "results", "fea3d", "field_along_plunger_edge_no_target_3d.csv")):
                 axial()
-        elif not run_group(g, budget):
+        elif not run_group(g, budget, part):
             break

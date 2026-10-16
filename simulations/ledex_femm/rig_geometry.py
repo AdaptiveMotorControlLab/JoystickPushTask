@@ -25,6 +25,8 @@ import struct
 
 import numpy as np
 
+from ledex_geometry import LEDEX, plunger_dims  # noqa: F401  (re-exported for the CAD and rig scripts)
+
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(os.path.dirname(HERE))
 CAD = os.path.join(ROOT, "mechanical", "3d-print")
@@ -76,27 +78,8 @@ ARCH_TOP = WINDOW_TOP
 WASHER_RI, WASHER_RO, WASHER_T, N_WASHERS = 1.6, 4.5, 0.8, 10
 WASHER_SEAT = 11.5                            # shaft z where the cone radius equals WASHER_RI
 
-# ------------------------------------------------------------------ Ledex 195224-230 (datasheet)
-# Ledex 195224-230 from the datasheet drawing (page F34, energised = seated): pull end 19.05 + 4.76 = 23.81 mm beyond
-# the body face; tip slot 2.5 +-0.3 wide, 9.5 +-0.3 deep, across the whole diameter; cross hole 2.5/2.6 mm through
-# both cheeks, 4.76 +-0.30 from the tip. Cone half-angle and apex flat as calibrated in FEMM (best_params.json).
-LEDEX = dict(case_r=9.78, case_len=39.37, boss_r=7.0, boss_len=9.52, plunger_r=3.91, protrude=23.81,
-             tip_slot_w=2.5, tip_slot_d=9.5, hole_from_tip=4.76, hole_d=2.55, plunger_g=20.1,
-             cone_half_deg=37.52, cone_flat_r=1.0, steel_g_mm3=7.85e-3)
-
-
-def plunger_dims(L=LEDEX):
-    """(cylinder length, cone length, total length) in mm, from the plunger mass (as in ledex_washer.lua)."""
-    rp, rt = L["plunger_r"], L["cone_flat_r"]
-    conel = (rp - rt) / np.tan(np.radians(L["cone_half_deg"]))
-    vcone = np.pi / 3 * conel * (rp * rp + rp * rt + rt * rt)
-    w = L["tip_slot_w"]
-    vslot = w * 2 * np.sqrt(rp * rp - (w / 2) ** 2) * L["tip_slot_d"]
-    vhole = np.pi * (L["hole_d"] / 2) ** 2 * (2 * rp - w)
-    lcyl = (L["plunger_g"] / L["steel_g_mm3"] - vcone + vslot + vhole) / (np.pi * rp * rp)
-    return float(lcyl), float(conel), float(lcyl + conel)
-
-
+# ------------------------------------------------------------------ Ledex 195224-230 (ledex_geometry.py)
+HOLDER_H_RANGE = (38.0, 78.0)                 # adjustable Ledex holder: axis height above the breadboard
 NUT_T = 3.5                                   # M14 x 1.5 thin mounting nut (assumed; check the supplied nut)
 PLATE_T = 5.0                                 # carriage plate the boss passes through
 CLEARANCE = 1.0                               # minimum gap kept between moving or adjustable parts and the CAD

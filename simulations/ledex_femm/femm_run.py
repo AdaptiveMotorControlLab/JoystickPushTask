@@ -10,7 +10,8 @@ temporary CSV, which is merged afterwards (a crash loses at most one job).
 
 FEMM location: C:\\femm42\\bin\\femm.exe on Windows. Elsewhere set FEMM_WINE (path to the wine
 binary) and WINEPREFIX; the defaults match the Mac install described in README.md.
-Model parameters not given explicitly use the defaults in ledex_washer.lua (the calibrated values).
+The plunger and case geometry comes from ledex_geometry.py (the same dimensions as the reference CAD); the
+calibrated internals not given explicitly use the defaults in ledex_washer.lua.
 """
 import argparse
 import csv
@@ -22,6 +23,8 @@ import sys
 import tempfile
 import uuid
 from concurrent.futures import ThreadPoolExecutor
+
+import ledex_geometry
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 MAIN = os.path.join(HERE, "ledex_washer.lua")
@@ -69,7 +72,7 @@ def run_lua(globals_, name, timeout=1800, hide=True):
     Bitmap export needs a visible window (hide=False), at least under Wine."""
     tmp = tempfile.mkdtemp(prefix="ledex_femm_")
     try:
-        g = dict(globals_)
+        g = dict(ledex_geometry.femm_globals(), **globals_)
         g.setdefault("TMP", femm_path(os.path.join(tmp, "model.fem")))
         g.setdefault("OUT", femm_path(HERE) + "/")
         g.setdefault("RES", femm_path(RES) + "/")
@@ -167,7 +170,7 @@ def sweep_jobs(over=None):
         jobs.append(("stroke_{:g}mm".format(s), "washers5_M3", dict(o, STROKE=s), [2], AMPS_KEY))
     sens = [("sens_reference", {}),
             ("sens_protrude23.51", dict(PROTRUDE=23.51)), ("sens_protrude24.11", dict(PROTRUDE=24.11)),
-            ("sens_noslot", dict(SLOTR=0)),
+            ("sens_noslot", dict(SLOTR=0)), ("sens_nocrosshole", dict(HOLER=0)),
             ("sens_steel1018", dict(STEEL="1018 Steel")), ("sens_pureiron", dict(STEEL="Pure Iron")),
             ("sens_mesh0.3", dict(MESHW=0.3)), ("sens_mesh0.075", dict(MESHW=0.075)),
             ("sens_plungermesh0.2", dict(MESHP=0.2))]

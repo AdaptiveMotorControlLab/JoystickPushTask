@@ -264,7 +264,7 @@ button{font-size:12px}
 <button id="rec">set the recommended layout</button>
 <h3>Ledex holder</h3>
 <div class="row"><span>face X (distance)</span><input id="face" type="range" min="-46" max="-24" step="0.01"><span id="face_v"></span></div>
-<div class="row"><span>axis Z (height)</span><input id="H" type="range" min="30" max="70" step="0.01"><span id="H_v"></span></div>
+<div class="row"><span>axis Z (height)</span><input id="H" type="range" min="__HMIN__" max="__HMAX__" step="0.01"><span id="H_v"></span></div>
 <div class="row"><span>lateral Y (visual)</span><input id="Y" type="range" min="-12.7" max="12.7" step="0.1" value="0"><span id="Y_v"></span></div>
 <h3>Joystick and drive</h3>
 <div class="row"><span>push at the cube</span><input id="push" type="range" step="0.01" value="0"><span id="push_v"></span></div>
@@ -463,7 +463,8 @@ def write_html(wf, tab):
     data["meshes"] = meshes
     sub = ("measured holder, component and constrainer CAD; pivot %.1f mm below the shaft base (%.1f-%.1f tested); "
            "home stop %.2f mm at the cube" % (rg.PIVOT_DEPTH, PIVOT_RANGE[0], PIVOT_RANGE[1], rg.stop_push(rg.PIVOT_DEPTH)))
-    html = HTML.replace("__PHYS__", PHYS_JS).replace("__DATA__", json.dumps(data)).replace("__SUBTITLE__", sub)
+    html = HTML.replace("__PHYS__", PHYS_JS).replace("__DATA__", json.dumps(data)).replace("__SUBTITLE__", sub) \
+        .replace("__HMIN__", "%g" % rf.H_RANGE[0]).replace("__HMAX__", "%g" % rf.H_RANGE[1])
     os.makedirs(OUT_FIG, exist_ok=True)
     path = os.path.join(OUT_FIG, "rig_explorer.html")
     open(path, "w").write(html)

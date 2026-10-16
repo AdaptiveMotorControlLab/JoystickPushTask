@@ -15,42 +15,42 @@ measurements.** Check them with one scale measurement once the printed holder an
 
 Outcome: on the measured rig (15 Oct, section "Washer target vs plunger link") the washer target gives
 under 1 gf at the handle at 10 V, so the chosen design links the plunger itself to the joystick shaft
-(section "Plunger link"; ~2-120 gf at neutral over the command range, ~50× the washers).
+(section "Plunger link"; ~2-125 gf at neutral over the command range, ~53× the washers).
 
 ![field maps](figures/magnetic_fields/overview_magnetic_fields.png)
 
 ## Main findings (3D model, ten M3 washers standing across the axis, plunger seated)
 
 - The pull is very small at the currents the rig uses: about **1.2 g-force (12 mN) at 2 mm** and
-  **2.5 g at 1 mm** at 10 V (0.31 A), 0.7 g at 3 mm.
+  **2.3 g at 1 mm** at 10 V (0.31 A), 0.7 g at 3 mm.
 - Below 10 V the force scales roughly with current squared: 1 V (0.074 A) gives only ~6 % of the
-  10 V force (0.08 g at 2 mm). Raising `Imax` to the rated 0.58 A (the most the 12 V supply can push
-  through the 20.7 Ω coil) gives about 1.8× the 10 V force (2.2 g at 2 mm, 4.7 g at 1 mm).
+  10 V force (0.07 g at 2 mm). Raising `Imax` to the rated 0.58 A (the most the 12 V supply can push
+  through the 20.7 Ω coil) gives about 1.9× the 10 V force (2.2 g at 2 mm, 4.2 g at 1 mm).
 - It falls steeply with gap (roughly 2× per extra millimetre near the tip), so the resistance fades
   within a few millimetres of the object moving away from the Ledex.
 - Taller towers help with diminishing returns (2 mm; 0.58 A in brackets, 10 V first): 1 washer
-  0.39 g (0.75), 5 washers 0.79 (1.5), 10 washers 1.2 (2.2), 20 washers 1.6 (2.9), 40 washers 2.3 (4.4).
+  0.44 g (0.80), 5 washers 0.84 (1.5), 10 washers 1.2 (2.2), 20 washers 1.5 (2.8), 40 washers 2.2 (4.0).
   Each washer is 0.8 mm thick (10 washers = 8 mm, about 3.5 g of mass on the joystick), the far
   washers sit in a weaker field, and the tower is modelled as solid, so real towers pull somewhat less.
 - The seated plunger gives the strongest pull; holding it out from its seat lowers it (10 V, 2 mm:
-  1.2 g seated, 0.63 g at 1.5 mm out, 0.13 g at 9.5 mm out).
+  1.2 g seated, 0.61 g at 1.5 mm out, 0.13 g at 9.5 mm out).
 
 | Gap | 1 V (0.074 A) | 2 V (0.106 A) | 5 V (0.180 A) | 10 V (0.310 A) | 0.58 A (Imax raised) |
 | --- | --- | --- | --- | --- | --- |
-| 0.5 mm | 0.33 g | 0.68 g | 1.9 g | 5.2 g | 9.7 g |
-| 1 mm | 0.16 g | 0.32 g | 0.93 g | 2.5 g | 4.7 g |
-| 2 mm | 0.075 g | 0.15 g | 0.44 g | 1.2 g | 2.2 g |
-| 3 mm | 0.043 g | 0.089 g | 0.26 g | 0.68 g | 1.3 g |
-| 5 mm | 0.018 g | 0.036 g | 0.10 g | 0.28 g | 0.52 g |
-| 6 mm | 0.012 g | 0.025 g | 0.070 g | 0.19 g | 0.35 g |
-| 8 mm | 0.006 g | 0.012 g | 0.035 g | 0.094 g | 0.18 g |
-| 10 mm | 0.003 g | 0.007 g | 0.019 g | 0.051 g | 0.097 g |
+| 0.5 mm | 0.27 g | 0.55 g | 1.6 g | 4.2 g | 7.5 g |
+| 1 mm | 0.15 g | 0.30 g | 0.86 g | 2.3 g | 4.2 g |
+| 2 mm | 0.074 g | 0.15 g | 0.43 g | 1.2 g | 2.2 g |
+| 3 mm | 0.043 g | 0.088 g | 0.25 g | 0.67 g | 1.2 g |
+| 5 mm | 0.017 g | 0.036 g | 0.10 g | 0.27 g | 0.51 g |
+| 6 mm | 0.012 g | 0.024 g | 0.069 g | 0.19 g | 0.35 g |
+| 8 mm | 0.006 g | 0.012 g | 0.034 g | 0.092 g | 0.17 g |
+| 10 mm | 0.003 g | 0.006 g | 0.018 g | 0.049 g | 0.095 g |
 
 Pull on ten stacked M3 washers (3.2 × 9 × 0.8 mm, mild steel) standing across the axis, plunger
 seated; 1 g = 9.81 mN. Best-fit calibration. Range over the best fit and 13 other accepted calibration sets (two more could
-not be meshed), 1 / 2 / 3 mm: 10 V 1.6-2.5 / 0.76-1.2 / 0.44-0.70 g; 0.58 A 2.2-5.6 / 1.1-2.2 /
-0.62-1.3 g; 1 V 0.15-0.23 / 0.07-0.11 / 0.04-0.06 g. The best fit sits at the top of each range, so the
-true pull is more likely below it than above (`figures/plots/target_force_band.png`). (The earlier FEMM five-washer ring gave about 0.96 g at 2 mm
+not be meshed), 1 / 2 / 3 mm: 10 V 1.5-2.3 / 0.74-1.2 / 0.43-0.68 g; 0.58 A 2.1-4.8 / 1.1-2.2 /
+0.61-1.3 g; 1 V 0.14-0.21 / 0.07-0.10 / 0.04-0.06 g. The best fit sits at the top of each range, so the
+true pull is more likely below it than above (`figures/plots/target_force_band.png`). (The earlier FEMM five-washer ring gave about 0.97 g at 2 mm
 and 10 V, in `results/femm/femm_sweeps.csv`; it is not the real layout.)
 
 ![target force band](figures/plots/target_force_band.png)
@@ -99,8 +99,9 @@ Caveats:
   between 0.57 and 0.80 A, so the extrapolation is plausible but untested.
 - The remaining long-stroke error (model high when the plunger is mostly out, where fringe
   field matters most) suggests the target force is, if anything, still overestimated.
-- Sensitivity of the calibrated model at 2 mm (`figures/plots/sensitivity.png`): protrusion
-  ±0.3 mm (drawing tolerance) ±3 %, no tip slot +9 %, other steel grades −12 to +9 %, mesh < 1 %.
+- Sensitivity of the calibrated model at 2 mm (`figures/plots/sensitivity.png`, FEMM, coaxial washers):
+  protrusion ±0.3 mm (drawing tolerance) ±1.5 %, no tip slot +10 %, no cross hole −0.3 %, other steel
+  grades −11 to +5 %, mesh < 1 %.
 - Treat absolute numbers as uncertain by about ±40 %; trends (gap, current², target size) are
   reliable. One measurement at 2 mm will settle the scale.
 
@@ -114,19 +115,20 @@ from its seat (`stroke`). It gives the pull on the target only; the force on the
 computed. Setup: `python3 -m venv /tmp/ngenv && /tmp/ngenv/bin/pip install ngsolve numpy scipy`.
 
 Validation: a coaxial ring of 5 washers, 2 mm, 0.31 A gives 0.90 g in 3D (mesh and box changes move it
-by under 2 %) against 0.96 g in FEMM, so the 3D model is about 6 % low.
+by under 2 %) against 0.97 g in FEMM, so the 3D model is about 7 % low.
 
 Pull (g-force) of a washer tower across the axis, tip to nearest rim, 0.58 A (10 V, 0.31 A, in brackets):
 
 | washers | 1 mm | 2 mm | 3 mm |
 |---|---|---|---|
-| 1 | 1.2 (0.63) | 0.75 (0.39) | 0.50 (0.26) |
-| 5 | 2.5 (1.4) | 1.5 (0.79) | 0.93 (0.49) |
-| 10 | 4.7 (2.5) | 2.2 (1.2) | 1.3 (0.68) |
-| 20 | 6.8 (3.4) | 2.9 (1.6) | 1.7 (0.91) |
-| 40 | 8.9 (5.0) | 4.4 (2.3) | 2.4 (1.3) |
+| 1 | 1.5 (0.80) | 0.80 (0.44) | 0.50 (0.27) |
+| 5 | 3.0 (1.6) | 1.5 (0.84) | 0.91 (0.50) |
+| 10 | 4.2 (2.3) | 2.2 (1.2) | 1.2 (0.67) |
+| 20 | 5.6 (3.2) | 2.8 (1.5) | 1.6 (0.89) |
+| 40 | 8.2 (4.6) | 4.0 (2.2) | 2.4 (1.3) |
 
-Gains from extra washers flatten past 10. Uncertainty: about ±10 % from the nonlinear iteration near
+With the real slotted tip, short towers pull 15-25 % more than with the round-hole stand-in (their
+rims face the slot's cheeks) and tall towers 7-8 % less. Gains from extra washers flatten past 10. Uncertainty: about ±10 % from the nonlinear iteration near
 saturation at 0.58 A, plus the calibration extrapolation (±40 %).
 
 ## Rig geometry (measured CAD, 15 Oct 2026)
@@ -225,7 +227,7 @@ the plunger out of the coil and the coil pulls it back, so the resistance oppose
   force is the plunger pull × 0.354 (link height over the cube height above the pivot).
 - Plunger end (datasheet drawing F34, model in `mechanical/3d-print/ledex-195224-model/`): the pull end
   has a 2.5 × 9.5 mm slot across its diameter and a factory 2.5/2.6 mm cross hole through both cheeks
-  4.76 mm from the tip; the link bar (2.0 × 5 mm) goes in the slot and the pin through that hole, so
+  4.76 mm from the tip; the link bar (1.8 × 5 mm) goes in the slot and the pin through that hole, so
   nothing is drilled. The slot is turned vertical (pin along Y).
 - Link height: the collar (6 mm) must sit on the straight 3 mm part of the shaft (pin at shaft z ≥ 15)
   and the plunger must pass 1 mm under the window top (z ≤ 20.3). Height barely matters for force
@@ -239,13 +241,13 @@ the plunger out of the coil and the coil pulls it back, so the resistance oppose
 
 | push at the cube | 0 mm | 1 mm | 2 mm | 5 mm | 10 mm | 15 mm |
 | --- | --- | --- | --- | --- | --- | --- |
-| 1 V (0.074 A) | 2.3 | 2.0 | 1.8 | 1.3 | 0.88 | 0.65 |
+| 1 V (0.074 A) | 2.3 | 2.0 | 1.8 | 1.3 | 0.88 | 0.64 |
 | 2 V (0.106 A) | 4.7 | 4.1 | 3.7 | 2.7 | 1.8 | 1.3 |
 | 5 V (0.180 A) | 13 | 12 | 11 | 7.8 | 5.2 | 3.8 |
 | 10 V (0.310 A) | 40 | 35 | 31 | 23 | 15 | 11 |
-| 0.58 A (Imax raised) | 124 | 112 | 101 | 77 | 53 | 39 |
+| 0.58 A (Imax raised) | 125 | 113 | 102 | 77 | 53 | 39 |
 
-  The command range spans ~1-120 gf, so graded random forces are possible without new hardware. A
+  The command range spans ~1-125 gf, so graded random forces are possible without new hardware. A
   smaller home stroke gives more at neutral but the force then falls off faster with the push
   (`design_space.png`, 10 V, link z 17.5: s0 1.5 mm 76 → 15 gf over 15 mm, 3 mm 40 → 11, 5 mm 22 → 8.4).
   The deeper measured pivot and the higher link raise the forces by ~40 % over the 12 Oct estimate.
@@ -294,27 +296,27 @@ link the collar and window limits and a stroke within 0.75-12.5 mm from the home
 Washer pull comes from a new 3D sweep with the tower centre moved along its own vertical axis
 (`sweep3d.py offset`, 7 gaps × 6 offsets at 0.31 A, scaled to other currents by the centred sweep).
 
-- The tower is 8 mm tall, so offsets up to ~4 mm cost little (10 V, 1 mm gap: 2.4 / 2.2 / 2.0 / 1.8 /
-  0.81 / 0.16 g at 0 / 2 / 4 / 6 / 8 / 11 mm offset). The tower centre is at Z 58.7, inside the window range.
+- The tower is 8 mm tall, so offsets up to ~4 mm cost little (10 V, 1 mm gap: 2.2 / 2.1 / 1.9 / 1.3 /
+  0.59 / 0.14 g at 0 / 2 / 4 / 6 / 8 / 11 mm offset). The tower centre is at Z 58.7, inside the window range.
 - Recommended layouts (stars in `design_maps.png`): washers at Z 58.7, face X −29.3 (1 mm gap at
   neutral, 0.6 mm at the home stop); link at Z 60.7, face X −42.05 (link z 17.5, 3 mm home stroke).
 
 | push at the cube | 0 mm | 1 mm | 2 mm | 5 mm | 10 mm | 15 mm |
 | --- | --- | --- | --- | --- | --- | --- |
-| washers, 1 V | 0.052 | 0.038 | 0.030 | 0.017 | 0.008 | 0.004 |
-| washers, 10 V | 0.82 | 0.61 | 0.48 | 0.27 | 0.12 | 0.061 |
-| washers, 0.58 A | 1.5 | 1.1 | 0.91 | 0.50 | 0.23 | 0.12 |
-| link, 1 V | 2.3 | 2.0 | 1.8 | 1.3 | 0.88 | 0.65 |
+| washers, 1 V | 0.048 | 0.037 | 0.029 | 0.017 | 0.007 | 0.004 |
+| washers, 10 V | 0.75 | 0.58 | 0.46 | 0.26 | 0.12 | 0.060 |
+| washers, 0.58 A | 1.4 | 1.1 | 0.86 | 0.49 | 0.22 | 0.11 |
+| link, 1 V | 2.3 | 2.0 | 1.8 | 1.3 | 0.88 | 0.64 |
 | link, 10 V | 40 | 35 | 31 | 23 | 15 | 11 |
-| link, 0.58 A | 124 | 112 | 101 | 77 | 53 | 39 |
+| link, 0.58 A | 125 | 113 | 102 | 77 | 53 | 39 |
 
 Resistance at the cube (gf, pivot 23.5 mm; 19.3 / 27.3 mm: washers −7 / +6 %, link −7 / +6 % at neutral).
 
-- **The plunger link wins by ~50× at neutral and ~185× at 15 mm.** The strongest feasible washer
-  layout (gap 0.7 mm, face X −29.0) still gives only 1.25 gf at 10 V; the washer force also falls ~13×
+- **The plunger link wins by ~53× at neutral and ~190× at 15 mm.** The strongest feasible washer
+  layout (gap 0.7 mm, face X −29.0, Z 58.5) still gives only 1.06 gf at 10 V; the washer force also falls ~12×
   over a 15 mm push against ~3.5× for the link. Use the plunger link; the washer target stays rejected.
-- The strongest feasible link layout on the design grid (face X −40.3, Z 62.0: link z 18.8, home
-  stroke 1.25 mm) gives 87 gf at 10 V at neutral but falls to 23 gf at 10 mm; 3 mm keeps a margin from
+- The strongest feasible link layout on the design grid (face X −40.5, Z 62.0: link z 18.8, home
+  stroke 1.45 mm) gives 80 gf at 10 V at neutral but falls to 22 gf at 10 mm; 3 mm keeps a margin from
   the 0.75 mm datasheet limit and a flatter curve.
 - Holder: `mechanical/3d-print/ledex-holder-adjustable/` (slotted base along X, lateral slots, long
   vertical slots with a 1 mm scale, stroke and gap gauges, link collar and bar, fit test). Both layouts
@@ -330,9 +332,20 @@ Resistance at the cube (gf, pivot 23.5 mm; 19.3 / 27.3 mm: washers −7 / +6 %, 
 ## Model
 
 - Published: case 19.56 mm dia × 39.37 mm, M14 boss 9.52 mm, plunger 7.82 mm dia and 20.1 g,
-  23.81 mm protrusion, 2.5 × 9.5 mm tip slot (modelled as an equal-area axial hole),
-  1491 turns (30 AWG, 20.7 Ω), 60° plunger. Measured: coil current at each AO command
+  23.81 mm protrusion, 2.5 × 9.5 mm tip slot across the diameter, 2.5/2.6 mm cross hole 4.76 mm from
+  the tip, 1491 turns (30 AWG, 20.7 Ω), 60° plunger. Measured: coil current at each AO command
   (Checkpoint 4, `calibration/README.md`).
+- One geometry for every model: `ledex_geometry.py` holds the body and plunger dimensions (plunger length
+  59.7 mm from the mass, cone from the calibration) and feeds the reference CAD
+  (`mechanical/3d-print/ledex-195224-model/`), the rig model, FEMM and the 3D model.
+  - FEMM (axisymmetric) uses stand-ins: the slot as an axial hole of the same cross-section (r 2.43 mm)
+    and the cross hole as an outer groove of the same width and volume (2.55 mm wide, down to r 3.45 mm).
+  - The 3D model uses the real tip: slot and cross hole as drawn, slot vertical as on the rig (the
+    cheeks either side of the washer tower).
+  - Before 15 Oct both models used the round-hole stand-in with a 2.5 mm cross hole counted only in the
+    mass. Switching changed the FEMM plunger force by −2 to +0.7 % (so the link forces barely move) and the
+    calibration error from 0.178 to 0.180 (held-out curve 0.191 both), so the fit was kept. The earlier
+    results are in `results/femm/axisym_tip/` and `results/fea3d/axisym_tip/`.
 - Fitted: see above. Assumed: bobbin 0.5 mm, 1 mm flat at the cone apex, "1010 Steel" for the
   target, washer tower modelled as solid steel (real interfaces between washers lower the force
   slightly). The PWM drive is modelled as its average DC current.
@@ -342,9 +355,12 @@ Resistance at the cube (gf, pivot 23.5 mm; 19.3 / 27.3 mm: washers −7 / +6 %, 
 
 ## Files
 
+- `ledex_geometry.py`: the Ledex body and plunger dimensions shared by the CAD, the rig model, FEMM and the
+  3D model (standard library only); `python3 ledex_geometry.py` prints the plunger length and the FEMM tip
+  stand-ins.
 - `ledex_washer.lua`: the FEMM 4.2 model (modes `forces`, `profile`, `stroke`, `sweep`,
-  `plunger`, `fieldgrid`, `map`). Every parameter can be overridden by the caller; defaults are
-  the calibrated values.
+  `plunger`, `fieldgrid`, `map`). Every parameter can be overridden by the caller; `femm_run.py` passes
+  the geometry from `ledex_geometry.py`, and the other defaults are the calibrated values.
 - `femm_run.py`: runs FEMM in parallel on Windows or on a Mac under Wine (Python 3.6+, standard
   library only). `python3 femm_run.py sweeps` (all sweeps and field grids; `--only <regex>`,
   `--no-grids`), `summary` (`results/femm/femm_forces_5washers_coaxial.csv`, `femm_field_along_plunger_edge_no_target.csv` (along the plunger outer edge r = 3.91 mm, not the slotted axis), `femm_stroke_5washers_coaxial.csv`), `maps` (FEMM
@@ -374,8 +390,9 @@ Resistance at the cube (gf, pivot 23.5 mm; 19.3 / 27.3 mm: washers −7 / +6 %, 
   `results/fea3d/force_sweep_3d.csv` (`set`, `n_washers`, `gap_mm`, `stroke_mm`, `current_A`, `force_g`; `set`
   = `best` or the FEMM eval number of an accepted calibration set) and `results/fea3d/field_along_plunger_edge_no_target_3d.csv`.
   `offset` (half model, tower centre moved along its own vertical axis by 0-11 mm, gaps 0.5-8 mm, 0.31 A;
-  `part=i/n` splits it over processes) writes `results/fea3d/force_offset_3d.csv` (`yoff_mm` column).
-  Older `results/fea3d/force_first_runs_3d.csv` holds the first across-axis and coaxial runs (best fit only).
+  `part=i/n` splits it over processes) writes   `results/fea3d/force_offset_3d.csv` (`yoff_mm` column). All with the drawing's tip; the runs with the
+  earlier round-hole tip (and the first across-axis and coaxial runs, `force_first_runs_3d.csv`) are kept in
+  `results/fea3d/axisym_tip/`.
 - `plot_results.py`: makes `figures/plots/*.png` (numpy + matplotlib). The force, stroke, target and
   profile figures read the 3D CSVs; `calibration_fit.png` and `sensitivity.png` read the FEMM CSVs.
 - `plot_target_across.py`: makes `figures/magnetic_fields/*.png` from the 3D model (needs the
@@ -386,7 +403,8 @@ Resistance at the cube (gf, pivot 23.5 mm; 19.3 / 27.3 mm: washers −7 / +6 %, 
   `tpl_mm`, `wall_mm`, `steel`, `target_mesh_mm`, `gap_mm` (tip to target face), `current_A`,
   `target_force_N`, `target_force_g`, `plunger_force_N` (axial force on the plunger, toward the
   seat), `clr_mm`, `conea_deg`. Cases: `baseline_gap*` (five washers, 11 gaps × 12 currents),
-  `target_*` (other targets), `stroke_*`, `sens_*`.
+  `target_*` (other targets), `stroke_*`, `sens_*`. `results/femm/axisym_tip/femm_sweeps.csv` is the
+  same set with the earlier tip stand-in.
 - `results/femm/femm_fieldgrid_<nowasher|washers5_coaxial_gap<G>mm|washers10_coaxial_gap2mm>_<I>A.csv`: FEMM field grids (`r_mm, z_mm, Br_T, Bz_T, Bmag_T` on a
   0.25 mm grid) for the coaxial layouts; no longer plotted (the field maps now come from the 3D model).
 - `results/femm/uncalibrated_first_model/` (same file names as above): the first model (9.5 mm protrusion, guessed internals), kept for

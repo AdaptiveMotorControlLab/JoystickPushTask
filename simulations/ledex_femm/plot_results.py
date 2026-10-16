@@ -151,11 +151,6 @@ LBL10 = "pull on the 10-washer tower (g-force)"
 def load3d():
     """3D results (washer tower across the axis): {(set, n, gap, stroke, current): force_g}."""
     d = {}
-    old = os.path.join(RES, "fea3d", "force_first_runs_3d.csv")
-    if os.path.exists(old):
-        for r in read_csv(old):
-            if r["kind"] == "across":
-                d[("best", int(r["n_washers"]), r["gap_mm"], 0.0, round(r["current_A"], 3))] = r["force_g"]
     path = os.path.join(RES, "fea3d", "force_sweep_3d.csv")
     if os.path.exists(path):
         for r in read_csv(path):
