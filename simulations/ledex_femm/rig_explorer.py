@@ -265,7 +265,7 @@ button{font-size:12px}
 <h3>Ledex holder</h3>
 <div class="row"><span>face X (distance)</span><input id="face" type="range" min="-46" max="-24" step="0.01"><span id="face_v"></span></div>
 <div class="row"><span>axis Z (height)</span><input id="H" type="range" min="__HMIN__" max="__HMAX__" step="0.01"><span id="H_v"></span></div>
-<div class="row"><span>lateral Y (visual)</span><input id="Y" type="range" min="-12.7" max="12.7" step="0.1" value="0"><span id="Y_v"></span></div>
+<input id="Y" type="hidden" value="0">
 <h3>Joystick and drive</h3>
 <div class="row"><span>push at the cube</span><input id="push" type="range" step="0.01" value="0"><span id="push_v"></span></div>
 <div class="row"><span>AO0 command</span><input id="volts" type="range" min="0" max="10" step="0.1" value="10"><span id="volts_v"></span></div>
@@ -282,7 +282,7 @@ button{font-size:12px}
 <div id="parts"></div>
 <p><small>Forces: washers from the 3D model (offset sweep, +-40 %), plunger from FEMM anchored to the datasheet
 (+-15-20 %); current held constant. Spring as felt at the cube: P0 toward neutral on each side plus k per mm.
-Lateral Y moves the Ledex and upright only (the model assumes it is aligned). See simulations/ledex_femm/README.md.</small></p>
+See simulations/ledex_femm/README.md.</small></p>
 </div>
 <div id="view"><div id="hint">drag: orbit, scroll: zoom, right-drag: pan</div></div>
 <div id="plots"><div id="pf" style="height:400px"></div><div id="pm" style="height:360px"></div><div id="pc" style="height:340px"></div></div>
@@ -351,7 +351,7 @@ addEventListener('resize', resize); resize();
 (function loop(){ requestAnimationFrame(loop); ren.render(scene, cam); })();
 
 // ---------------- controls
-const ctrl = {face: 2, H: 2, Y: 1, push: 2, volts: 1, dp: 1, p0: 1, k: 2, mu: 2};
+const ctrl = {face: 2, H: 2, push: 2, volts: 1, dp: 1, p0: 1, k: 2, mu: 2};
 function opt(){ return document.querySelector('input[name=opt]:checked').value; }
 function setRec(){ const r = D.rec[opt()]; $('face').value = r.face; $('H').value = r.H; }
 $('dp').min = G.PIVOT_MIN; $('dp').max = G.PIVOT_MAX; $('dp').value = G.PIVOT;
@@ -420,9 +420,9 @@ function plots(o, H, face, a, dp, mu, p0, k, u, us, um){
     {x: us_, y: Fo, name: 'magnet, ' + name(other(o)) + ' (recommended layout)', line: {color: '#999', dash: 'dash'}},
     {x: us_, y: S, name: 'spring', line: {color: '#1565c0'}},
     {x: us_, y: T, name: 'push to hold (magnet + spring + friction)', line: {color: '#222', width: 1}},
-    {x: [u, u], y: [1e-3, 1e3], name: 'push', mode: 'lines', line: {color: '#2e7d32', dash: 'dot'}, showlegend: false}],
-    lay('Force at the cube vs push', 'push at the cube (mm)', 'gf (log)',
-        {yaxis: {title: 'gf (log)', type: 'log', range: [-2, 2.3]}}), {displayModeBar: false});
+    {x: [u, u], y: [0, 150], name: 'push', mode: 'lines', line: {color: '#2e7d32', dash: 'dot'}, showlegend: false}],
+    lay('Force at the cube vs push', 'push at the cube (mm)', 'gf',
+        {yaxis: {title: 'gf', rangemode: 'tozero'}}), {displayModeBar: false});
   // live design map at this command, push and pivot
   const xs = [], ys = [], Z = [], M = [];
   const fx = o === 'link' ? [-46, -34] : [-37, -25], hz = o === 'link' ? [50, 64] : [42, 66];
@@ -445,8 +445,8 @@ function plots(o, H, face, a, dp, mu, p0, k, u, us, um){
   Plotly.react('pc', [
     {x: vs, y: A, name: name(o) + ' (this layout)', line: {color: '#c62828'}},
     {x: vs, y: B, name: name(other(o)) + ' (recommended)', line: {color: '#999', dash: 'dash'}}],
-    lay('Resistance at neutral vs AO0 command (Imax at minimum)', 'AO0 command (V)', 'gf (log)',
-        {yaxis: {title: 'gf (log)', type: 'log'}}), {displayModeBar: false});
+    lay('Resistance at neutral vs AO0 command (Imax at minimum)', 'AO0 command (V)', 'gf',
+        {yaxis: {title: 'gf', rangemode: 'tozero'}}), {displayModeBar: false});
 }
 draw();
 </script></body></html>
