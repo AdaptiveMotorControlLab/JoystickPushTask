@@ -6,5 +6,5 @@ solenoid used for axial push resistance.
 - STEP source: [`ledex_195224-230_holder_30mm_axis.step`](ledex_195224-230_holder_30mm_axis.step)
 - STL export: [`ledex_195224-230_holder_30mm_axis.stl`](ledex_195224-230_holder_30mm_axis.stl)
 - The holder has not yet been documented as printed, fitted, or validated on the rig.
-- Superseded by the [adjustable holder](../ledex-holder-adjustable/README.md), which matches the measured
+- Superseded by the [adjustable holder](../../mechanical/3d-print/ledex-holder-adjustable/README.md), which matches the measured
   joystick holder and component heights.

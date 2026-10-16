@@ -9,6 +9,12 @@ parts:
     - file: calibration/water-volume
     - file: calibration/joystick-volts-mm
   - file: parameters/README
+  - file: EVENTS_LOGGER_PLAN
+  - file: arduino/touch_pad/README
+- caption: Magnet and simulations
+  chapters:
+  - file: MAGNET_COMMISSIONING
+  - file: simulations/ledex_femm/README
 - caption: Mechanical designs
   chapters:
   - file: mechanical/README
@@ -16,7 +22,10 @@ parts:
     - file: mechanical/3d-print/README
       sections:
       - file: mechanical/3d-print/joystick/README
+      - file: mechanical/3d-print/joystick-component/README
+      - file: mechanical/3d-print/joystick-holder/README
       - file: mechanical/3d-print/joystick-handle-bar/README
       - file: mechanical/3d-print/joystick-handle-cube/README
       - file: mechanical/3d-print/joystick-1d-axis-constrainer/README
-      - file: mechanical/3d-print/ledex-holder/README
+      - file: mechanical/3d-print/ledex-195224-model/README
+      - file: mechanical/3d-print/ledex-holder-adjustable/README
