@@ -358,7 +358,7 @@ Resistance at the cube (gf, pivot 23.5 mm; 19.3 / 27.3 mm: washers −7 / +6 %, 
 - `ledex_geometry.py`: the Ledex body and plunger dimensions shared by the CAD, the rig model, FEMM and the
   3D model (standard library only); `python3 ledex_geometry.py` prints the plunger length and the FEMM tip
   stand-ins.
-- `ledex_washer.lua`: the FEMM 4.2 model (modes `forces`, `profile`, `stroke`, `sweep`,
+- `ledex_washer.lua`: the FEMM 4.2 model of the Ledex. The name is historical (it began as the washer-target model); it is still the model behind the plunger force calibration, and the washer target is just one option (modes `forces`, `profile`, `stroke`, `sweep`,
   `plunger`, `fieldgrid`, `map`). Every parameter can be overridden by the caller; `femm_run.py` passes
   the geometry from `ledex_geometry.py`, and the other defaults are the calibrated values.
 - `femm_run.py`: runs FEMM in parallel on Windows or on a Mac under Wine (Python 3.6+, standard
@@ -395,8 +395,9 @@ Resistance at the cube (gf, pivot 23.5 mm; 19.3 / 27.3 mm: washers −7 / +6 %, 
   `results/fea3d/axisym_tip/`.
 - `plot_results.py`: makes `figures/plots/*.png` (numpy + matplotlib). The force, stroke, target and
   profile figures read the 3D CSVs; `calibration_fit.png` and `sensitivity.png` read the FEMM CSVs.
-- `plot_target_across.py`: makes `figures/magnetic_fields/*.png` from the 3D model (needs the
-  NGSolve venv; solved fields cached in `results/fea3d/field_cut_3d_<nowasher|washers10_across_gap<G>mm>_<I>A.npz`).
+- `plot_target_across.py`: makes `figures/magnetic_fields/*.png` from the 3D model (the rejected washer-target
+  study, kept to show why the washer target was dropped; needs the
+  NGSolve venv; solved fields are cached, not tracked in git, and are regenerated on demand, in `results/fea3d/field_cut_3d_<nowasher|washers10_across_gap<G>mm>_<I>A.npz`).
 - `results/femm/femm_sweeps.csv`: one row per FEMM solve (coaxial layouts, used for the calibration and sensitivity figures). Columns: `case`, `target`,
   `target_id_mm`, `target_od_mm`, `target_t_mm` (inner/outer diameter, thickness; id 0 = solid
   disc), `protrude_mm`, `seat_mm`, `stroke_mm` (plunger held out from its seat), `bscale`,
