@@ -91,6 +91,7 @@ one important thing at a time.
 | [training/01_pad_contact_shaping_250ms.txt](training/01_pad_contact_shaping_250ms.txt) | 1b supervised pad-contact shaping, longer hold | 0.00–5.00 | Joystick ignored within 0–5 V | **0** | 125 | 250 ms pad gate (`home TO`); otherwise identical to the 50 ms file |
 | [training/02_micro_push.txt](training/02_micro_push.txt) | 2 Discovery | 2.15–2.45 | past ~1.7 mm, no far wall | **0** | 200 | delay 0 |
 | [training/02_micro_push_day1_5s_8ul.txt](training/02_micro_push_day1_5s_8ul.txt) | 2 Day-1 pilot | 0.00–2.22 | permissive threshold from 28/09 live rest 2.25 V and 2.225–2.350 home | **0** | 250 | 1 ms home/rest-pad contact gate; 5 s move; 8 µl; fixed 3 V spout |
+| [training/02_micro_push_day1_restpad.txt](training/02_micro_push_day1_restpad.txt) | 2 Day-1 rest pad + micro push (16 Oct) | 0.00-2.47 | home 2.47-2.56 (measured 2.48-2.525 at baseline, object on) | **0** | 250 | 100 ms home + capacitive pad gate; 3 s move; 4 ul (130 ms); 2 s ITI; spout columns 0 V (no spout motion) |
 | [training/03_proximal_zone.txt](training/03_proximal_zone.txt) | 3 Proximal | 2.35–2.45 | 1.7–5.0 mm | 50 | 400 | delay 0 |
 | [training/04_zone_translate_1.txt](training/04_zone_translate_1.txt) | 4 Shift 1 | 2.31–2.41 | 3.0–6.3 mm | 50 | 400 | delay 0 |
 | [training/04_zone_translate_2.txt](training/04_zone_translate_2.txt) | 4 Shift 2 | 2.26–2.36 | 4.7–8.0 mm | 50 | 400 | delay 0 |
