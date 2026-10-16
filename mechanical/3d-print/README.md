@@ -10,14 +10,13 @@ Current models are provided as editable STEP sources and slicer-ready STL export
 - [Joystick component holder](joystick-holder/README.md) — breadboard holder for the component; the constrainer sits on it
 - [Adjustable Ledex holder](ledex-holder-adjustable/README.md) — slotted base, upright and carriage (distance, lateral, height), gauges and plunger-link parts
 - [Ledex 195224-230 model](ledex-195224-model/README.md) — body and plunger from the datasheet drawing (reference, not printed)
-- [Ledex holder (fixed 30 mm axis)](ledex-holder/README.md) — superseded
 
 Keep one subfolder per part (or per design iteration), for example:
 
 ```
 3d-print/
   lateral-delimiter/
-  fsr-rest-pad-mount/
+  rest-pad-mount/
   lick-spout-carriage/
 ```
 

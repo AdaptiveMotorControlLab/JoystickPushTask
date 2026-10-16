@@ -40,7 +40,7 @@ Key differences from the original task:
 ## Current status
 
 - Canonical VIs imported from the behavioural rig and pushed on 18 August 2026.
-- Bench-validated path: object home + FSR paw gate → trial → success cue → adjustable delay → spout
+- Bench-validated path: object home + rest-pad paw gate → trial → success cue → adjustable delay → spout
   extension → water → consumption wait → spout retraction.
 - The acquisition helper reads joystick X/Y, lick/frame signals and the new rest-pad channel.
 - A fresh GitHub copy now opens and completes the full bench sequence on the rig PC using the
@@ -53,10 +53,10 @@ Key differences from the original task:
   toolbar Abort remains emergency-only because it bypasses normal cleanup.
 - STEP models exist for an 89 mm joystick shaft plus two tip-mounted handles: a 38 mm bar and a
   rounded cube with three offset holes. See [`mechanical/README.md`](mechanical/README.md).
-- A printed joystick, handle and 1D-axis constrainer are already fitted on the rig. Further
-  CAD prints wait until 21 September 2026. The rest-pad FSR was replaced on 8 September 2026,
-  taped, and is working. Remaining build work includes spring return and a steel-ring target,
-  installing the ordered PVA driver and force-calibrating the Ledex, mouse-specific calibration and training-stage
+- A printed joystick, handle and 1D-axis constrainer are already fitted on the rig.
+  The rest pad is a capacitive touch sensor (Arduino Nano, see
+  [`arduino/touch_pad/`](arduino/touch_pad/README.md)), installed and bench-validated. Remaining build
+  work includes spring return, linking the Ledex plunger to the joystick shaft, force-calibrating the Ledex, mouse-specific calibration and training-stage
   controls/presets.
 
 
@@ -74,17 +74,16 @@ Existing rig hardware:
 
 Mechanical adaptation in progress:
 
-- One printed joystick, handle and 1D-axis constrainer are fitted for bench testing. Further
-  CAD prints wait until 21 September 2026; compare the rounded cube's three offset holes when
+- One printed joystick, handle and 1D-axis constrainer are fitted for bench testing. Compare the rounded cube's three offset holes when
   freezing the final mouse-relative reach and object weight.
-- Add spring return to home and the steel-ring / washer target for the axial solenoid.
+- Add spring return to home and link the Ledex plunger to the joystick shaft for axial resistance.
 
 New components for the push task:
 
 
 | Role                   | Component                                                                      | DAQ channel          |
 | ---------------------- | ------------------------------------------------------------------------------ | -------------------- |
-| Rest-pad paw sensor    | Interlink **FSR 402** (solder tabs, 30-81794) + 10 kΩ divider                  | `Dev1/ai2`           |
+| Rest-pad paw sensor    | **Capacitive touch pad** (Arduino Nano, 10×10 mm copper tape, 0 V / 5 V output)| `Dev1/ai2`           |
 | Retractable lick spout | **Actuonix L12-30-50-12-I** linear actuator (0–5 V position mode, 12 V supply) | `Dev1/ao1`           |
 | Auditory success cue   | **Adafruit 5 V active buzzer** (#1536)                                         | `Dev1/port0/line1`   |
 | Axial resistance       | Ledex **`195224-230`** (received 02/09/26; not installed). Driver ordered 25/09/26: Hydraulik-Kompetenz PVA 1.6 0–10 V | reserved `Dev1/ao0`  |
@@ -105,7 +104,7 @@ The main VI is `Push Behaviour_MCHALABI.vi`. Its required local dependencies are
 `avg joystick and frame trig lick3.vi`, `frame counter.vi` and `PushTask Globals.vi`.
 
 The program retains the original occurrence-driven five-state architecture and trajectory logging while
-adding the FSR gate, digital success cue, retractable-spout reward sequence and shared normal-stop
+adding the rest-pad gate, digital success cue, retractable-spout reward sequence and shared normal-stop
 signal for all asynchronous loops. It requires LabVIEW and NI-DAQmx. Saved NI-MAX tasks are
 machine-local and must be imported or configured on each rig. The validated task/channel map is
 documented in [`RIG_INVENTORY.md`](RIG_INVENTORY.md), with the 20 August 2026 NI-DAQmx backup stored at

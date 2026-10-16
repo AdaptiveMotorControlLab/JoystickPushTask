@@ -9,7 +9,7 @@ related build notes.
 | ------ | ------- |
 | [3D-printed parts](3d-print/README.md) | 3D-printable meshes and project files (STL, 3MF, STEP, Fusion, etc.) |
 
-Add new parts in a named subfolder (e.g. `3d-print/fsr-mount/`) so
+Add new parts in a named subfolder (e.g. `3d-print/rest-pad-mount/`) so
 revisions stay grouped. Prefer descriptive filenames with dimensions or revision when useful.
 
 ## Push object
@@ -31,7 +31,7 @@ push-biased surface that discourages grasping like the original pull handles.
 - [Joystick bar handle](3d-print/joystick-handle-bar/README.md) — 38 mm STEP source and STL export
 - [Joystick rounded-cube handle](3d-print/joystick-handle-cube/README.md) — rounded-box STEP source and STL export
 - [Joystick 1D-axis constrainer](3d-print/joystick-1d-axis-constrainer/README.md) — 38 × 38 × 56 mm STEP source and STL export
-- [Ledex holder](3d-print/ledex-holder/README.md) — holder for the Ledex `195224-230`, 30 mm axis STEP source and STL export
+- [Adjustable Ledex holder](3d-print/ledex-holder-adjustable/README.md) — slotted base, upright and carriage, gauges and plunger-link parts
 
 One printed joystick, handle and 1D-axis constrainer are fitted for bench testing. Further
 prints wait until 21 September 2026. Still to integrate: spring return to home, the

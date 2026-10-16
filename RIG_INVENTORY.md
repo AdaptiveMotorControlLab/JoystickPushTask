@@ -132,19 +132,19 @@ documented re-test. Abort-path output cleanup has not been specifically validate
 - Acquisition: Continuous Samples
 - Sample rate: 10 kHz
 
-Do not assign `ai0` or `ai1` to the new FSR rest-pad sensor.
+Do not assign `ai0` or `ai1` to the rest-pad sensor.
 
 ### `joysticklickframe_push` — created 12/08/26
 
 - New independent AI task created for the working push-task hierarchy; original
 `joysticklickframe` remains unchanged.
 - Corrected channel order confirmed 20/08/26 as `Dev1/ai1`, `Dev1/ai0`, `Dev1/ai2`
-  (`Y_POS`, `X_POS`, FSR). The first push-task configuration used `ai0`, `ai1`, `ai2`, which
+  (`Y_POS`, `X_POS`, rest pad). The first push-task configuration used `ai0`, `ai1`, `ai2`, which
   swapped X/Y relative to the unchanged LabVIEW array-index convention inherited from the old task.
 - Final channel configuration: `ai0` and `ai1` differential ±10 V; `ai2` RSE, 0–5 V.
 - Final timing: Continuous Samples, 10 samples/read, 10 kHz.
-- Saved NI-MAX test passed 12/08/26: joystick X, joystick Y, and FSR signals were all visible
-simultaneously; FSR responded as expected.
+- Saved NI-MAX test passed 12/08/26: joystick X, joystick Y, and rest-pad signals were all visible
+simultaneously; the rest pad responded as expected.
 - Working-copy `avg joystick and frame trig lick3.vi` was updated and saved to select
 `joysticklickframe_push`; original hierarchy remains pointed at `joysticklickframe`.
 - Working-copy main VI Case 0 now reads queue element index 2 into a `rest pad voltage` indicator;
@@ -152,7 +152,7 @@ simultaneously; FSR responded as expected.
 Starting threshold is 0.10 V pending animal-mounted calibration.
 - A new AND combines the original X/Y home-ROI result with `paw on rest pad` before the existing
 `home TO` hold logic. The separate inter-trial timeout gate is unchanged.
-- Runtime test passed: index-2 FSR voltage and `paw on rest pad` changed correctly when Case 0 became
+- Runtime test passed: index-2 rest-pad voltage and `paw on rest pad` changed correctly when Case 0 became
 active after a completed/rewarded trial. The apparent initial failure was expected Case Structure
 behavior—the indicator does not update while another case executes.
 - Working-VI state shift-register initializer changed from 1 to 0 so sessions start in Case 0.
@@ -263,7 +263,7 @@ Traced 04/08/26. This is an adjustable DC-DC converter mounted in the breadboard
 This supplies the joystick's excitation voltage, and its trim pot is almost certainly what sets the
 documented ~2.55 V resting output. **Do not remove, repower or re-trim this module** — doing so would
 silently recalibrate every position reading. Note that this consumes **terminal 14**, so the second
-+5 V terminal (**8**) must be used for the FSR excitation.
++5 V terminal (**8**) must be used for the rest-pad sensor's +5 V supply.
 
 ### Laser interlock — SAFETY CRITICAL
 
@@ -336,9 +336,9 @@ Digital port 0:
 | 66       | AI 9 (AI 1−) | joystick Y position, differential return |
 | 67       | AI GND       | analog ground                            |
 | 27       | AI GND       | analog ground                            |
-| 8        | +5 V         | FSR divider excitation                   |
-| 65       | AI 2         | FSR rest-pad signal                      |
-| 64       | AI GND       | FSR divider return                       |
+| 8        | +5 V         | Rest-pad Arduino 5V supply               |
+| 65       | AI 2         | Rest-pad signal (Arduino D2)             |
+| 64       | AI GND       | Rest-pad Arduino GND                     |
 | 21       | AO 1         | Actuonix 0–5 V position command          |
 | 54       | AO GND       | Actuonix command/external-PSU common     |
 | 52       | P0.0         | water solenoid                           |
@@ -357,7 +357,7 @@ Digital port 0:
 
 - **22 (AO 0)** — axial-resistance magnet command, wired to PVA `H` (with 55 AO GND to PVA `G`) on 7 Oct 2026
 - 37 (PFI 8) and 40 (PFI 13) — not in the occupied list
-- AI10 terminal 31 remains unused because FSR AI2 uses RSE, not differential
+- AI10 terminal 31 remains unused because AI2 uses RSE, not differential
 - Remaining unused P0 lines: P0.2–P0.7
 
 
@@ -447,7 +447,7 @@ AI 9 (terminals 68, 34, 33, 66). `ai2` and above are the genuinely free analog i
 - Port 0 lines can source up to 24 mA; PFI lines only 16 mA. The Adafruit #1536 buzzer draws roughly
 24 mA at 5 V, so it must use a **port 0** line, and even then it sits at the specification limit —
 add a small transistor/MOSFET driver if the tone is weak or the line is loaded.
-- Terminal 14 (+5 V) is taken by the regulator module; use **terminal 8** for FSR excitation.
+- Terminal 14 (+5 V) is taken by the regulator module; use **terminal 8** for the rest-pad +5 V.
 
 
 
@@ -487,7 +487,7 @@ add a small transistor/MOSFET driver if the tone is weak or the line is loaded.
 
 | Component             | Channel            | SCB-68A terminals                                                                           | Status                                                                                                  |
 | --------------------- | ------------------ | ------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| FSR 402 rest pad      | `Dev1/ai2`         | signal → 65, ground → AI GND (64), excitation → +5 V (**8**, not 14)                        | replaced 08/09/26 after 04/09 tail rip; fixed on rail with protective tape; working. Threshold/hysteresis still to calibrate |
+| Capacitive rest pad (Arduino Nano) | `Dev1/ai2` | D2 → 65, GND → AI GND (64), 5V → +5 V (**8**, not 14)                        | installed and bench-validated 14/10/26; 0 V untouched / 5 V touched; threshold 2.5 V; see `arduino/touch_pad/README.md` |
 | Adafruit #1536 buzzer | `Dev1/port0/line1` | `+` → 17 (P0.1), `−` → 15 (D GND)                                                           | installed; NI-MAX and 50 ms LabVIEW success-cue tests passed                                            |
 | Actuonix lick spout   | `Dev1/ao1`         | signal → 21, reference → AO GND (54), motor power from separate 12 V PSU with shared ground | installed; `LickSpout_Dev1` and full extend/water/retract sequence passed across three spaced trials    |
 | Axial magnet Ledex `195224-230` | `Dev1/ao0` | command → 22, AO GND shared with drive electronics; coil power **not** from the DAQ pin | PVA 1.6 0–10 V driver wired (22 → `H`, 55 → `G`, coil on `C`/`A`, Enable `J` on a removable lead); bench-commissioned 11/10/26, 10 V gives 0.31 A at minimum Imax. Not mounted. Mount axially; steel target on push object |
@@ -640,66 +640,6 @@ inventory connector hardware before wiring.
 
 
 
-### FSR bench test — 05/08/26
-
-- 10 kΩ divider resistor measured approximately 9.88 kΩ.
-- FSR measured open circuit when unloaded.
-- Direct multimeter measurement across the two solder tabs produced a resistance value when the
-sensing area was pressed, confirming that the sensor responds to force.
-- Two flexible leads were soldered to the factory solder tabs. The completed joints passed the same
-unloaded/pressed resistance test.
-- Breadboard divider assembled using the FSR and 9.88 kΩ resistor.
-- Breadboard resistor branch measured correctly across the signal/ground nodes.
-- Breadboard FSR branch measured open unloaded and force-responsive when pressed.
-- Divider connected to SCB-68A: yellow terminal 8→A10, green terminal 65→A11, blue/black
-terminal 64→A15; FSR at E10/E11; resistor D11→D15.
-- With the rig PC powered, the divider supply measured **5.06 V** between the +5 V and AI GND nodes.
-- Divider signal measured relative to AI GND:
-  - Unpressed: 0.000 V
-  - Light/intermediate pressure: approximately 0.2–1.5 V
-  - Hard pressure: approximately 4.7–4.8 V
-- Signal rises monotonically with applied pressure. Electrical bench test passed; NI-MAX `ai2`
-acquisition test passed.
-- On 05/08/26 the temporary breadboard divider was replaced with an inline soldered harness and the
-yellow/green/blue leads were reattached to SCB terminals 8/65/64 respectively.
-- On 06/08/26 the permanent harness passed its post-solder `rest_pad_test_Dev1` verification:
-released baseline near zero, graded pressure peaks, and no large artifacts during gentle cable
-movement. Electrical installation was complete at this checkpoint; the FSR was subsequently placed
-in the temporary rail mount documented below. Its animal-safe cap and final cleanable mounting
-remain pending.
-
-
-
-### NI-MAX FSR test task — 05/08/26
-
-- Saved task: `rest_pad_test_Dev1`
-- Physical channel: `Dev1/ai2`
-- Input range: 0–5 V
-- Terminal configuration: RSE
-- Acquisition: Continuous Samples
-- Samples to read: 100
-- Rate: 1 kHz
-- Result: stable near-zero released baseline and graded upward voltage peaks under increasing force.
-- Working push task uses `joysticklickframe_push`; rest-pad voltage is queue element index 2.
-- Case 0 requires joystick home X/Y AND `paw on rest pad`, then applies the existing home hold.
-- State initializer changed from 1 to 0 so the first trial cannot bypass the gate; fresh-start test
-passed. Current bench threshold shown on 18/08/26 was 0.01 V and must be recalibrated with the final
-paw-contact cap and animal.
-
-The PCIe-6321 has one analog-input timing engine, so this standalone test task is for bench testing
-only. For the experiment, `ai2` must be appended to the existing joystick analog-input acquisition
-task; do not attempt to run `rest_pad_test_Dev1` simultaneously with `joysticklickframe`.
-
-### Proposed mechanical rest-pad location — 05/08/26
-
-- Selected location: fixed black horizontal rail immediately in front of the head-fixation tube,
-beside the future push-object position.
-- FSR circular active area sits flat on the rail; tail routes laterally away from the paw and object.
-- This location preserves the intended sequence: paw on fixed pad → leave pad → contact push object.
-- Temporary geometry testing may use removable tape on the inactive tail/perimeter only.
-- Final animal-ready mounting requires a small protective paw-contact cap/puck, tail strain relief,
-and protection from claws/moisture; do not glue or preload the active sensing circle.
-
 ### Push-object placement redesign — 04/09/26
 
 - 3D-model a replacement handle that connects directly to the joystick and places its contact
@@ -724,22 +664,13 @@ volts-to-mm and force calibration.
   21/09/26. Freeze one geometry after a rest-pad-to-object reach check, then add spring
   return and the steel washer target.
 
+### Rest-pad acquisition notes
 
-
-### Temporary mechanical mount — 06/08/26
-
-- FSR mounted face-up on the selected fixed rail in front of the head tube.
-- Inactive tail and cable secured laterally with removable tape/strain relief.
-- Mounted sensor retained a near-zero unloaded baseline and graded pressure response in
-`rest_pad_test_Dev1`.
-- Temporary mount passed bench testing.
-- Mount status reconfirmed 04/09/26: user reports the FSR is securely fixed in place with tape.
-  Recheck the unloaded baseline after taping to ensure the active circle is not mechanically preloaded.
-- Current status later on 04/09/26: the FSR tail/tongue ripped during testing. Do not splice a
-  damaged printed tail.
-- Replacement completed 08/09/26: new FSR 402 installed on the existing harness, fixed on the
-  rail, protective tape over the contact face, and reported working with no issues. Do not treat
-  the ripped 04/09 sensor as current. Recalibrate threshold/hysteresis on the taped surface;
-  confirm the unloaded baseline is not preloaded by the tape. A dedicated cleanable puck remains
-  optional if the taped cover stays stable.
+- The rest pad is the capacitive Arduino sensor (see `arduino/touch_pad/README.md`); the earlier FSR 402
+  bench logs are in `archive/FSR_rest_pad_history.md`.
+- Working push task uses `joysticklickframe_push`; the rest-pad voltage is queue element index 2 (`ai2`, RSE, 0-5 V).
+- Case 0 requires joystick home X/Y AND `paw on rest pad`, then applies the existing home hold. The state
+  initializer is 0 so the first trial cannot bypass the gate.
+- The PCIe-6321 has one analog-input timing engine: never run a standalone test task (such as the old
+  `rest_pad_test_Dev1`) at the same time as `joysticklickframe_push`.
 

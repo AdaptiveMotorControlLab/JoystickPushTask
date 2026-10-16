@@ -13,7 +13,7 @@ confirmed on 29 Sep 2026 that this 27-column order is the correct one.
 | 1 | 2 | `home Y1` | **ROI slot Y — follows the red / lateral line.** Pair with col 4. |
 | 2 | 3 | `home X2` | No ×2 on the live loader (checked 09/09/26). |
 | 3 | 4 | `home Y2` | |
-| 4 | 5 | `home TO` | ms. Object-in-home **and** FSR paw. |
+| 4 | 5 | `home TO` | ms. Object-in-home **and** rest pad touched. |
 | 5 | 6 | `start X1` | Unused while `start TO` = 0. |
 | 6 | 7 | `start Y1` | |
 | 7 | 8 | `start X2` | |
@@ -43,7 +43,7 @@ the NI-MAX channel names. White / push goes in the **X** columns (1, 3, 11, 13).
 Red / lateral goes in the **Y** columns (2, 4, 12, 14). A 09/09/26 file with
 the forward band in the Y slots paid out only when red moved. The 27-column
 files already use this order; user confirmed that on 29 Sep 2026. Likely
-cause: after `joysticklickframe_push` was reordered to `[Y, X, FSR]`, Case 3
+cause: after `joysticklickframe_push` was reordered to `[Y, X, rest pad]`, Case 3
 still compares index 0 to the X box and index 1 to the Y box.
 
 ## Shared settings
@@ -59,7 +59,7 @@ The table below is the **08–09 Sep** calibration (rest **2.50 V**). It still
 describes `02_micro_push.txt` and stages 03–08. It is not the current
 object-on setup. For that setup use
 `training/02_micro_push_day1_5s_8ul.txt` (rest about **2.25 V**, home
-2.225–2.350, `home TO` 1 ms, reward 0.00–2.22) or the two FSR shaping files.
+2.225–2.350, `home TO` 1 ms, reward 0.00–2.22) or the two pad-contact shaping files.
 User confirmed those later files on 29 Sep 2026.
 
 | Field | Value | Why |
@@ -85,12 +85,12 @@ one important thing at a time.
 | File | Stage | Push end box (X) | ~mm from rest | `end TO` | Rows | Extra |
 | --- | --- | --- | --- | --- | --- | --- |
 | [push_bench_wide-zone.txt](push_bench_wide-zone.txt) | Hand test | 2.20–2.35 | 5–10 mm, wide | 50 | 80 | delay 0 |
-| [push_bench_full-system.txt](push_bench_full-system.txt) | No-joystick/base-movement full-system hand test | 0.00–2.22 | manually move base from expert-file home | 0 | 20 | expert home/start and 250 ms FSR gate; 500 ms reward delay; cue, spout 0→3→0 V, 6 µl water; `mag=0` |
+| [push_bench_full-system.txt](push_bench_full-system.txt) | No-joystick/base-movement full-system hand test | 0.00–2.22 | manually move base from expert-file home | 0 | 20 | expert home/start and 250 ms rest-pad gate; 500 ms reward delay; cue, spout 0→3→0 V, 6 µl water; `mag=0` |
 | [push_bench_full-system_nocue.txt](push_bench_full-system_nocue.txt) | Same as full-system bench test, silent | 0.00–2.22 | same as above | 0 | 20 | identical except `cue duration` = 0 ms (column 23), so the buzzer is not held HIGH |
-| [training/01_fsr_contact_shaping.txt](training/01_fsr_contact_shaping.txt) | 1b supervised FSR shaping | 0.00–5.00 | Joystick ignored within 0–5 V | **0** | 125 | 1 ms FSR gate; 2 s ITI; 8 µl; fixed 3 V spout |
-| [training/01_fsr_contact_shaping_0ms.txt](training/01_fsr_contact_shaping_0ms.txt) | 1b supervised FSR shaping, zero hold | 0.00–5.00 | Joystick ignored within 0–5 V | **0** | 125 | 0 ms FSR gate; still requires one sampled/loop-visible contact; otherwise matches 1 ms file |
+| [training/01_pad_contact_shaping_50ms.txt](training/01_pad_contact_shaping_50ms.txt) | 1b supervised pad-contact shaping | 0.00–5.00 | Joystick ignored within 0–5 V | **0** | 125 | 50 ms pad gate (`home TO`); 2 s ITI; 8 µl; fixed 3 V spout |
+| [training/01_pad_contact_shaping_250ms.txt](training/01_pad_contact_shaping_250ms.txt) | 1b supervised pad-contact shaping, longer hold | 0.00–5.00 | Joystick ignored within 0–5 V | **0** | 125 | 250 ms pad gate (`home TO`); otherwise identical to the 50 ms file |
 | [training/02_micro_push.txt](training/02_micro_push.txt) | 2 Discovery | 2.15–2.45 | past ~1.7 mm, no far wall | **0** | 200 | delay 0 |
-| [training/02_micro_push_day1_5s_8ul.txt](training/02_micro_push_day1_5s_8ul.txt) | 2 Day-1 pilot | 0.00–2.22 | permissive threshold from 28/09 live rest 2.25 V and 2.225–2.350 home | **0** | 250 | 1 ms home/FSR contact gate; 5 s move; 8 µl; fixed 3 V spout |
+| [training/02_micro_push_day1_5s_8ul.txt](training/02_micro_push_day1_5s_8ul.txt) | 2 Day-1 pilot | 0.00–2.22 | permissive threshold from 28/09 live rest 2.25 V and 2.225–2.350 home | **0** | 250 | 1 ms home/rest-pad contact gate; 5 s move; 8 µl; fixed 3 V spout |
 | [training/03_proximal_zone.txt](training/03_proximal_zone.txt) | 3 Proximal | 2.35–2.45 | 1.7–5.0 mm | 50 | 400 | delay 0 |
 | [training/04_zone_translate_1.txt](training/04_zone_translate_1.txt) | 4 Shift 1 | 2.31–2.41 | 3.0–6.3 mm | 50 | 400 | delay 0 |
 | [training/04_zone_translate_2.txt](training/04_zone_translate_2.txt) | 4 Shift 2 | 2.26–2.36 | 4.7–8.0 mm | 50 | 400 | delay 0 |
@@ -119,12 +119,12 @@ the expert file's narrow target. Before Run:
 
 1. Keep the Class 3B laser keyed off. Do not power the unfused PVA/Ledex.
    The file commands `mag=0`.
-2. Stop the manual-reward and standalone FSR-test VIs. Prime the water line
+2. Stop the manual-reward and standalone rest-pad test VIs. Prime the water line
    until it is bubble-free.
 3. Position the base so both live signals are inside the expert home box:
    push/white 2.46–2.54 V and lateral/red 2.40–2.65 V. Set the
-   front-panel rest-pad threshold from the live signal; the current 1 MΩ FSR
-   setup has been using about 1 V and is known to ghost joystick X.
+   front-panel rest-pad threshold from the live signal; use about 2.5 V
+   (the capacitive pad outputs 0 V / 5 V).
 4. Set `Session start spout (V)` to **0.0 V** so this test visibly exercises
    both protraction and retraction.
 
@@ -152,7 +152,7 @@ inline fuse is installed and magnet commissioning resumes.
 | Stage | Why | What to do instead |
 | --- | --- | --- |
 | 1 Habituation (cue → water, no push) | Water loop only wakes on Case 4 | Run `deliverWater_RIG1_cue.vi` once per manual reward. It gives a fixed 50 ms cue, then water for the front-panel `Water on time (ms)` value. |
-| FSR-contact shaping (supervised fallback) | Rewards pad contact without requiring joystick movement | Use `training/01_fsr_contact_shaping.txt` only after a hand-contact bench test. Its full-range home/end boxes make joystick position irrelevant within 0–5 V. It does not require release-to-rearm, so held contact can earn another reward after each 2 s ITI; supervise reward count and stop if this is not intended. |
+| Pad-contact shaping (supervised fallback) | Rewards pad contact without requiring joystick movement | Use `training/01_pad_contact_shaping_50ms.txt` (or `_250ms`) only after a hand-contact bench test. Its full-range home/end boxes make joystick position irrelevant within 0–5 V. It does not require release-to-rearm, so held contact can earn another reward after each 2 s ITI; supervise reward count and stop if this is not intended. |
 | 6 Delay / retractable spout | Files exist (`06_delay_*`) | Load 0 → 250 → 500; use 1000 only if desired and tolerated. Do not change the zone in those sessions. |
 | 8 Shadow block labels | No column for block ID; magnet still absent | Run `08_shadow` as one 300-trial zero-force session. Split 50/75/100/75 later if needed. |
 | 9 Experiment (Baseline / Random / Fixed / Washout) | Random/Fixed need a force-calibrated magnet | Baseline ≈ `07_expert`. Do not write `mag ≠ 0` files yet. |

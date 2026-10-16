@@ -7,7 +7,7 @@ formats must stay exactly as they are.
 ## Why
 
 The lab DataJoint pipeline (`MMathisLab/DataJoint_mathis`) currently gets only three things from this
-rig: the joystick/FSR trace, one row per trial start (`TRIAL`) and one row per reward (`REWARD`). Many
+rig: the joystick/rest-pad trace, one row per trial start (`TRIAL`) and one row per reward (`REWARD`). Many
 things the task does are never written anywhere:
 
 - every state-machine transition (Case 0 -> 1 -> 2 -> 3 -> 4, and the Case 3 -> 0 timeout/fail)
@@ -171,7 +171,7 @@ checked. Run about 5 minutes:
 2. Trigger rest-pad initiation, then do NOT push: one timeout trial (expect 2->1->2->3->0 with codes
    3 and 5).
 3. Complete 3-4 successful trials (codes 3, 4, then 10-18 each time).
-4. Once, press the FSR clearly in view of the camera (a visual sync check).
+4. Once, touch the rest pad clearly in view of the camera (a visual sync check).
 5. Stop normally, then a second time stop from inside a reward sequence.
 
 Then check (this can be done on the Mac with Python):

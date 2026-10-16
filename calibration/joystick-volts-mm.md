@@ -12,7 +12,7 @@ NI-MAX: **Voltage_1 / `Dev1/ai1` = push**. **Voltage_0 / `Dev1/ai0` = lateral**.
 | **Push** | white | `ai1` | **Y** (`Y_POS`) | **0** | 2nd and 4th numbers |
 | **Lateral** | red | `ai0` | **X** (`X_POS`) | **1** | 1st and 3rd numbers |
 
-`joysticklickframe_push` order is `[ai1, ai0, ai2]` = Y, X, FSR. Matches this.
+`joysticklickframe_push` order is `[ai1, ai0, ai2]` = Y, X, rest pad. Matches this.
 
 ## Rest (home)
 
@@ -50,7 +50,7 @@ Noise ±0.035 V is ~1 mm on this provisional scale (~0.7 mm on the old 0.05 scal
 | Cols | Field | This file |
 | --- | --- | --- |
 | 1–4 | `home` box | (2.39, 2) to (2.8, 3) — rest 2.50 / 2.525 sits inside |
-| 5 | `home TO` | 500 ms (plus FSR gate) |
+| 5 | `home TO` | 500 ms (plus rest-pad gate) |
 | 6–9 | `start` box | (2, 2) to (2.35, 2.7) |
 | 10 | `start TO` | **0** (start wait off) |
 | 11–14 | `end` box | (1.8, 2.45) to (2.34, 2.55) |

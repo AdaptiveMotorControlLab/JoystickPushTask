@@ -1,10 +1,10 @@
 # Capacitive rest-pad sensor (Arduino Nano)
 
-Replaces the FSR 402 on the rest pad. A 10×10 mm copper-tape pad is read by an Arduino Nano;
+The rest-pad touch sensor. A 10×10 mm copper-tape pad is read by an Arduino Nano;
 a knob (10 kΩ pot) sets the sensitivity. The Nano outputs a clean 0 V / 5 V signal into
 `Dev1/ai2`: **5 V while the paw touches the pad**, 0 V otherwise. The output is low-impedance,
-so joystick X no longer ghosts onto `ai2`. The LabVIEW rest-pad logic (`voltage > threshold`)
-does not change; set the `rest pad threshold (V)` control to about **2.5 V**.
+so joystick X does not ghost onto `ai2`. The LabVIEW rest-pad logic is `voltage > threshold`;
+set the `rest pad threshold (V)` control to about **2.5 V**.
 
 ## Parts
 
@@ -14,7 +14,7 @@ does not change; set the `rest pad threshold (V)` control to about **2.5 V**.
 | Arduino Nano Screw Terminal Adapter ASX00037 | Nano plugs in; all wiring goes to screw terminals. |
 | Copper foil tape (Velleman 5 mm) | Two strips side by side make the 10×10 mm pad. |
 | Bourns 10 kΩ linear pot (51AAD-B28-A15L) | Sensitivity knob; 6.35 mm shaft, needs a knob. |
-| 1 MΩ resistor | Reuse the 1 MΩ from the FSR divider. |
+| 1 MΩ resistor | Send resistor between D4 and D6. |
 | Thin shielded wire | Pad lead, as short as practical (< 30 cm). |
 | Mini-USB cable | Programming and serial calibration only. |
 
@@ -33,8 +33,7 @@ does not change; set the `rest pad threshold (V)` control to about **2.5 V**.
 | 5V | Rig +5 V, SCB-68A terminal 8 | Power from the DAQ |
 | GND | AI GND, SCB-68A terminal 64 | Common ground |
 
-Before connecting D2 to terminal 65, **remove the FSR 402 and its 1 MΩ divider** so nothing else
-drives or loads `ai2`. Do not leave the USB cable connected while the Nano runs from the rig
+Nothing else may drive or load `ai2` (terminal 65). Do not leave the USB cable connected while the Nano runs from the rig
 +5 V; program and calibrate on USB first, or calibrate on USB with the 5V lead disconnected.
 
 Cover the pad with a thin layer of ordinary tape so the paw never touches bare copper and water
