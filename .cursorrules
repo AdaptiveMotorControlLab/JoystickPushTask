@@ -82,7 +82,7 @@ Head-fixed mouse 1D forelimb object-push task, forked from the Mathis joystick-p
 - Known: `Trial #` is incremented at trial start (magnet loop) but indexed at success (water loop); verify alignment.
 
 ## Mechanics and hardware facts
-- Joystick: APEM TS-1D1S00A-1294 Hall thumbstick base (castle cap removed; printed shaft screwed onto the lever stub) in the printed component holder, 89 mm shaft + interchangeable tip handle (rounded cube preferred, 38 mm bar), 1D-axis constrainer (`38x38x56` revision, sits on the holder frame; not yet printed/fit-checked), adjustable Ledex holder. CAD (STEP + STL) in `mechanical/3d-print/`. The adjustable return spring and the plunger link are still to be fitted.
+- Joystick: APEM TS-1D1S00A-1294 Hall thumbstick base (castle cap removed; printed shaft screwed onto the lever stub) in the printed component holder, 89 mm shaft + interchangeable tip handle (rounded cube 20 × 11.5 × 10 mm in use, shaft in the front hole; narrow 11.5 × 11.5 × 10 mm cube `joystick_handle_cube_11p5` made 17 Oct, not printed, same push face and holes so the force models hold; 38 mm bar), 1D-axis constrainer (`38x38x56` revision, sits on the holder frame; not yet printed/fit-checked), adjustable Ledex holder. CAD (STEP + STL) in `mechanical/3d-print/`. The adjustable return spring and the plunger link are still to be fitted.
 - Magnet coupling: plunger linked to the shaft (see Ledex "Plunger link"). The steel washers (SFS M4 `111952`, M3 `132845`) are no longer the target.
 - Ledex `195224-230`: 12 V, 7 W, 20.7 Ω, ~0.58 A nominal, pull type, mounted axially opposing the push.
 - Water: bubble-free priming before every session; calibrated pulse volumes in `calibration/water-volume.md`.
