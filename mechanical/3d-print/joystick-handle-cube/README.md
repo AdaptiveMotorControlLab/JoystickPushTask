@@ -28,6 +28,6 @@ push rather than a grasp.
   inward each. Push face, depth, height, fillets and the three holes are
   unchanged, so the force models apply as they are; volume 1131 mm³ instead of
   2085 mm³ (lighter handle)
-- Not yet printed or fitted
+- Chosen push object (17 Oct 2026) and used by the rig models and explorer; not yet printed or fitted
 
 Alternative: the [bar handle](../joystick-handle-bar/README.md).

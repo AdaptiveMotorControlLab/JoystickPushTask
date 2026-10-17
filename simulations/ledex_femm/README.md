@@ -188,7 +188,7 @@ handle into tower motion, gap and resistance (`results/lever/lever_table.csv`,
   printed shaft screwed onto the lever stub. Heights from the measured component and holder
   (section above); pivot 23.5 mm below the shaft base (19.3-27.3).
 - Ten M3 washers seat on the cone at 11.5-19.5 mm above the shaft base; the cube handle spans
-  87.4-97.4 mm (push taken at 92.4 mm). The three cube holes change the result by < 0.02 mm; the models use the front hole (`CUBE_HOLE` in `rig_geometry.py`, push face 2.05 mm from the shaft axis), which changed the forces by < 1 %.
+  87.4-97.4 mm (push taken at 92.4 mm). The three cube holes change the result by < 0.02 mm; the models use the narrow 11.5 × 11.5 × 10 mm cube (`CUBE_STL`) in the front hole (`CUBE_HOLE` in `rig_geometry.py`, push face 2.05 mm from the shaft axis), which changed the forces by < 1 %.
 - The tower moves about a third of the push (rigid rotation, not small-angle):
 
 | push at the cube | 1 mm | 2 mm | 5 mm | 10 mm | 15 mm |
@@ -264,10 +264,10 @@ the plunger out of the coil and the coil pulls it back, so the resistance oppose
   for mu 0.3)**; 6.9 gf covers every pivot, link height and home stroke up to mu 0.4
   (`spring_requirement.csv`). The
   thumbstick's own friction is part of the measured spring curve.
-- Return after release from 15 mm (`spring_return.png`; effective mass at the cube 5.4 g from the
-  printed shaft and cube, solid PLA, plus the plunger): weakest safe spring (4.7 gf + 0.2 gf/mm) reaches
-  neutral in ~58 ms, a Mathis-like spring (10 gf at home, 20 gf at 15 mm) in ~32 ms; with 10 V on the
-  magnet speeds the return (~30 ms) and then holds the handle on the stop. Without preload the handle
+- Return after release from 15 mm (`spring_return.png`; effective mass at the cube 4.2 g from the
+  printed shaft and narrow 11.5 mm cube, solid PLA, plus the plunger): weakest safe spring (4.7 gf + 0.2 gf/mm)
+  reaches neutral in ~52 ms, a Mathis-like spring (10 gf at home, 20 gf at 15 mm) in ~28 ms; with 10 V on the
+  magnet speeds the return (~27 ms) and then holds the handle on the stop. Without preload the handle
   stops wherever friction catches it after the bounce, so preload matters more than stiffness.
 - Assumptions to confirm on the rig: pivot depth, collar pin 6 mm off axis, the plunger's cross hole at
   4.76 mm from the tip (datasheet ± 0.30), rigid link with free pins, no residual magnetism

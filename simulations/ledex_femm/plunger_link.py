@@ -30,7 +30,7 @@ import matplotlib.pyplot as plt
 
 from plot_results import HERE, RES, save
 import rig_geometry as rg
-from rig_geometry import (ATTACH_R, CUBE_HOLE_Y, CAD, FACE, HANDLE_Z, LINK, PIN_FROM_TIP, PIVOT_DEPTH, PIVOT_DEPTHS, read_stl,
+from rig_geometry import (ATTACH_R, CUBE_HOLE_Y, CUBE_STL, CAD, FACE, HANDLE_Z, LINK, PIN_FROM_TIP, PIVOT_DEPTH, PIVOT_DEPTHS, read_stl,
                           rotate, stop_push, tilt_for_push)
 
 OUT_RES = os.path.join(RES, "plunger_link")
@@ -122,7 +122,7 @@ def inertia_about_pivot(d_p):
     """Moment of inertia (g mm^2) of the printed shaft + cube about the pivot axis (solid PLA)."""
     total = 0.0
     parts = [("joystick/joystick_89mm.stl", lambda c: (c[:, 0], c[:, 2])),
-             ("joystick-handle-cube/joystick_handle_cube.stl", lambda c: (c[:, 1] - CUBE_HOLE_Y, c[:, 2] + 88.9))]
+             (CUBE_STL, lambda c: (c[:, 1] - CUBE_HOLE_Y, c[:, 2] + 88.9))]
     for rel, xz in parts:
         vol, cen = stl_tetra(os.path.join(CAD, rel))
         x, z = xz(cen)

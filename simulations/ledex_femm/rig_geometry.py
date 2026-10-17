@@ -13,7 +13,7 @@ joystick-1d-axis-constrainer):
   bottom at Z 13.88; stub top at component z 29.3.
 - Shaft: its 5 mm x 2.7 mm bottom bore holds a glued screw head; the screw goes into the stub and the cone sits
   directly on the stub top -> shaft base at Z 43.18; cone r 4 -> 1.5 over 12 mm; 89 mm long.
-- Cube handle: front hole (nearest the push face), push face 2.05 mm from the shaft axis, contact at shaft z 92.4 (cube z 87.4-97.4).
+- Cube handle: narrow 11.5 x 11.5 x 10 mm cube, front hole (nearest the push face), push face 2.05 mm from the shaft axis, contact at shaft z 92.4 (cube z 87.4-97.4).
 - Constrainer: lower 10 mm is a socket (inner 32 mm) over the frame -> spans Z 15.41-71.41; walls 6 mm above the
   socket (inner +-13); top plate Z 68.41-71.41 with the 4 mm slot from X -2 to 17; home wall has an arch 16 mm wide
   (straight to Z 55.41, radius 8, top Z 63.41), cut square to Z 68.41 in the window revision.
@@ -51,6 +51,7 @@ HOLES = (("hole y 0.55", 2.05), ("hole y 4.25", 5.75), ("hole y 7.95", 9.45))  #
 CUBE_HOLE = 0                                  # shaft in the front hole (nearest the push face, the mouse side)
 CUBE_HOLE_Y = float(HOLES[CUBE_HOLE][0].split()[-1])   # that hole's y in the cube STL (STL y runs along the push axis)
 FACE = HOLES[CUBE_HOLE][1]
+CUBE_STL = "joystick-handle-cube/joystick_handle_cube_11p5.stl"   # narrow cube, 11.5 x 11.5 x 10 mm
 
 # ------------------------------------------------------------------ pivot
 PIVOT_COMP_Z = COMP_BODY_H / 2
@@ -173,7 +174,7 @@ PARTS = {
     "constrainer": ("joystick-1d-axis-constrainer/" + CON_WINDOW_FILE + ".stl",
                     lambda t: _swap(t, dz=CON_Z0), False),
     "shaft": ("joystick/joystick_89mm.stl", lambda t: t + np.array([0.0, 0.0, SHAFT_BASE]), True),
-    "cube": ("joystick-handle-cube/joystick_handle_cube.stl",
+    "cube": (CUBE_STL,
              lambda t: _swap(t, dx=-CUBE_HOLE_Y, dz=88.9 + SHAFT_BASE), True),
 }
 
