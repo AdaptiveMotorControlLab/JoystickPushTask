@@ -51,8 +51,8 @@ Key differences from the original task:
   50 ms auditory cue followed by the front-panel-selected water pulse, with no joystick requirement.
 - Remaining validation includes repeated-cycle testing and explicit fail/timeout checks. LabVIEW's
   toolbar Abort remains emergency-only because it bypasses normal cleanup.
-- STEP models exist for an 89 mm joystick shaft plus two tip-mounted handles: a 38 mm bar and a
-  rounded cube with three offset holes. See [`mechanical/README.md`](mechanical/README.md).
+- STEP models exist for an 89 mm joystick shaft plus a tip-mounted rounded cube handle (a 38 mm bar
+  handle is archived) with three offset holes. See [`mechanical/README.md`](mechanical/README.md).
 - A printed joystick, handle and 1D-axis constrainer are already fitted on the rig.
   The rest pad is a capacitive touch sensor (Arduino Nano, see
   [`arduino/touch_pad/`](arduino/touch_pad/README.md)), installed and bench-validated. Remaining build
@@ -67,10 +67,9 @@ Existing rig hardware:
 
 - NI-DAQ card, **PCIe-6321** (`Dev1` on the live rig)
 - Joystick base/readout (Digi-Key 679-2501-ND)
-- 3D-printed **1D-axis constrainer** ([STEP model](mechanical/3d-print/joystick-1d-axis-constrainer/README.md))
+- 3D-printed **1D-axis constrainer** ([window revision](mechanical/README.md))
 - 3D-modeled **joystick shaft** and interchangeable handles
-  ([cube](mechanical/3d-print/joystick-handle-cube/README.md),
-  [bar](mechanical/3d-print/joystick-handle-bar/README.md))
+  ([cube](mechanical/README.md))
 
 Mechanical adaptation in progress:
 

@@ -1,6 +1,6 @@
 """Ledex 195224-230 body and plunger geometry, shared by every model of the solenoid.
 
-Used by the reference CAD (mechanical/3d-print/ledex-holder-adjustable/make_ledex_holder.py), the rig model
+Used by the reference CAD (mechanical/ledex-holder-adjustable/make_ledex_holder.py), the rig model
 (rig_geometry.py), FEMM (femm_run.py passes femm_globals() to ledex_washer.lua) and the 3D model (fea3d.py).
 Stdlib only, so it also runs under the rig PC's Python 3.6.
 

@@ -1,4 +1,4 @@
-"""Adjustable Ledex 195224-230 holder (base + upright + carriage), gauges and the plunger-link parts, as STEP + STL.
+"""Adjustable Ledex 195224-230 holder (base + upright + carriage), and the plunger-link parts, as STEP + STL.
 
     /tmp/ngenv/bin/python make_ledex_holder.py          # writes the parts next to this file and checks clearances
 
@@ -6,7 +6,7 @@ Needs netgen (pip install ngsolve) and numpy/scipy; the rig geometry comes from
 simulations/ledex_femm/rig_geometry.py. Frames (mm; X along the push, +X toward the joystick, Z up):
 - carriage: X from the Ledex body face (the M14 boss side), Y lateral, Z from the Ledex axis.
 - upright, base: X from the Ledex body face, Z from the breadboard top.
-- gauges, collar, link: their own frames (see README).
+- collar, link: their own frames (see README).
 Adjustments: distance (X) by the base's two M6 slots along X (33 mm travel, works on 25 mm and 1 inch grids);
 lateral (Y) by the upright's two M4 slots on the base (+-12.75 mm); height (Z) by the carriage's four M3 screws
 (above and below the case, captive nuts in the carriage) in the upright's two long vertical slots (Ledex axis
@@ -20,7 +20,7 @@ from netgen.occ import Axis, Box, Cylinder, Dir, OCCGeometry, Pnt, X, Y, Z
 from netgen.meshing import MeshingStep
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(0, os.path.join(HERE, "..", "..", "..", "simulations", "ledex_femm"))
+sys.path.insert(0, os.path.join(HERE, "..", "..", "simulations", "ledex_femm"))
 import rig_geometry as rg  # noqa: E402
 
 LX = rg.LEDEX
@@ -157,23 +157,6 @@ def base():
     return s
 
 
-def gap_gauge(t, n):
-    s = box(0, 40, 0, 15, 0, t)
-    for i in range(n):
-        s = s - box(30 - 3 * i, 31.5 - 3 * i, 13.5, 16, -1, t + 1)
-    return s
-
-
-def stroke_gauge(s0):
-    """Fork against the boss front face; its far end is flush with the plunger tip at stroke s0."""
-    length = LX["protrude"] - LX["boss_len"] + s0
-    s = box(0, length, -9, 9, 0, 2.0) + box(-12, 0, -9, 9, 0, 2.0)
-    s = s - box(-1, length + 1, -4.2, 4.2, -1, 3)
-    for i in range(int(round(s0))):
-        s = s - box(-10 + 2.5 * i, -9 + 2.5 * i, 7.5, 10, -1, 3)
-    return s
-
-
 def ledex_body():
     """Reference model (not for printing), Ledex frame: X from the body face, axis on X. Leads at the rear, down."""
     tpl = 1.58
@@ -249,13 +232,6 @@ PARTS = {
     "ledex_holder_carriage": carriage,
     "ledex_holder_upright": upright,
     "ledex_holder_base": base,
-    "gap_gauge_0.5mm": lambda: gap_gauge(0.5, 1),
-    "gap_gauge_1mm": lambda: gap_gauge(1.0, 2),
-    "gap_gauge_2mm": lambda: gap_gauge(2.0, 3),
-    "gap_gauge_3mm": lambda: gap_gauge(3.0, 4),
-    "stroke_gauge_2mm": lambda: stroke_gauge(2.0),
-    "stroke_gauge_3mm": lambda: stroke_gauge(3.0),
-    "stroke_gauge_4mm": lambda: stroke_gauge(4.0),
     "link_collar": collar,
     "link_bar": link,
     "fit_test": fit_test,

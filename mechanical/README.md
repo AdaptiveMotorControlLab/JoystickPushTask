@@ -1,39 +1,83 @@
-# Mechanical designs
+# 3D-printed parts and CAD models
 
-CAD and fabrication files for the forelimb push-task rig: 3D-printed parts and
-related build notes.
+Every model is an editable STEP source plus a slicer-ready STL, one subfolder per part. Frames and the
+rig layout are in `simulations/ledex_femm/rig_geometry.py` (README "Rig geometry"); the Ledex holder and
+plunger-link parts have their own [README](ledex-holder-adjustable/README.md). Superseded designs are in
+[`archive/`](../archive/).
 
-## Layout
+The push object is a compact rounded cube that sits below the mouse in the natural forelimb workspace and
+presents a push-biased surface that discourages grasping like the original pull handles. Add new parts as a
+named subfolder (STEP + STL, descriptive filenames) and a row in the table below; no README per folder.
 
-| Folder | Use for |
-| ------ | ------- |
-| [3D-printed parts](3d-print/README.md) | 3D-printable meshes and project files (STL, 3MF, STEP, Fusion, etc.) |
+Still to do: print and fit-check the window constrainer, holder and link; spring return to home; final
+volts-to-mm calibration (`calibration/joystick-volts-mm.md`).
 
-Add new parts in a named subfolder (e.g. `3d-print/rest-pad-mount/`) so
-revisions stay grouped. Prefer descriptive filenames with dimensions or revision when useful.
+Print notes: PETG or PLA, orientation and fit allowances for the holder parts are in the Ledex holder
+README (printed holes come out ~0.3-0.4 mm small; print `fit_test` first).
 
-## Push object
+| Folder | Files | Status | What it is |
+| --- | --- | --- | --- |
+| `joystick/` | `joystick_89mm` | printed, on the rig | 89 mm shaft (conical body, 4 mm radius base to 1.5 mm radius tip) that screws onto the thumbstick stub; handles slide onto its tip. |
+| `TS-1D1S00A-1294_stripped/` | `TS-1D1S00A-1294_stripped` | reference, not printed | Measured APEM TS-1D1S00A-1294 Hall base (castle cap removed). |
+| `joystick-holder/` | `joystick_holder` | printed, on the rig | Breadboard holder for the component. |
+| `joystick-handle-cube/` | `joystick_handle_cube_11p5` | chosen 17 Oct, not yet printed | Narrow rounded-cube push object, 11.5 × 11.5 × 10 mm. |
+| `joystick-1d-axis-constrainer/` | `..._38x38x56_ledex_window` | not yet printed or fit-checked | Stepped hollow box that limits the joystick to one axis, window revision for the plunger link. |
+| `ledex-holder-adjustable/` | base, upright, carriage, `link_collar`, `link_bar`, `fit_test`, `make_ledex_holder.py` | not printed | Adjustable Ledex holder and plunger link (see its README). |
+| `ledex-195224-model/` | `ledex_body`, `ledex_plunger` | reference, not printed | Ledex body and plunger from the datasheet drawing. |
 
-CAD added 05 Sep 2026: an 89 mm joystick shaft plus two interchangeable tip-mounted handles.
+## Joystick component and holder
 
-- [Joystick shaft](3d-print/joystick/README.md)
-- [Bar handle](3d-print/joystick-handle-bar/README.md) — 38 mm bar
-- [Rounded-cube handle](3d-print/joystick-handle-cube/README.md) — current push object (20 mm wide;
-  a narrow 11.5 × 11.5 × 10 mm version is also available). Three holes set how close the front face sits
-  to the mouse and rest pad; the shaft goes in the front hole.
+- **Component:** round body 25.3 mm diameter, 11.53 mm tall; flange 29.75 mm diameter (z 11.53-13.09); stepped
+  dome up to z 18.28; stem to z 23.45; a 9.6 × 2.1 mm cross-bar at z 23.87-26.27; 4.3 mm stub to z 29.3. The
+  shaft's 5 mm × 2.7 mm bottom bore holds a small screw with its head glued in; the screw goes into the stub
+  and the shaft cone sits on the stub top, so the shaft base is 29.3 mm above the body bottom. The pivot is
+  inside the body and not modelled (the models assume mid-body, z 5.8, and test z 2-10).
+- **Holder:** base 86 × 31.8 × 5 mm with four 10 × 24 mm slots, four 5 × 5 mm corner posts (z 5-20.4, open
+  sides for the cable), top frame z 20.41-25.41 (31.82 mm square, 25.3 mm hole). The component's flange rests
+  on the frame, so the body bottom is 13.88 mm and the shaft base 40.5 mm above the breadboard. The push runs
+  along the 31.8 mm width; the Ledex stands on the breadboard on the mouse (home) side.
 
-The cube is meant to sit below the mouse in the natural forelimb workspace and present a
-push-biased surface that discourages grasping like the original pull handles.
+## Handles
 
-## 3D models
+- **Narrow cube (11.5 mm wide, chosen 17 Oct):** 11.5 × 11.5 × 10 mm, 3 mm corner radius, 2.5 mm top fillets,
+  three blind 3.2 mm holes 3.2 mm deep along the push axis (push face 2.05 / 5.75 / 9.45 mm from the shaft
+  axis). The shaft goes in the front hole (nearest the mouse) so the paw cannot touch cube and rest pad
+  together. Volume 1131 mm³ (effective mass 4.2 g). Force models unchanged from the 20 mm cube. Position on
+  the rig: front face 6 mm from the platform edge, 7 mm from the rest-pad edge.
+- **Original 20 mm cube** (used from the first mouse session, 16 Oct) is archived in
+  [`archive/joystick-handle-cube/`](../archive/joystick-handle-cube/).
+- **38 × 3 × 3.1 mm bar handle** (never fitted) is archived in [`archive/joystick-handle-bar/`](../archive/joystick-handle-bar/).
 
-- [Joystick shaft](3d-print/joystick/README.md) — 89 mm STEP source and STL export
-- [Joystick bar handle](3d-print/joystick-handle-bar/README.md) — 38 mm STEP source and STL export
-- [Joystick rounded-cube handle](3d-print/joystick-handle-cube/README.md) — STEP and STL for the 20 mm and the narrow 11.5 mm cube
-- [Joystick 1D-axis constrainer](3d-print/joystick-1d-axis-constrainer/README.md) — 38 × 38 × 56 mm STEP source and STL export
-- [Adjustable Ledex holder](3d-print/ledex-holder-adjustable/README.md) — slotted base, upright and carriage, gauges and plunger-link parts
+## 1D-axis constrainer (window revision)
 
-One printed joystick, handle and 1D-axis constrainer are fitted for bench testing. Further
-prints wait until 21 September 2026. Still to integrate: spring return to home, the
-steel-ring / washer target, and final volts→mm calibration after the below-mouse geometry
-is frozen.
+38 × 38 × 56 mm stepped hollow box. The round-topped arch in the home (mouse-side) wall (16 mm wide, top at
+48 mm above the part's bottom) is cut square up to the cavity ceiling (53 mm); width, top plate and 1D slot
+are unchanged. On the rig it spans world Z 15.41-71.41 on the holder frame, window Z 55.4-68.4. With the link
+at its recommended height (Ledex axis Z 60.7) the plunger passes ≥ 3.8 mm from the window and the 10 mm link
+pin ends stay 3 mm from the sides; the link can sit up to 20.3 mm above the shaft base. The original arched
+version is in [`archive/joystick-1d-axis-constrainer/`](../archive/joystick-1d-axis-constrainer/).
+
+## Ledex 195224-230 reference model
+
+Body and plunger of the STA 20 × 40 mm pull solenoid (60° plunger, no anti-rotation flat) from the datasheet
+drawing (page F34, `simulations/ledex_femm/datasheet/`), for clearance checks, figures and the rig explorer.
+Generated by `ledex-holder-adjustable/make_ledex_holder.py` from `simulations/ledex_femm/ledex_geometry.py`
+(`LEDEX`, `plunger_dims`). Frame: X along the axis from the body face (boss side, + toward the joystick); the
+plunger is drawn seated (energised).
+
+| | dimension (mm) | source |
+| --- | --- | --- |
+| case | Ø19.56 × 39.37 | drawing |
+| M14 × 1.5 boss | 9.52 long | drawing |
+| plunger | Ø7.82, 20.1 g | drawing |
+| tip beyond body face, seated | 23.81 | drawing |
+| tip slot | 2.5 ± 0.3 wide, 9.5 ± 0.3 deep | drawing |
+| cross hole | Ø2.5/2.6, 4.76 ± 0.30 from the tip | drawing |
+| plunger length | 59.7 (55.9 cylinder + 3.8 cone) | from the mass |
+| 60° cone | half-angle 37.5°, 1 mm flat at the apex | FEMM calibration |
+| mounting nut | M14 × 1.5, size not given | assumed 22 mm AF × 3.5 mm |
+
+Mesh masses match the datasheet (plunger 20.0 g vs 20.1 g). Internals (bobbin, coil, back stop) are not
+modelled; FEMM adds fitted internals and uses axisymmetric stand-ins for the slot and cross hole. Still to
+confirm with calipers: slot width, cross-hole diameter and distance from the tip, seated protrusion, plunger
+length and the nut size.

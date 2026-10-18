@@ -6,7 +6,7 @@ World frame (all models and the rig explorer): X along the push (+X away from th
 the breadboard top, origin under the joystick axis. The lever models (lever.py, plunger_link.py, rig_forces.py)
 use x = X and z = height above the shaft base (Z - SHAFT_BASE), with the pivot at z = -d_p.
 
-Measured from the CAD in mechanical/3d-print (joystick-holder, joystick-component, joystick, joystick-handle-cube,
+Measured from the CAD in mechanical (joystick-holder, TS-1D1S00A-1294_stripped, joystick, joystick-handle-cube,
 joystick-1d-axis-constrainer):
 - Holder: base 86 x 31.8 x 5 mm (long side along Y), corner posts, top frame z 20.41-25.41 with a 25.3 mm hole.
 - Component: body 25.3 mm dia x 11.53 mm drops through the hole, flange (29.75 mm) rests on the frame -> body
@@ -29,7 +29,7 @@ from ledex_geometry import LEDEX, plunger_dims  # noqa: F401  (re-exported for t
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(os.path.dirname(HERE))
-CAD = os.path.join(ROOT, "mechanical", "3d-print")
+CAD = os.path.join(ROOT, "mechanical")
 OUT_RES = os.path.join(HERE, "results", "rig")
 
 # ------------------------------------------------------------------ joystick holder and component
@@ -72,7 +72,7 @@ SLOT_FAR_X = SLOT[1] - SHAFT_R
 ARCH_HALF_W, ARCH_R = 8.0, 8.0
 ARCH_SPRING = CON_Z0 + 40.0                   # original part: straight sides end, semicircle centre (world Z)
 ARCH_BOTTOM = HOLDER_TOP                      # the holder frame fills the opening below this
-# Revision used here: the arch is cut square up to the cavity ceiling (make_ledex_window.py), same width.
+# Revision used here: the arch is cut square up to the cavity ceiling (window revision STEP/STL), same width.
 CON_WINDOW_FILE = "joystick_1d_axis_constrainer_38x38x56_ledex_window"
 WINDOW_TOP = CON_TOP[0]
 ARCH_TOP = WINDOW_TOP
@@ -170,7 +170,7 @@ def _swap(t, dx=0.0, dz=0.0):
 # name: (file under CAD, mapping to world at the vertical shaft, moves with the shaft)
 PARTS = {
     "holder": ("joystick-holder/joystick_holder.stl", lambda t: _swap(t), False),
-    "component": ("joystick-component/joystick_component.stl", lambda t: _swap(t, dz=COMP_Z0), False),
+    "component": ("TS-1D1S00A-1294_stripped/TS-1D1S00A-1294_stripped.stl", lambda t: _swap(t, dz=COMP_Z0), False),
     "constrainer": ("joystick-1d-axis-constrainer/" + CON_WINDOW_FILE + ".stl",
                     lambda t: _swap(t, dz=CON_Z0), False),
     "shaft": ("joystick/joystick_89mm.stl", lambda t: t + np.array([0.0, 0.0, SHAFT_BASE]), True),

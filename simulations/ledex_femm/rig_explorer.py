@@ -4,7 +4,7 @@
                              # figures/rig/side_view.png (section at Y = 0), figures/rig/assembly_3d.png
 
 The explorer embeds the measured CAD (joystick holder, component, constrainer, shaft, cube), the adjustable Ledex
-holder (mechanical/3d-print/ledex-holder-adjustable), the link parts and the force tables, and recomputes in the
+holder (mechanical/ledex-holder-adjustable), the link parts and the force tables, and recomputes in the
 browser: lever tilt about the pivot, washer gap and offset or plunger stroke, the magnet resistance at the cube,
 the centring spring, plunger friction, feasibility and a live design map. The browser model is a port of
 rig_forces.py / plunger_link.py; `main()` checks it against them with node (if installed) before writing.

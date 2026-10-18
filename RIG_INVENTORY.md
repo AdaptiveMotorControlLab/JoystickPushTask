@@ -460,8 +460,8 @@ add a small transistor/MOSFET driver if the tone is weak or the line is loaded.
 - [x] Ledex `195224-230` received 02/09/26; holder STEP model added 03/09/26
 - [x] Ordered 25/09/26: Hydraulik-Kompetenz PVA 1.6 0–10 V (CHF 260) as the Ledex coil driver. Not the 4–20 mA SKU. Bürkert Type 8605 / `316532` stays the ~2 December spare unless cancelled
 - [x] PVA driver installed (1 A fuse in the 12 V lead) and AO0 terminal 22 wired; coil current vs AO0 measured 11/10/26
-- [x] Adjustable Ledex holder (slotted base, upright, carriage), gauges and plunger-link parts generated 15/10/26 (`mechanical/3d-print/ledex-holder-adjustable/`); the washer target is rejected
-- [x] Ledex body and plunger modelled from the datasheet drawing (factory 2.5/2.6 mm cross hole 4.76 mm from the tip, nothing to drill); constrainer window revision for the link (`joystick-1d-axis-constrainer/make_ledex_window.py`)
+- [x] Adjustable Ledex holder (slotted base, upright, carriage), gauges and plunger-link parts generated 15/10/26 (`mechanical/ledex-holder-adjustable/`); the washer target is rejected
+- [x] Ledex body and plunger modelled from the datasheet drawing (factory 2.5/2.6 mm cross hole 4.76 mm from the tip, nothing to drill); constrainer window revision for the link (`joystick-1d-axis-constrainer/*_ledex_window.step/.stl`)
 - [ ] Caliper-check the plunger (slot width, cross hole, seated protrusion, length) and the M14 nut
 - [x] Holder revision: shaft seated on the component stub in the model, 14 mm link, simplified collar (M2 set screw), carriage on 4 × M3 with captive nuts reachable with the Ledex fitted, FDM fit allowances and `fit_test` part
 - [ ] Print `fit_test` and adjust the `FIT` allowances in `make_ledex_holder.py` if needed
@@ -653,9 +653,8 @@ volts-to-mm and force calibration.
 
 ### Joystick and handle CAD — 05/09/26
 
-- Imported STEP models: 89 mm [joystick shaft](mechanical/3d-print/joystick/README.md),
-  38 mm [bar handle](mechanical/3d-print/joystick-handle-bar/README.md), and
-  [rounded-cube handle](mechanical/3d-print/joystick-handle-cube/README.md).
+- Imported STEP models: 89 mm joystick shaft, 38 mm bar handle and
+  rounded-cube handle (see [`mechanical/README.md`](mechanical/README.md)).
 - Both handles attach to the shaft tip. The cube has three mounting holes so the front face can
   be moved closer to or farther from the mouse and rest pad; the same holes also change how the
   object's weight sits over the joystick.

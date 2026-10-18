@@ -134,7 +134,7 @@ saturation at 0.58 A, plus the calibration extrapolation (±40 %).
 ## Rig geometry (measured CAD, 15 Oct 2026)
 
 `rig_geometry.py` is the single source of the rig dimensions for every model here. It reads the
-measured joystick component and component holder (`mechanical/3d-print/joystick-component/`,
+measured joystick component and component holder (`mechanical/TS-1D1S00A-1294_stripped/`,
 `joystick-holder/`), the constrainer, shaft and cube STLs, places them in one world frame and writes
 `results/rig/stackup.csv`. World frame: X along the push (+X away from the mouse), Y lateral, Z up from
 the breadboard, origin under the joystick axis. The lever models use x = X and z = height above the
@@ -160,7 +160,7 @@ shaft base.
   the cube** (home side of the vertical, i.e. of the spring's neutral); its far end allows 36.0 mm. A
   15 mm push tilts the shaft 7.4°.
 - Constrainer: the model uses the window revision
-  (`mechanical/3d-print/joystick-1d-axis-constrainer/make_ledex_window.py`): the home-wall arch is cut
+  (`mechanical/joystick-1d-axis-constrainer/*_ledex_window.step`): the home-wall arch is cut
   square up to the cavity ceiling, same 16 mm width, so the plunger and the link pin have room.
 - Ledex placement limits: the plunger (+1 mm) passes through the window, so its axis must be at Z
   30.3-63.5; the M14 nut must stay 1 mm clear of the constrainer's outer wall (X −19), so the body face
@@ -218,14 +218,14 @@ the shaft: a rigid link (14 mm pin to pin) joins the plunger's pull end to a col
 shaft axis on the home (mouse) side (6 mm leaves room in the collar's fork for the link's rounded end). A forward push draws
 the plunger out of the coil and the coil pulls it back, so the resistance opposes the push.
 `plunger_link.py` models this on the measured geometry (`rig_geometry.py`); the parts are in
-`mechanical/3d-print/ledex-holder-adjustable/`.
+`mechanical/ledex-holder-adjustable/`.
 
 - Plunger pull: new FEMM run with no target (`femm_run.py plunger`, 0.5-13 mm stroke, nine currents),
   scaled at each stroke so that the 0.5734 A curve matches the datasheet 100 % duty curve (the FEMM model
   reads up to 1.9× high at long stroke). The same scale is used at all currents.
 - Kinematics: rigid shaft rotating about the pivot; the plunger pin stays on the Ledex axis. The handle
   force is the plunger pull × 0.354 (link height over the cube height above the pivot).
-- Plunger end (datasheet drawing F34, model in `mechanical/3d-print/ledex-195224-model/`): the pull end
+- Plunger end (datasheet drawing F34, model in `mechanical/ledex-195224-model/`): the pull end
   has a 2.5 × 9.5 mm slot across its diameter and a factory 2.5/2.6 mm cross hole through both cheeks
   4.76 mm from the tip; the link bar (1.8 × 5 mm) goes in the slot and the pin through that hole, so
   nothing is drilled. The slot is turned vertical (pin along Y).
@@ -318,8 +318,8 @@ Resistance at the cube (gf, pivot 23.5 mm; 19.3 / 27.3 mm: washers −7 / +6 %, 
 - The strongest feasible link layout on the design grid (face X −40.5, Z 62.0: link z 18.8, home
   stroke 1.45 mm) gives 80 gf at 10 V at neutral but falls to 22 gf at 10 mm; 3 mm keeps a margin from
   the 0.75 mm datasheet limit and a flatter curve.
-- Holder: `mechanical/3d-print/ledex-holder-adjustable/` (slotted base along X, lateral slots, long
-  vertical slots with a 1 mm scale, stroke and gap gauges, link collar and bar, fit test). Both layouts
+- Holder: `mechanical/ledex-holder-adjustable/` (slotted base along X, lateral slots, long
+  vertical slots with a 1 mm scale, link collar and bar, fit test). Both layouts
   clear the joystick holder, component and constrainer (link ≥ 16 mm, washers ≥ 4.3 mm). Moving link
   parts, home stop to 15 mm: link end to shaft 2.1 mm, pin, collar and plunger to the constrainer ≥ 3 mm,
   plunger tip to collar > 5 mm; the bar sits in the collar's fork and the plunger's tip slot with
@@ -337,7 +337,7 @@ Resistance at the cube (gf, pivot 23.5 mm; 19.3 / 27.3 mm: washers −7 / +6 %, 
   (Checkpoint 4, `calibration/README.md`).
 - One geometry for every model: `ledex_geometry.py` holds the body and plunger dimensions (plunger length
   59.7 mm from the mass, cone from the calibration) and feeds the reference CAD
-  (`mechanical/3d-print/ledex-195224-model/`), the rig model, FEMM and the 3D model.
+  (`mechanical/ledex-195224-model/`), the rig model, FEMM and the 3D model.
   - FEMM (axisymmetric) uses stand-ins: the slot as an axial hole of the same cross-section (r 2.43 mm)
     and the cross hole as an outer groove of the same width and volume (2.55 mm wide, down to r 3.45 mm).
   - The 3D model uses the real tip: slot and cross hole as drawn, slot vertical as on the rig (the
@@ -384,7 +384,7 @@ Resistance at the cube (gf, pivot 23.5 mm; 19.3 / 27.3 mm: washers −7 / +6 %, 
   0.5 mm: face X, axis Z, gap or home stroke, feasible, handle force at 10 V for push 0 and 10 mm),
   `summary.csv`, and `figures/rig/{options_force_vs_push,design_maps}.png`.
 - `rig_explorer.py`: `figures/rig/rig_explorer.html`, `side_view.png` (true section at Y = 0) and
-  `assembly_3d.png` (needs the holder STLs from `mechanical/3d-print/ledex-holder-adjustable/`; node
+  `assembly_3d.png` (needs the holder STLs from `mechanical/ledex-holder-adjustable/`; node
   for the self-check, optional).
 - `sweep3d.py`: resumable 3D sweeps (`grid`, `far` (gaps 6-10 mm), `stacks`, `stroke`, `band`, `axial`) written to
   `results/fea3d/force_sweep_3d.csv` (`set`, `n_washers`, `gap_mm`, `stroke_mm`, `current_A`, `force_g`; `set`
