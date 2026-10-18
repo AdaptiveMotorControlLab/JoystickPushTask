@@ -82,7 +82,7 @@ def browser_data(wf, tab):
              LINK_Z_MIN=rg.LINK_Z_MIN, LINK_Z_MAX=rg.LINK_Z_MAX, H_MIN=rf.H_RANGE[0], H_MAX=rf.H_RANGE[1],
              CONTACT_MIN=rf.CONTACT_MIN, S_MIN=rf.STROKE_RANGE[0], S_MAX=rf.STROKE_RANGE[1], MAX_PUSH=rf.MAX_PUSH,
              PIVOT=rg.PIVOT_DEPTH, PIVOT_MIN=PIVOT_RANGE[0], PIVOT_MAX=PIVOT_RANGE[1], g=pl.G,
-             PLUNGER_G=pl.PLUNGER_G, PIN_FRICTION_GF=pl.PIN_FRICTION_GF, U_SMOOTH=pl.U_SMOOTH)
+             PLUNGER_G=pl.PLUNGER_G, PIN_FRICTION_GF=pl.PIN_FRICTION_GF)
     a, v = np.array(sorted(COMMAND_V.items())).T
     gaps = np.round(np.arange(0.05, 25.0001, 0.05), 3)
     offs = np.round(np.arange(0.0, 30.0001, 0.25), 3)
@@ -93,12 +93,11 @@ def browser_data(wf, tab):
     plf = np.array([np.log(tab[c][1]) for c in cur])
     rec = {k: dict(H=round(r["H"], 3), face=round(r["face"], 3)) for k, r in rf.REC.items()}
     mu = pl.MU[1]
-    p_min = pl.min_preload_gf(mu, rg.PIVOT_DEPTH, pl.REC["z_a"], pl.REC["s0"])
     return dict(G=G, cmd=dict(volts=list(v), amps=list(a)),
                 washer=dict(gaps=list(gaps), offs=list(offs), lf=enc_f32(lf.ravel()),
                             cur=list(wf.cur), rat=list(wf.rat)),
                 plunger=dict(strokes=list(strokes), cur=cur, lf=enc_f32(plf.ravel())),
-                rec=rec, spring=dict(p0=round(float(p_min), 2), k=0.2, mu=mu))
+                rec=rec, spring=dict(k=0.2, mu=mu))
 
 
 # ---------------------------------------------------------------- browser physics (also run by node in the check)
@@ -183,7 +182,7 @@ function makePhys(D, dec){
                 `${lo.toFixed(2)}-${hi.toFixed(2)} mm (stop to ${G.MAX_PUSH} mm push)`]);
     }
     return out; }
-  const spring = (u, p0, k) => p0 * Math.tanh(u / G.U_SMOOTH) + k * u;
+  const spring = (u, p0, k) => k * u;
   return {rotate, tiltForPush, pushForTilt, stopPush, maxPush, current, washerPull, plungerPull, washers, link, state,
           checks, spring};
 }
@@ -272,7 +271,6 @@ button{font-size:12px}
 <label><input type="checkbox" id="imax"> Imax raised (0.58 A, ignores the command)</label>
 <div class="row"><span>pivot depth</span><input id="dp" type="range" step="0.1"><span id="dp_v"></span></div>
 <h3>Return spring and friction</h3>
-<div class="row"><span>preload P0 (gf)</span><input id="p0" type="range" min="0" max="25" step="0.1"><span id="p0_v"></span></div>
 <div class="row"><span>rate k (gf/mm)</span><input id="k" type="range" min="0" max="2" step="0.01"><span id="k_v"></span></div>
 <div class="row"><span>plunger mu</span><input id="mu" type="range" min="0.1" max="0.5" step="0.01"><span id="mu_v"></span></div>
 <h3>Readout</h3><div id="read"></div>
@@ -281,7 +279,7 @@ button{font-size:12px}
 <label><input type="checkbox" id="cut"> section at Y = 0 (hide the -Y half)</label><br>
 <div id="parts"></div>
 <p><small>Forces: washers from the 3D model (offset sweep, +-40 %), plunger from FEMM anchored to the datasheet
-(+-15-20 %); current held constant. Spring as felt at the cube: P0 toward neutral on each side plus k per mm.
+(+-15-20 %); current held constant. Spring as felt at the cube: k per mm from neutral.
 See simulations/ledex_femm/README.md.</small></p>
 </div>
 <div id="view"><div id="hint">drag: orbit, scroll: zoom, right-drag: pan</div></div>
@@ -351,11 +349,11 @@ addEventListener('resize', resize); resize();
 (function loop(){ requestAnimationFrame(loop); ren.render(scene, cam); })();
 
 // ---------------- controls
-const ctrl = {face: 2, H: 2, push: 2, volts: 1, dp: 1, p0: 1, k: 2, mu: 2};
+const ctrl = {face: 2, H: 2, push: 2, volts: 1, dp: 1, k: 2, mu: 2};
 function opt(){ return document.querySelector('input[name=opt]:checked').value; }
 function setRec(){ const r = D.rec[opt()]; $('face').value = r.face; $('H').value = r.H; }
 $('dp').min = G.PIVOT_MIN; $('dp').max = G.PIVOT_MAX; $('dp').value = G.PIVOT;
-$('p0').value = D.spring.p0; $('k').value = D.spring.k; $('mu').value = D.spring.mu;
+$('k').value = D.spring.k; $('mu').value = D.spring.mu;
 setRec();
 function amps(){ return $('imax').checked ? 0.58 : P.current(+$('volts').value); }
 let pending = false;
@@ -369,7 +367,7 @@ function draw(){
   const o = opt(), face = +$('face').value, H = +$('H').value, Y = +$('Y').value, dp = +$('dp').value;
   const us = P.stopPush(dp), um = P.maxPush(dp);
   $('push').min = us.toFixed(2); $('push').max = um.toFixed(2);
-  const u = Math.min(Math.max(+$('push').value, us), um), a = amps(), mu = +$('mu').value, p0 = +$('p0').value, k = +$('k').value;
+  const u = Math.min(Math.max(+$('push').value, us), um), a = amps(), mu = +$('mu').value, p0 = 0, k = +$('k').value;
   for (const id of Object.keys(ctrl)) $(id + '_v').textContent = fmt($(id).value, ctrl[id]);
   $('push_v').textContent = fmt(u, 2);
   ren.clippingPlanes = $('cut').checked ? [cut] : [];

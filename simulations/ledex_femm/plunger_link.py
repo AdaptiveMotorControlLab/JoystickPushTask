@@ -13,11 +13,11 @@ z up the shaft from the shaft base, pivot at z = -d_p):
 - Push u is measured at the cube from the vertical shaft (the spring's neutral). s0 is the stroke at u = 0 (never
   0: seated, the plunger holds 12.8 N). The constrainer slot's home end stops the shaft at u_stop (-1.1 mm with the
   current constrainer, rig_geometry.stop_push): the magnet pulls the handle back onto it whenever its pull at home
-  beats the spring's centring preload.
+  beats the plunger friction (the spring has no preload: its force is zero at neutral).
 Plunger pull: FEMM (results/femm/femm_plunger_force_vs_stroke.csv, no target, from `femm_run.py plunger`) scaled
 at each stroke by datasheet / FEMM at 0.5734 A (the 100 % duty curve); FEMM reads up to 1.9x high at long stroke.
-Spring: centring spring as felt at the cube (what a scale pressed by the cube reads): preload P0 on each side of
-neutral plus k per mm. Friction: plunger weight on the nylon bearing (mu) plus a pin allowance; the thumbstick's
+Spring: centring spring as felt at the cube (what a scale pressed by the cube reads): zero at neutral plus k per mm
+(no preload; strength set by the spring fitted). Friction: plunger weight on the nylon bearing (mu) plus a pin allowance; the thumbstick's
 own friction is part of the measured spring curve.
 """
 import csv
@@ -45,9 +45,8 @@ ATTACH_Z = (rg.LINK_Z_MIN, round((rg.LINK_Z_MIN + rg.LINK_Z_MAX) / 2, 1), round(
 HOME_STROKES = (1.5, 2.0, 3.0, 4.0, 5.0)
 REC = dict(z_a=rg.LINK_Z_REC, s0=3.0, d_p=PIVOT_DEPTH)
 PLA = 1.24e-3                    # g / mm^3 (solid print; scale by the infill if printed hollow)
-SAFETY = 2.0                     # spring preload / friction at home
 RESTITUTION = 0.3                # bounce at the home stop (PLA on PLA)
-U_SMOOTH = 0.02                  # mm: the centring preload switches sign over this width around neutral
+K_SPRINGS = (0.2, 0.5, 10.0 / 15)   # spring rates tried, gf/mm at the cube
 TABLE_PUSHES = (0.0, 1.0, 2.0, 5.0, 10.0, 15.0)
 PUSH = np.linspace(0, 15, 151)
 
@@ -139,18 +138,17 @@ def effective_mass_g(d_p, z_a, s0, plunger=True):
 
 
 # ---------------------------------------------------------------- spring and return
-def spring_gf(push, p0, k):
-    """Centring spring at the cube: preload p0 toward neutral on either side, plus k per mm."""
-    u = np.asarray(push, float)
-    return p0 * np.tanh(u / U_SMOOTH) + k * u
+def spring_gf(push, k):
+    """Centring spring at the cube: no preload, k per mm from neutral."""
+    return k * np.asarray(push, float)
 
 
-def min_preload_gf(mu, d_p, z_a, s0):
-    k = kinematics(PUSH, d_p, z_a, s0)
-    return SAFETY * np.max(friction_plunger_N(mu) * k["ratio"]) / G * 1e3
+def friction_handle_gf(mu, d_p, z_a, s0):
+    """Plunger friction at the cube handle (gf) at home."""
+    return friction_plunger_N(mu) * kinematics(0.0, d_p, z_a, s0)["ratio"][0] / G * 1e3
 
 
-def home_with_magnet(tab, a, p0, k, mu, d_p, z_a, s0, home_stop=None):
+def home_with_magnet(tab, a, mu, d_p, z_a, s0, home_stop=None):
     """Where the handle sits at home with current a on: neutral (0) or pulled back onto the stop."""
     u_stop = stop_push(d_p) if home_stop is None else home_stop
     if u_stop >= 0:
@@ -158,10 +156,10 @@ def home_with_magnet(tab, a, p0, k, mu, d_p, z_a, s0, home_stop=None):
     kin = kinematics(0.0, d_p, z_a, s0)
     mag = plunger_force(tab, a, kin["stroke_mm"])[0] * kin["ratio"][0] / G * 1e3
     fric = friction_plunger_N(mu) * kin["ratio"][0] / G * 1e3
-    return u_stop if mag > p0 + fric else 0.0
+    return u_stop if mag > fric else 0.0
 
 
-def release(p0, k_spring, mu, d_p, z_a, s0, u0=15.0, a=0.0, tab=None, home_stop=None, t_end=0.6, dt=2e-6):
+def release(k_spring, mu, d_p, z_a, s0, u0=15.0, a=0.0, tab=None, home_stop=None, t_end=0.6, dt=2e-6):
     """Let go of the cube at push u0: Coulomb friction, centring spring, optional magnet, bounce on the home stop.
 
     Returns (t, u, t_home, rest): t_home = first time the handle is back at neutral, rest = final push (mm)."""
@@ -175,7 +173,7 @@ def release(p0, k_spring, mu, d_p, z_a, s0, u0=15.0, a=0.0, tab=None, home_stop=
     t_home = None
     while t < t_end:
         um = u * 1e3
-        drive = -(spring_gf(um, p0, k_spring) * 1e-3 * G + np.interp(um, uu, mag))
+        drive = -(spring_gf(um, k_spring) * 1e-3 * G + np.interp(um, uu, mag))
         f = np.interp(um, uu, fric)
         if v == 0.0 and abs(drive) <= f:
             break                                                    # stuck by friction
@@ -224,7 +222,7 @@ def write_tables(tab):
     with open(path, "w", newline="") as f:
         w = csv.writer(f)
         w.writerow(["pivot_depth_mm", "attach_z_mm", "home_stroke_mm", "mu", "friction_at_plunger_gf",
-                    "friction_at_handle_gf", "min_preload_gf", "effective_mass_g", "return_time_ms",
+                    "friction_at_handle_gf", "spring_rate_gf_per_mm", "effective_mass_g", "return_time_ms",
                     "rest_push_mm", "home_stop_mm", "home_with_10V_mm"])
         for d_p in PIVOT_DEPTHS:
             for z_a in ATTACH_Z:
@@ -232,13 +230,13 @@ def write_tables(tab):
                 for mu in MU:
                     kin = kinematics(0.0, d_p, z_a, s0)
                     fpl = friction_plunger_N(mu) / G * 1e3
-                    p0 = min_preload_gf(mu, d_p, z_a, s0)
-                    _, _, th, rest = release(p0, 0.2, mu, d_p, z_a, s0)
-                    w.writerow(["%g" % d_p, "%g" % z_a, "%g" % s0, "%g" % mu, "%.2f" % fpl,
-                                "%.2f" % (fpl * kin["ratio"][0]), "%.2f" % p0,
-                                "%.2f" % effective_mass_g(d_p, z_a, s0),
-                                "%.0f" % (th * 1e3) if th else "", "%.2f" % rest, "%.2f" % stop_push(d_p),
-                                "%.2f" % home_with_magnet(tab, 0.310, p0, 0.2, mu, d_p, z_a, s0)])
+                    for k in K_SPRINGS:
+                        _, _, th, rest = release(k, mu, d_p, z_a, s0)
+                        w.writerow(["%g" % d_p, "%g" % z_a, "%g" % s0, "%g" % mu, "%.2f" % fpl,
+                                    "%.2f" % (fpl * kin["ratio"][0]), "%.3f" % k,
+                                    "%.2f" % effective_mass_g(d_p, z_a, s0),
+                                    "%.0f" % (th * 1e3) if th else "", "%.2f" % rest, "%.2f" % stop_push(d_p),
+                                    "%.2f" % home_with_magnet(tab, 0.310, mu, d_p, z_a, s0)])
     print("wrote", os.path.relpath(path, HERE))
 
 
@@ -267,15 +265,15 @@ def plot_handle_force(tab):
     mu = MU[1]
     kin = kinematics(PUSH, d_p, z_a, s0)
     fric = friction_plunger_N(mu) * kin["ratio"] / G * 1e3
-    p_min = min_preload_gf(mu, d_p, z_a, s0)
-    springs = (("weakest safe spring: {:.1f} gf preload + 0.2 gf/mm".format(p_min), p_min, 0.2, "-"),
-               ("Mathis 2017 range: 10 gf at home -> 20 gf at 15 mm", 10.0, 10.0 / 15, "--"))
-    for lab, p0, k, ls in springs:
-        bx.plot(PUSH, spring_gf(PUSH, p0, k) + fric, ls, color="k", label="0 V, " + lab)
-    base = spring_gf(PUSH, p_min, 0.2) + fric
+    springs = (("spring {:.1f} gf/mm, no preload".format(K_SPRINGS[0]), K_SPRINGS[0], "-"),
+               ("Mathis 2017 range: 10 gf at home -> 20 gf at 15 mm", None, "--"))
+    for lab, k, ls in springs:
+        sp = 10.0 + 10.0 / 15 * PUSH if k is None else spring_gf(PUSH, k)
+        bx.plot(PUSH, sp + fric, ls, color="k", label="0 V, " + lab)
+    base = spring_gf(PUSH, K_SPRINGS[0]) + fric
     for (a, name), c in list(zip(COMMANDS, colors))[1:]:
         bx.plot(PUSH, base + handle_curves(tab, a, d_p, z_a, s0), color=c,
-                label="{} + weakest safe spring".format(name.split(" (")[0]))
+                label="{} + spring {:.1f} gf/mm".format(name.split(" (")[0], K_SPRINGS[0]))
     bx.set_ylabel("total push force at the cube (g-force)")
     bx.set_title("What the mouse pushes against (spring + friction mu {:g} + magnet)".format(mu))
     bx.set_yscale("log")
@@ -313,26 +311,24 @@ def plot_spring_return(tab):
     s0, d_p = REC["s0"], REC["d_p"]
     fig, (ax, bx) = plt.subplots(1, 2, figsize=(13, 4.6))
     mus = np.linspace(0.1, 0.5, 41)
-    for z_a, c in zip(ATTACH_Z, ("tab:blue", "tab:orange", "tab:green")):
-        ax.plot(mus, [min_preload_gf(m, d_p, z_a, s0) for m in mus], color=c,
-                label="link at shaft z {:g} mm".format(z_a))
+    z_a, mu = REC["z_a"], MU[1]
+    for k, c in zip(K_SPRINGS, ("tab:blue", "tab:orange", "tab:green")):
+        ax.plot(mus, [release(k, m, d_p, z_a, s0, t_end=0.3)[3] for m in mus], color=c,
+                label="spring {:.2f} gf/mm".format(k))
     ax.axvspan(MU[0], MU[-1], color="grey", alpha=0.12, lw=0)
     ax.set_xlabel("friction coefficient, plunger in its nylon bearing")
-    ax.set_ylabel("weakest centring preload, at the cube (g-force)")
-    ax.set_title("Weakest spring that still returns home (= {:g} x friction)".format(SAFETY))
+    ax.set_ylabel("where the handle rests after release from 15 mm (mm)")
+    ax.set_title("Return to home with no preload: friction leaves a dead band")
     ax.grid(alpha=0.3)
     ax.legend(fontsize=8)
-    z_a, mu = REC["z_a"], MU[1]
-    p_min = min_preload_gf(mu, d_p, z_a, s0)
     u_stop = stop_push(d_p)
-    cases = (("weakest safe spring {:.1f} gf + 0.2 gf/mm".format(p_min), p_min, 0.2, 0.0, None, "k", "-"),
-             ("same spring, preload halved", p_min / 2, 0.2, 0.0, None, "tab:red", "-"),
-             ("no preload, 0.5 gf/mm only", 0.0, 0.5, 0.0, None, "tab:purple", "-"),
-             ("Mathis-like 10 gf + 0.67 gf/mm", 10.0, 10.0 / 15, 0.0, None, "tab:blue", "--"),
-             ("weakest spring with 10 V on", p_min, 0.2, 0.310, None, "tab:green", "-."),
-             ("10 V on, stop moved to neutral", p_min, 0.2, 0.310, 0.0, "tab:olive", ":"))
-    for lab, p0, k, a, hs, c, ls in cases:
-        t, u, th, rest = release(p0, k, mu, d_p, z_a, s0, a=a, tab=tab, home_stop=hs)
+    cases = (("spring {:.2f} gf/mm".format(K_SPRINGS[0]), K_SPRINGS[0], 0.0, None, "k", "-"),
+             ("spring {:.2f} gf/mm".format(K_SPRINGS[1]), K_SPRINGS[1], 0.0, None, "tab:purple", "-"),
+             ("Mathis-like slope {:.2f} gf/mm".format(K_SPRINGS[2]), K_SPRINGS[2], 0.0, None, "tab:blue", "--"),
+             ("spring {:.2f} gf/mm with 10 V on".format(K_SPRINGS[1]), K_SPRINGS[1], 0.310, None, "tab:green", "-."),
+             ("10 V on, stop moved to neutral", K_SPRINGS[1], 0.310, 0.0, "tab:olive", ":"))
+    for lab, k, a, hs, c, ls in cases:
+        t, u, th, rest = release(k, mu, d_p, z_a, s0, a=a, tab=tab, home_stop=hs)
         tag = "home in {:.0f} ms".format(th * 1e3) if th else "never reaches home"
         tag += ", rests at {:+.2f} mm".format(rest)
         bx.plot(t * 1e3, u, ls, color=c, label="{} ({})".format(lab, tag))
@@ -363,8 +359,7 @@ def main():
     print("link z", z_a, "stroke", np.round(k["stroke_mm"], 2), "ratio", np.round(k["ratio"], 3),
           "link deg", np.round(k["link_deg"], 2), "home stop", round(stop_push(d_p), 2))
     for mu in MU:
-        print("mu", mu, "friction at handle %.2f gf, weakest preload %.2f gf" % (
-            friction_plunger_N(mu) * k["ratio"][0] / G * 1e3, min_preload_gf(mu, d_p, z_a, s0)))
+        print("mu", mu, "friction at handle %.2f gf" % friction_handle_gf(mu, d_p, z_a, s0))
     print("effective mass at the cube %.2f g (inertia %.0f g mm^2)" % (effective_mass_g(d_p, z_a, s0),
                                                                       inertia_about_pivot(d_p)))
 

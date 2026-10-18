@@ -6,7 +6,8 @@ body{margin:0;font-family:system-ui,sans-serif;font-size:13px;background:#f4f4f4
 #ui{overflow-y:auto;padding:10px 14px;background:#fff;border-right:1px solid #ccc}
 #view{position:relative}
 #plots{overflow-y:auto;background:#fff;border-left:1px solid #ccc}
-.row{display:grid;grid-template-columns:118px 1fr 66px;align-items:center;margin:3px 0}
+.row{display:grid;grid-template-columns:118px 1fr 56px;column-gap:10px;align-items:center;margin:3px 0}
+.row>span:last-child{text-align:right;font-variant-numeric:tabular-nums}
 .row input[type=range]{width:100%}
 h3{margin:12px 0 4px;font-size:13px;border-bottom:1px solid #ddd}
 .ok{color:#1a7f37}.bad{color:#c62828;font-weight:600}
@@ -22,7 +23,7 @@ button{font-size:12px}
 "three/addons/":"https://unpkg.com/three@0.160.0/examples/jsm/"}}</script>
 </head><body>
 <div id="ui">
-<b>JoystickPushTask rig explorer</b><br><small>measured holder, component and constrainer CAD; pivot 23.5 mm below the shaft base (19.3-27.3 tested); home stop -1.15 mm at the cube</small>
+<b>JoystickPushTask rig explorer</b>
 <h3>Magnet option</h3>
 <label><input type="radio" name="opt" value="link" checked> plunger linked to the shaft</label><br>
 <label><input type="radio" name="opt" value="washers"> washer target on the shaft</label><br>
@@ -37,7 +38,6 @@ button{font-size:12px}
 <label><input type="checkbox" id="imax"> Imax raised (0.58 A, ignores the command)</label>
 <div class="row"><span>pivot depth</span><input id="dp" type="range" step="0.1"><span id="dp_v"></span></div>
 <h3>Return spring and friction</h3>
-<div class="row"><span>preload P0 (gf)</span><input id="p0" type="range" min="0" max="25" step="0.1"><span id="p0_v"></span></div>
 <div class="row"><span>rate k (gf/mm)</span><input id="k" type="range" min="0" max="2" step="0.01"><span id="k_v"></span></div>
 <div class="row"><span>plunger mu</span><input id="mu" type="range" min="0.1" max="0.5" step="0.01"><span id="mu_v"></span></div>
 <h3>Readout</h3><div id="read"></div>
@@ -46,7 +46,7 @@ button{font-size:12px}
 <label><input type="checkbox" id="cut"> section at Y = 0 (hide the -Y half)</label><br>
 <div id="parts"></div>
 <p><small>Forces: washers from the 3D model (offset sweep, +-40 %), plunger from FEMM anchored to the datasheet
-(+-15-20 %); current held constant. Spring as felt at the cube: P0 toward neutral on each side plus k per mm.
+(+-15-20 %); current held constant. Spring as felt at the cube: k per mm from neutral.
 See simulations/ledex_femm/README.md.</small></p>
 </div>
 <div id="view"><div id="hint">drag: orbit, scroll: zoom, right-drag: pan</div></div>
@@ -202,11 +202,11 @@ addEventListener('resize', resize); resize();
 (function loop(){ requestAnimationFrame(loop); ren.render(scene, cam); })();
 
 // ---------------- controls
-const ctrl = {face: 2, H: 2, push: 2, volts: 1, dp: 1, p0: 1, k: 2, mu: 2};
+const ctrl = {face: 2, H: 2, push: 2, volts: 1, dp: 1, k: 2, mu: 2};
 function opt(){ return document.querySelector('input[name=opt]:checked').value; }
 function setRec(){ const r = D.rec[opt()]; $('face').value = r.face; $('H').value = r.H; }
 $('dp').min = G.PIVOT_MIN; $('dp').max = G.PIVOT_MAX; $('dp').value = G.PIVOT;
-$('p0').value = D.spring.p0; $('k').value = D.spring.k; $('mu').value = D.spring.mu;
+$('k').value = D.spring.k; $('mu').value = D.spring.mu;
 setRec();
 function amps(){ return $('imax').checked ? 0.58 : P.current(+$('volts').value); }
 let pending = false;
@@ -220,7 +220,7 @@ function draw(){
   const o = opt(), face = +$('face').value, H = +$('H').value, Y = +$('Y').value, dp = +$('dp').value;
   const us = P.stopPush(dp), um = P.maxPush(dp);
   $('push').min = us.toFixed(2); $('push').max = um.toFixed(2);
-  const u = Math.min(Math.max(+$('push').value, us), um), a = amps(), mu = +$('mu').value, p0 = +$('p0').value, k = +$('k').value;
+  const u = Math.min(Math.max(+$('push').value, us), um), a = amps(), mu = +$('mu').value, p0 = 0, k = +$('k').value;
   for (const id of Object.keys(ctrl)) $(id + '_v').textContent = fmt($(id).value, ctrl[id]);
   $('push_v').textContent = fmt(u, 2);
   ren.clippingPlanes = $('cut').checked ? [cut] : [];

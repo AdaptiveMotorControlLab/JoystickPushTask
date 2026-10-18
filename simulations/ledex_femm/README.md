@@ -172,7 +172,7 @@ shaft base.
 
 **Rig explorer:** `figures/rig/rig_explorer.html` (open in a browser; needs internet for three.js and
 Plotly). All parts in 3D, sliders for the option, Ledex distance, height and lateral position, push,
-AO0 command or raised Imax, pivot depth, spring preload and rate and plunger friction; live readouts
+AO0 command or raised Imax, pivot depth, spring rate and plunger friction; live readouts
 (gap or stroke, offset, pull, handle force, spring, friction, push needed to hold, whether the magnet
 pulls the handle onto the home stop), feasibility checks, force-vs-push and force-vs-command plots and a
 live design map. Its force model is a JavaScript port that `rig_explorer.py` checks against
@@ -252,30 +252,28 @@ the plunger out of the coil and the coil pulls it back, so the resistance oppose
   (`design_space.png`, 10 V, link z 17.5: s0 1.5 mm 76 → 15 gf over 15 mm, 3 mm 40 → 11, 5 mm 22 → 8.4).
   The deeper measured pivot and the higher link raise the forces by ~40 % over the 12 Oct estimate.
 - **Home stop.** The constrainer slot's home end stops the shaft 1.15 mm (at the cube) on the home side of
-  the vertical, the spring's neutral. Whenever the magnet's pull at home beats the spring preload plus
-  friction (at 10 V: 40 gf against ~5-7 gf) it pulls the handle back onto that stop, so the home position
+  the vertical, the spring's neutral. Whenever the magnet's pull at home beats the plunger
+  friction (at 10 V: 40 gf against ~1-3 gf) it pulls the handle back onto that stop, so the home position
   moves by 1.15 mm (~0.06 V on `ai1`) when the magnet is on. Fix before relying on it: move the stop to the
   neutral or just past it (slot end at Y −1.5 instead of −2, or a 0.5 mm shim at the slot end), or set
   the home window and record the magnet state per trial. `spring_return.png` shows both cases.
-- Spring (handle-equivalent force at the cube, as a scale pressed by the cube reads it; P0 toward
-  neutral on each side plus k × push). Friction is the plunger weight (20.1 g) on its nylon bearing × mu
-  (0.15-0.4) plus 0.5 gf for the pins: 1.2 / 2.3 / 3.0 gf at the handle for mu 0.15 / 0.3 / 0.4. The
-  weakest spring that still returns home reliably has 2 × that at home: **~2.5-6.1 gf preload (4.7 gf
-  for mu 0.3)**; 6.9 gf covers every pivot, link height and home stroke up to mu 0.4
-  (`spring_requirement.csv`). The
-  thumbstick's own friction is part of the measured spring curve.
-- Return after release from 15 mm (`spring_return.png`; effective mass at the cube 4.2 g from the
-  printed shaft and narrow 11.5 mm cube, solid PLA, plus the plunger): weakest safe spring (4.7 gf + 0.2 gf/mm)
-  reaches neutral in ~52 ms, a Mathis-like spring (10 gf at home, 20 gf at 15 mm) in ~28 ms; with 10 V on the
-  magnet speeds the return (~27 ms) and then holds the handle on the stop. Without preload the handle
-  stops wherever friction catches it after the bounce, so preload matters more than stiffness.
+- Spring (handle-equivalent force at the cube, as a scale pressed by the cube reads it): the fitted spring
+  has no preload, so it is k × push (zero at neutral); its strength k is what can be changed. Friction is the
+  plunger weight (20.1 g) on its nylon bearing × mu (0.15-0.4) plus 0.5 gf for the pins: 1.2 / 2.3 / 3.0 gf at
+  the handle for mu 0.15 / 0.3 / 0.4. The thumbstick's own friction is part of the measured spring curve.
+- Return after release from 15 mm (`spring_return.png`, `spring_requirement.csv`; effective mass at the cube
+  4.2 g, solid PLA, plus the plunger). Friction leaves a dead band around neutral where k × push < friction,
+  so the handle stops short of home when k is low: at mu 0.3, 0.20 gf/mm stops at +8.4 mm (never home),
+  0.50 gf/mm reaches neutral in ~60 ms, 0.67 gf/mm (Mathis-like slope) in ~48 ms. With 10 V on, the magnet
+  speeds the return (~27 ms) and holds the handle on the stop. The viewer's default k of 0.2 gf/mm is
+  therefore too weak to return the handle with the plunger linked; measure the real k (bench check 1).
 - Assumptions to confirm on the rig: pivot depth, collar pin 6 mm off axis, the plunger's cross hole at
   4.76 mm from the tip (datasheet ± 0.30), rigid link with free pins, no residual magnetism
   at 0 V, coil current constant during a push. Not modelled: the link's weight and the extra friction of
   the side load (the link stays within 1.8°, so the side load is < 4 % of the pull).
 - Bench checks before relying on these numbers:
   1. Spring curve: press a gram scale with the cube at 0 / 5 / 10 / 15 mm, with and without the plunger
-     linked, Ledex off. The difference is the friction; the preload at home should be ≥ 2× it.
+     linked, Ledex off. The difference is the friction; fit k from the slope; k × 15 mm must clearly exceed it.
   2. Release test: push to 15 mm and let go, 10 times; `ai1` must return to the home voltage within
      ±0.035 V every time (with and without the plunger).
   3. Hard stop: with 10 V on and the handle at home, the plunger must not seat (the stop holds the
@@ -376,7 +374,7 @@ Resistance at the cube (gf, pivot 23.5 mm; 19.3 / 27.3 mm: washers −7 / +6 %, 
 - `lever.py`: joystick lever (see above; numpy + matplotlib, reads the 3D CSVs).
 - `plunger_link.py`: plunger-link model (see above; numpy + matplotlib). Writes
   `results/plunger_link/plunger_link_table.csv` (pivot, link height, home stroke, current, push → tilt,
-  stroke, plunger pull, handle force) and `spring_requirement.csv` (friction, weakest preload, effective
+  stroke, plunger pull, handle force) and `spring_requirement.csv` (friction, spring rate, effective
   mass, return time, home stop, where the handle rests with 10 V on), and
   `figures/plunger_link/{handle_force_vs_push,design_space,spring_return}.png`.
 - `rig_forces.py`: washer target vs plunger link over the Ledex height and distance (numpy, scipy,
