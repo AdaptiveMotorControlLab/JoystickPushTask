@@ -371,9 +371,12 @@ function setRec(){
   setLabels(o);
   $('face').value = faceToUi(o, r.face);
   $('H').value = hToUi(r.H, dp);
+  lastDp = +$('dp').value;
 }
+let lastDp = null;      // the pivot moves the scale of the magnet height, never the magnet itself
 $('dp').min = dpToUi(G.PIVOT_MAX).toFixed(2); $('dp').max = dpToUi(G.PIVOT_MIN).toFixed(2); $('dp').value = dpToUi(G.PIVOT).toFixed(2);
 $('k').value = D.spring.k; $('mu').value = D.spring.mu;
+let Hw = D.rec.link.H;     // magnet axis height above the breadboard (world), the true state
 setRec();
 function amps(){ return $('imax').checked ? 0.58 : P.current(+$('volts').value); }
 let pending = false;
@@ -408,8 +411,13 @@ function draw(){
   const dpUi = Math.min(Math.max(+$('dp').value, +$('dp').min), +$('dp').max);
   $('dp').value = dpUi;
   const dp = uiToDp(dpUi);
+  const hel = $('H');
+  if (lastDp !== null && dpUi !== lastDp) hel.value = hToUi(Hw, dp);      // pivot moved: same magnet, new reading
+  lastDp = dpUi;
+  hel.dataset.min = hToUi(30, dp).toFixed(2); hel.dataset.max = hToUi(90, dp).toFixed(2);
   limitInputs(o, dp);
-  const face = uiToFace(o, +$('face').value), H = uiToH(+$('H').value, dp), Y = +$('Y').value;
+  Hw = uiToH(+hel.value, dp);
+  const face = uiToFace(o, +$('face').value), H = Hw, Y = +$('Y').value;
   const us = P.stopPush(dp), um = P.maxPush(dp);
   $('push').min = us.toFixed(2); $('push').max = um.toFixed(2);
   const u = Math.min(Math.max(+$('push').value, us), um), a = amps(), mu = +$('mu').value, p0 = 0, k = +$('k').value;
