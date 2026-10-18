@@ -331,13 +331,13 @@ function plots(o, H, face, a, dp, mu, p0, k, u, us, um){
     Fo.push(Math.max(P.state(other(o), x, r.H, r.face, a, dp, mu).F, 1e-3) * K);
     const sp = P.spring(x, p0, k); S.push(sp * K); T.push((s.F + sp + (o === 'link' ? s.fric : 0)) * K); }
   const lay = (t, x, y, extra) => Object.assign({title: {text: t, font: {size: 12}}, margin: {l: 55, r: 10, t: 34, b: 42},
-    xaxis: {title: x}, yaxis: {title: y}, legend: {font: {size: 10}, orientation: 'h', x: 0, y: -0.22, yanchor: 'top'},
+    xaxis: {title: x}, yaxis: {title: y}, legend: {font: {size: 10}, orientation: 'v', x: 0, y: -0.22, yanchor: 'top'},
     showlegend: true}, extra || {});
   Plotly.react('pf', [
-    {x: us_, y: F, name: 'magnet, ' + name(o), line: {color: '#c62828'}},
-    {x: us_, y: Fo, name: 'magnet, ' + name(other(o)) + ' (recommended layout)', line: {color: '#999', dash: 'dash'}},
-    {x: us_, y: S, name: 'spring', line: {color: '#1565c0'}},
-    {x: us_, y: T, name: 'push to hold (magnet + spring + friction)', line: {color: '#222', width: 1}},
+    {x: us_, y: F, name: 'Magnet pull, ' + name(o) + ' (as set by the sliders)', line: {color: '#c62828'}},
+    {x: us_, y: Fo, name: 'Magnet pull, ' + name(other(o)) + ' (for comparison, at its recommended position)', line: {color: '#999', dash: 'dash'}},
+    {x: us_, y: S, name: 'Return spring force', line: {color: '#1565c0'}},
+    {x: us_, y: T, name: 'Push needed to hold (magnet + spring + friction)', line: {color: '#222', width: 1}},
     {x: [u, u], y: [0, 150 * K], name: 'push', mode: 'lines', line: {color: '#2e7d32', dash: 'dot'}, showlegend: false}],
     lay('Force at the cube vs push', 'push at the cube (mm)', fu,
         {yaxis: {title: fu, rangemode: 'tozero'}}), {displayModeBar: false});
