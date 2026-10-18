@@ -80,7 +80,7 @@ def browser_data(wf, tab):
              SLOT_FAR_X=rg.SLOT_FAR_X, SLOT_Z=rg.SLOT_Z, ARCH_HALF_W=rg.ARCH_HALF_W, ARCH_BOTTOM=rg.ARCH_BOTTOM,
              WINDOW_TOP=rg.WINDOW_TOP, CON_OUTER=rg.CON_OUTER, CLEARANCE=rg.CLEARANCE,
              LINK_Z_MIN=rg.LINK_Z_MIN, LINK_Z_MAX=rg.LINK_Z_MAX, H_MIN=rf.H_RANGE[0], H_MAX=rf.H_RANGE[1],
-             CONTACT_MIN=rf.CONTACT_MIN, S_MIN=rf.STROKE_RANGE[0], S_MAX=rf.STROKE_RANGE[1], MAX_PUSH=rf.MAX_PUSH,
+             CONTACT_MIN=rf.CONTACT_MIN, S_MIN=rf.STROKE_RANGE[0], S_MAX=rf.STROKE_RANGE[1], S_RET=round(59.7 - LX["protrude"] - 15.0, 2), MAX_PUSH=rf.MAX_PUSH,
              PIVOT=rg.PIVOT_DEPTH, PIVOT_MIN=PIVOT_RANGE[0], PIVOT_MAX=PIVOT_RANGE[1], g=pl.G,
              PLUNGER_G=pl.PLUNGER_G, PIN_FRICTION_GF=pl.PIN_FRICTION_GF)
     a, v = np.array(sorted(COMMAND_V.items())).T
@@ -137,10 +137,12 @@ function makePhys(D, dec){
     return Math.exp(l) * washerRatio(a); }
   function plungerPull(a, s){                // N
     if (a <= 0) return 0;
-    const c = P.cur, ls = Math.log(Math.min(Math.max(s, P.strokes[0]), P.strokes[nS - 1]));
+    const c = P.cur, ls = Math.log(Math.max(s, P.strokes[0]));
     const lsx = P.strokes.map(Math.log);
     let i = 0; while (i < c.length - 2 && c[i + 1] < a) i++;
-    const row = k => lerp(ls, lsx, Array.from(plf.subarray(k * nS, (k + 1) * nS)));
+    const row = k => { const r = Array.from(plf.subarray(k * nS, (k + 1) * nS));
+      return ls <= lsx[nS - 1] ? lerp(ls, lsx, r)      // beyond the table: extend the end slope in log-log
+        : r[nS - 1] + (r[nS - 1] - r[nS - 2]) / (lsx[nS - 1] - lsx[nS - 2]) * (ls - lsx[nS - 1]); };
     const w = (Math.log(a) - Math.log(c[i])) / (Math.log(c[i + 1]) - Math.log(c[i]));
     return Math.exp(row(i) + w * (row(i + 1) - row(i))); }
   function washers(u, H, face, a, dp){
@@ -156,7 +158,7 @@ function makePhys(D, dec){
     const px = sx - Math.sqrt(G.LINK * G.LINK - (sz - za) * (sz - za));
     const stroke = s0 + px - pin0, tx = (px - sx) / G.LINK, tz = (za - sz) / G.LINK;
     const torque = (sx * tz - (sz + dp) * tx) / Math.abs(tx), cz = rotate(-G.FACE, G.HANDLE_Z, dp, th)[1];
-    const ratio = torque / (cz + dp), pullN = plungerPull(a, Math.min(Math.max(stroke, 0.5), 13));
+    const ratio = torque / (cz + dp), pullN = plungerPull(a, Math.max(stroke, 0.5));
     const fricN = (mu === undefined ? 0 : mu) * G.PLUNGER_G * 1e-3 * G.g + G.PIN_FRICTION_GF * 1e-3 * G.g;
     return {th, za, s0, stroke, sx, sz, px, tip: px + G.PIN_FROM_TIP, ratio, pull: pullN / G.g * 1e3,
             F: pullN * ratio / G.g * 1e3, fric: fricN * ratio / G.g * 1e3,
@@ -178,8 +180,8 @@ function makePhys(D, dec){
       const za = H - G.SHAFT_BASE, lo = link(us, H, face, 0, dp).stroke, hi = link(G.MAX_PUSH, H, face, 0, dp).stroke;
       out.push(['collar on the straight shaft, plunger under the window top', za >= G.LINK_Z_MIN - 1e-9 && za <= G.LINK_Z_MAX + 1e-9,
                 `link z ${za.toFixed(1)} in ${G.LINK_Z_MIN.toFixed(1)}-${G.LINK_Z_MAX.toFixed(1)}`]);
-      out.push(['stroke in the datasheet range', lo >= G.S_MIN && hi <= G.S_MAX,
-                `${lo.toFixed(2)}-${hi.toFixed(2)} mm (stop to ${G.MAX_PUSH} mm push)`]);
+      out.push(['plunger stays in its bearing (stroke limit)', lo >= G.S_MIN && hi <= G.S_RET,
+                `${lo.toFixed(2)}-${hi.toFixed(2)} mm of ${G.S_MIN}-${G.S_RET.toFixed(1)}` + (hi > G.S_MAX ? ` (pull extrapolated beyond ${G.S_MAX})` : '')]);
     }
     return out; }
   const spring = (u, p0, k) => k * u;
@@ -440,7 +442,7 @@ function plots(o, H, face, a, dp, mu, p0, k, u, us, um){
         {yaxis: {title: 'gf', rangemode: 'tozero'}}), {displayModeBar: false});
   // live design map at this command, push and pivot
   const xs = [], ys = [], Z = [], M = [];
-  const fx = o === 'link' ? [-46, -34] : [-37, -25], hz = o === 'link' ? [50, 64] : [42, 66];
+  const fx = o === 'link' ? [-56, -34] : [-37, -25], hz = o === 'link' ? [50, 64] : [42, 66];
   for (let j = 0; j <= 48; j++) ys.push(hz[0] + (hz[1] - hz[0]) * j / 48);
   for (let i = 0; i <= 48; i++) xs.push(fx[0] + (fx[1] - fx[0]) * i / 48);
   for (const h of ys){ const zr = [], mr = [];
