@@ -81,7 +81,7 @@ def browser_data(wf, tab):
              WINDOW_TOP=rg.WINDOW_TOP, CON_OUTER=rg.CON_OUTER, CLEARANCE=rg.CLEARANCE,
              LINK_Z_MIN=rg.LINK_Z_MIN, LINK_Z_MAX=rg.LINK_Z_MAX, H_MIN=rf.H_RANGE[0], H_MAX=rf.H_RANGE[1],
              CONTACT_MIN=rf.CONTACT_MIN, S_MIN=rf.STROKE_RANGE[0], S_MAX=rf.STROKE_RANGE[1], S_RET=round(59.7 - LX["protrude"] - 15.0, 2), MAX_PUSH=20.0,
-             PIVOT=rg.PIVOT_DEPTH, PIVOT_MIN=PIVOT_RANGE[0], PIVOT_MAX=PIVOT_RANGE[1], g=pl.G,
+             COMP_TOP=rg.COMP_TOP, PIVOT=rg.PIVOT_DEPTH, PIVOT_MIN=PIVOT_RANGE[0], PIVOT_MAX=PIVOT_RANGE[1], g=pl.G,
              PLUNGER_G=pl.PLUNGER_G, PIN_FRICTION_GF=pl.PIN_FRICTION_GF)
     a, v = np.array(sorted(COMMAND_V.items())).T
     gaps = np.round(np.arange(0.05, 25.0001, 0.05), 3)
@@ -175,7 +175,7 @@ function makePhys(D, dec){
     const us = stopPush(dp);
     if (opt === 'washers'){
       const g = washers(us, H, face, 0.31, dp).gap;
-      out.push(['no contact at the home stop', g >= G.CONTACT_MIN, `gap at the stop ${g.toFixed(2)} mm`]);
+      out.push(['no contact at the home stop', g >= G.CONTACT_MIN, `gap at the stop ${g.toFixed(2)} mm (min ${G.CONTACT_MIN.toFixed(1)})`]);
     } else {
       const za = H - G.SHAFT_BASE, lo = link(us, H, face, 0, dp).stroke, hi = link(G.MAX_PUSH, H, face, 0, dp).stroke;
       out.push(['collar on the straight shaft, plunger under the window top', za >= G.LINK_Z_MIN - 1e-9 && za <= G.LINK_Z_MAX + 1e-9,
@@ -228,7 +228,7 @@ console.log(JSON.stringify({worst, n: D.cases.length, stop: P.stopPush(D.G.PIVOT
         json.dump(dict(data, cases=cases), open(dj, "w"))
         out = json.loads(subprocess.run([node, js, dj], capture_output=True, text=True, check=True).stdout)
     ok = out["worst"] < 0.03 and abs(out["stop"] - rg.stop_push(rg.PIVOT_DEPTH)) < 1e-3 \
-        and abs(out["max"] - rg.max_push(rg.PIVOT_DEPTH)) < 1e-3
+        and abs(out["max"] - 20.0) < 1e-3
     print("browser model vs rig_forces: worst %.2f %% over %d cases, stop %.3f, max push %.2f -> %s"
           % (100 * out["worst"], out["n"], out["stop"], out["max"], "OK" if ok else "MISMATCH"))
     return ok
@@ -242,7 +242,7 @@ body{margin:0;font-family:system-ui,sans-serif;font-size:13px;background:#f4f4f4
 #ui{overflow-y:auto;padding:10px 14px;background:#fff;border-right:1px solid #ccc}
 #view{position:relative}
 #plots{overflow-y:auto;background:#fff;border-left:1px solid #ccc}
-.row{display:grid;grid-template-columns:118px 1fr 64px;column-gap:10px;align-items:center;margin:3px 0}
+.row{display:grid;grid-template-columns:126px 1fr 64px;column-gap:10px;align-items:center;margin:3px 0}
 .num{width:100%;box-sizing:border-box;text-align:right;font:inherit;font-variant-numeric:tabular-nums;border:1px solid #ccc;border-radius:3px;padding:1px 3px;background:#fafafa}
 .row input[type=range]{width:100%}
 h3{margin:12px 0 4px;font-size:13px;border-bottom:1px solid #ddd}
@@ -259,20 +259,20 @@ button{font-size:12px}
 "three/addons/":"https://unpkg.com/three@0.160.0/examples/jsm/"}}</script>
 </head><body>
 <div id="ui">
-<b>JoystickPushTask rig explorer</b><br><small>__SUBTITLE__</small>
+<b>JoystickPushTask rig explorer</b>
 <h3>Magnet option</h3>
 <label><input type="radio" name="opt" value="link" checked> plunger linked to the shaft</label><br>
 <label><input type="radio" name="opt" value="washers"> washer target on the shaft</label><br>
 <button id="rec">set the recommended layout</button>
 <h3>Ledex holder</h3>
-<div class="row"><span>face X (distance)</span><input id="face" type="range" min="-100" max="-24" step="0.01"><input id="face_v" class="num" type="number" step="any"></div>
-<div class="row"><span>axis Z (height)</span><input id="H" type="range" min="__HMIN__" max="__HMAX__" step="0.01"><input id="H_v" class="num" type="number" step="any"></div>
+<div class="row"><span id="face_lbl">stroke length (mm)</span><input id="face" type="range" min="0" max="70" step="0.01"><input id="face_v" class="num" type="number" step="any"></div>
+<div class="row"><span title="height distance to pivot">magnet height (mm)</span><input id="H" type="range" min="15" max="65" step="0.01"><input id="H_v" class="num" type="number" step="any"></div>
 <input id="Y" type="hidden" value="0">
 <h3>Joystick and drive</h3>
-<div class="row"><span>push at the cube</span><input id="push" type="range" step="0.01" value="0"><input id="push_v" class="num" type="number" step="any"></div>
-<div class="row"><span>AO0 command</span><input id="volts" type="range" min="0" max="10" step="0.1" value="10"><input id="volts_v" class="num" type="number" step="any"></div>
+<div class="row"><span>push at the cube (mm)</span><input id="push" type="range" step="0.01" value="0"><input id="push_v" class="num" type="number" step="any"></div>
+<div class="row"><span>AO0 command (V)</span><input id="volts" type="range" min="0" max="10" step="0.1" value="10"><input id="volts_v" class="num" type="number" step="any"></div>
 <label><input type="checkbox" id="imax"> Imax raised (0.58 A, ignores the command)</label>
-<div class="row"><span>pivot depth</span><input id="dp" type="range" step="0.1"><input id="dp_v" class="num" type="number" step="any"></div>
+<div class="row"><span title="height from the bottom face of the TS-1D1S00A component">pivot depth (mm)</span><input id="dp" type="range" step="0.1"><input id="dp_v" class="num" type="number" step="any"></div>
 <h3>Return spring and friction</h3>
 <div class="row"><span>rate k (gf/mm)</span><input id="k" type="range" min="0" max="2" step="0.01"><input id="k_v" class="num" type="number" step="any"></div>
 <div class="row"><span>plunger mu</span><input id="mu" type="range" min="0.1" max="0.5" step="0.01"><input id="mu_v" class="num" type="number" step="any"></div>
@@ -352,10 +352,27 @@ addEventListener('resize', resize); resize();
 (function loop(){ requestAnimationFrame(loop); ren.render(scene, cam); })();
 
 // ---------------- controls
-const ctrl = {face: 2, H: 2, push: 2, volts: 1, dp: 1, k: 2, mu: 2};
+const ctrl = {face: 2, H: 2, push: 2, volts: 1, dp: 2, k: 2, mu: 2};
 function opt(){ return document.querySelector('input[name=opt]:checked').value; }
-function setRec(){ const r = D.rec[opt()]; $('face').value = r.face; $('H').value = r.H; }
-$('dp').min = G.PIVOT_MIN; $('dp').max = G.PIVOT_MAX; $('dp').value = G.PIVOT;
+const tip0 = -G.ATTACH_R - G.LINK + G.PIN_FROM_TIP;
+const faceToUi = (o, face) => o === 'link' ? tip0 - G.protrude - face : -G.WASHER_RO - G.protrude - face;
+const uiToFace = (o, v) => o === 'link' ? tip0 - G.protrude - v : -G.WASHER_RO - G.protrude - v;
+const hToUi = (H, dp) => H - G.SHAFT_BASE + dp;
+const uiToH = (v, dp) => v + G.SHAFT_BASE - dp;
+const dpToUi = dp => G.COMP_TOP - dp;
+const uiToDp = v => G.COMP_TOP - v;
+function setLabels(o){
+  $('face_lbl').textContent = o === 'link' ? 'stroke length (mm)' : 'distance to target (mm)';
+  $('face_lbl').title = o === 'link' ? 'plunger stroke from seated at neutral (0 = fully seated)'
+                                     : 'gap from plunger tip to washer tower at neutral';
+}
+function setRec(){
+  const o = opt(), r = D.rec[o], dp = uiToDp(+$('dp').value);
+  setLabels(o);
+  $('face').value = faceToUi(o, r.face);
+  $('H').value = hToUi(r.H, dp);
+}
+$('dp').min = dpToUi(G.PIVOT_MAX).toFixed(2); $('dp').max = dpToUi(G.PIVOT_MIN).toFixed(2); $('dp').value = dpToUi(G.PIVOT).toFixed(2);
 $('k').value = D.spring.k; $('mu').value = D.spring.mu;
 setRec();
 function amps(){ return $('imax').checked ? 0.58 : P.current(+$('volts').value); }
@@ -380,15 +397,19 @@ const clampTo = (el, r) => {      // the slider spans exactly the feasible range
   const v = Math.min(Math.max(+el.value, r[0]), r[1]);
   el.min = r[0].toFixed(2); el.max = r[1].toFixed(2); el.value = v; };
 function limitInputs(o, dp){      // sliders cannot leave the feasible layout
+  setLabels(o);
   const hOnly = c => /window|height|collar/.test(c[0]);
-  clampTo($('H'), feasibleRange($('H'), h => P.checks(o, h, D.rec[o].face, dp).filter(hOnly).every(c => c[1])));
-  const H = +$('H').value;
-  clampTo($('face'), feasibleRange($('face'), x => P.checks(o, H, x, dp).every(c => c[1])));
+  clampTo($('H'), feasibleRange($('H'), v => P.checks(o, uiToH(v, dp), D.rec[o].face, dp).filter(hOnly).every(c => c[1])));
+  const H = uiToH(+$('H').value, dp);
+  clampTo($('face'), feasibleRange($('face'), v => P.checks(o, H, uiToFace(o, v), dp).every(c => c[1])));
 }
 function draw(){
-  const o = opt(), dp = +$('dp').value;
+  const o = opt();
+  const dpUi = Math.min(Math.max(+$('dp').value, +$('dp').min), +$('dp').max);
+  $('dp').value = dpUi;
+  const dp = uiToDp(dpUi);
   limitInputs(o, dp);
-  const face = +$('face').value, H = +$('H').value, Y = +$('Y').value;
+  const face = uiToFace(o, +$('face').value), H = uiToH(+$('H').value, dp), Y = +$('Y').value;
   const us = P.stopPush(dp), um = P.maxPush(dp);
   $('push').min = us.toFixed(2); $('push').max = um.toFixed(2);
   const u = Math.min(Math.max(+$('push').value, us), um), a = amps(), mu = +$('mu').value, p0 = 0, k = +$('k').value;
