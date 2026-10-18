@@ -263,7 +263,7 @@ button{font-size:12px}
 <h3>Magnet option</h3>
 <label><input type="radio" name="opt" value="link" checked> plunger linked to the shaft</label><br>
 <label><input type="radio" name="opt" value="washers"> washer target on the shaft</label><br>
-<button id="rec">set the recommended layout</button>
+<button id="rec">set the recommended layout</button> <button id="unitBtn" title="switch every force between gram-force (gf) and newton (N)">force unit: gf</button>
 <h3>Magnet</h3>
 <div class="row"><span id="face_lbl">stroke length (mm)</span><input id="face" type="range" min="0" max="70" step="0.01"><input id="face_v" class="num" type="number" step="any"></div>
 <div class="row"><span title="height distance to pivot">magnet height (mm)</span><input id="H" type="range" min="15" max="65" step="0.01"><input id="H_v" class="num" type="number" step="any"></div>
@@ -274,7 +274,7 @@ button{font-size:12px}
 <div class="row"><span>push at the cube (mm)</span><input id="push" type="range" step="0.01" value="0"><input id="push_v" class="num" type="number" step="any"></div>
 <div class="row"><span title="height from the bottom face of the TS-1D1S00A component">pivot depth (mm)</span><input id="dp" type="range" step="0.1"><input id="dp_v" class="num" type="number" step="any"></div>
 <h3>Return spring and friction</h3>
-<div class="row"><span title="Return spring: extra force at the cube for each mm of push (gram-force per mm). Zero force at home.">spring stiffness (gf/mm)</span><input id="k" type="range" min="0" max="2" step="0.01"><input id="k_v" class="num" type="number" step="any"></div>
+<div class="row"><span id="k_lbl">spring stiffness (gf/mm)</span><input id="k" type="range" min="0" max="2" step="0.01"><input id="k_v" class="num" type="number" step="any"></div>
 <div class="row"><span title="Friction coefficient of the plunger sliding in the Ledex bearing (dry nylon on steel: 0.15 slippery, 0.3 typical, 0.4 sticky). Higher = more drag on the handle.">plunger friction (no unit)</span><input id="mu" type="range" min="0.1" max="0.5" step="0.01"><input id="mu_v" class="num" type="number" step="any"></div>
 <h3>Readout</h3><div id="read"></div>
 <h3>Feasibility</h3><div id="feas"></div>
@@ -384,12 +384,24 @@ function update(){ if (!pending){ pending = true; setTimeout(() => { pending = f
 for (const id of Object.keys(ctrl)) $(id).oninput = update;
 for (const id of Object.keys(ctrl)){ const n = $(id + '_v');           // numbers can be typed too
   n.oninput = () => { n.dataset.typing = '1'; };
-  n.onchange = () => { delete n.dataset.typing; const v = parseFloat(n.value); if (!isNaN(v)) $(id).value = v; update(); };
+  n.onchange = () => { delete n.dataset.typing; const v = parseFloat(n.value); if (!isNaN(v)) $(id).value = id === 'k' ? v / kScale() : v; update(); };
   n.onblur = () => { delete n.dataset.typing; update(); }; }
 for (const el of document.querySelectorAll('input[name=opt]')) el.onchange = () => { setRec(); update(); };
 $('imax').onchange = update; $('cut').onchange = update; $('rec').onclick = () => { setRec(); update(); };
 
 const fmt = (v, d) => (+v).toFixed(d);
+let fu = 'gf';                                              // force unit shown: gf or N
+const fk = () => fu === 'gf' ? 1 : G.g / 1000;               // gf -> shown unit
+const kScale = () => fu === 'gf' ? 1 : G.g;                  // gf/mm -> N/m
+const fF = (v, d) => fmt(v * fk(), fu === 'gf' ? d : d + 2) + ' ' + fu;
+function setUnitLabels(){
+  $('unitBtn').textContent = 'force unit: ' + fu;
+  $('k_lbl').textContent = 'spring stiffness (' + (fu === 'gf' ? 'gf/mm' : 'N/m') + ')';
+  $('k_lbl').title = 'Return spring: extra force at the cube for each mm of push. Zero force at home. ' +
+    (fu === 'gf' ? '1 gf/mm = 9.81 N/m.' : '9.81 N/m = 1 gf/mm.');
+}
+$('unitBtn').onclick = () => { fu = fu === 'gf' ? 'N' : 'gf'; setUnitLabels(); update(); };
+setUnitLabels();
 function feasibleRange(el, ok){
   if (!el.dataset.min){ el.dataset.min = el.min; el.dataset.max = el.max; }     // full design range
   const lo0 = +el.dataset.min, hi0 = +el.dataset.max, step = 0.01; let lo = null, hi = null;
@@ -422,8 +434,9 @@ function draw(){
   $('push').min = us.toFixed(2); $('push').max = um.toFixed(2);
   const u = Math.min(Math.max(+$('push').value, us), um), a = amps(), mu = +$('mu').value, p0 = 0, k = +$('k').value;
   for (const id of Object.keys(ctrl)){ const n = $(id + '_v'), el = $(id);
-    n.min = el.min; n.max = el.max;
-    if (!n.dataset.typing) n.value = fmt(id === 'push' ? u : el.value, ctrl[id]); }
+    const sc = id === 'k' ? kScale() : 1;
+    n.min = +el.min * sc; n.max = +el.max * sc;
+    if (!n.dataset.typing) n.value = fmt((id === 'push' ? u : el.value) * sc, ctrl[id]); }
   ren.clippingPlanes = $('cut').checked ? [cut] : [];
   // geometry
   const s = P.state(o, u, H, face, a, dp, mu), Zp = G.SHAFT_BASE - dp;
@@ -442,11 +455,11 @@ function draw(){
   const pulled = s0.F > p0 + (o === 'link' ? s0.fric : 0);
   const rows = [['coil current', fmt(a, 3) + ' A'], ['tilt', fmt(s.th * 180 / Math.PI, 2) + '&deg;']];
   if (o === 'washers') rows.push(['gap (tip to washers)', fmt(s.gap, 2) + ' mm'], ['tower centre above the axis', fmt(s.yoff, 2) + ' mm'],
-                                 ['pull on the tower', fmt(s.pull, 3) + ' gf'], ['handle / tower lever', fmt(s.ratio, 3)]);
+                                 ['pull on the tower', fF(s.pull, 3)], ['handle / tower lever', fmt(s.ratio, 3)]);
   else rows.push(['plunger stroke', fmt(s.stroke, 2) + ' mm (home ' + fmt(s.s0, 2) + ')'], ['link angle', fmt(s.linkDeg, 2) + '&deg;'],
-                 ['plunger pull', fmt(s.pull, 1) + ' gf'], ['handle / plunger', fmt(s.ratio, 3)]);
-  rows.push(['<b>magnet resistance at the cube</b>', '<b>' + fmt(s.F, s.F < 1 ? 3 : 1) + ' gf</b>'], ['spring at the cube', fmt(sp, 2) + ' gf'],
-            ['plunger friction at the cube', fmt(fr, 2) + ' gf'], ['<b>push needed to hold here</b>', '<b>' + fmt(s.F + sp + fr, 2) + ' gf</b>'],
+                 ['plunger pull', fF(s.pull, 1)], ['handle / plunger', fmt(s.ratio, 3)]);
+  rows.push(['<b>magnet resistance at the cube</b>', '<b>' + fF(s.F, s.F < 1 ? 3 : 1) + '</b>'], ['spring at the cube', fF(sp, 2)],
+            ['plunger friction at the cube', fF(fr, 2)], ['<b>push needed to hold here</b>', '<b>' + fF(s.F + sp + fr, 2) + '</b>'],
             ['at home with this current', pulled ? `<span class="bad">pulled onto the stop (${fmt(us, 2)} mm)</span>` : '<span class="ok">stays at neutral</span>']);
   $('read').innerHTML = '<table>' + rows.map(r => `<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join('') + '</table>';
   const ch = P.checks(o, H, face, dp);
@@ -458,12 +471,12 @@ function draw(){
 const other = o => o === 'link' ? 'washers' : 'link';
 const name = o => o === 'link' ? 'plunger link' : 'washer target';
 function plots(o, H, face, a, dp, mu, p0, k, u, us, um){
-  const us_ = [], F = [], Fo = [], S = [], T = [];
+  const us_ = [], F = [], Fo = [], S = [], T = [], K = fk();
   const r = D.rec[other(o)];
   for (let i = 0; i <= 120; i++){ const x = us + (um - us) * i / 120; us_.push(x);
-    const s = P.state(o, x, H, face, a, dp, mu); F.push(Math.max(s.F, 1e-3));
-    Fo.push(Math.max(P.state(other(o), x, r.H, r.face, a, dp, mu).F, 1e-3));
-    const sp = P.spring(x, p0, k); S.push(sp); T.push(s.F + sp + (o === 'link' ? s.fric : 0)); }
+    const s = P.state(o, x, H, face, a, dp, mu); F.push(Math.max(s.F, 1e-3) * K);
+    Fo.push(Math.max(P.state(other(o), x, r.H, r.face, a, dp, mu).F, 1e-3) * K);
+    const sp = P.spring(x, p0, k); S.push(sp * K); T.push((s.F + sp + (o === 'link' ? s.fric : 0)) * K); }
   const lay = (t, x, y, extra) => Object.assign({title: {text: t, font: {size: 12}}, margin: {l: 55, r: 10, t: 34, b: 42},
     xaxis: {title: x}, yaxis: {title: y}, legend: {font: {size: 10}, orientation: 'h', x: 0, y: -0.22, yanchor: 'top'},
     showlegend: true}, extra || {});
@@ -472,9 +485,9 @@ function plots(o, H, face, a, dp, mu, p0, k, u, us, um){
     {x: us_, y: Fo, name: 'magnet, ' + name(other(o)) + ' (recommended layout)', line: {color: '#999', dash: 'dash'}},
     {x: us_, y: S, name: 'spring', line: {color: '#1565c0'}},
     {x: us_, y: T, name: 'push to hold (magnet + spring + friction)', line: {color: '#222', width: 1}},
-    {x: [u, u], y: [0, 150], name: 'push', mode: 'lines', line: {color: '#2e7d32', dash: 'dot'}, showlegend: false}],
-    lay('Force at the cube vs push', 'push at the cube (mm)', 'gf',
-        {yaxis: {title: 'gf', rangemode: 'tozero'}}), {displayModeBar: false});
+    {x: [u, u], y: [0, 150 * K], name: 'push', mode: 'lines', line: {color: '#2e7d32', dash: 'dot'}, showlegend: false}],
+    lay('Force at the cube vs push', 'push at the cube (mm)', fu,
+        {yaxis: {title: fu, rangemode: 'tozero'}}), {displayModeBar: false});
   // live design map at this command, push and pivot
   const xs = [], ys = [], Z = [], M = [];
   const fx = o === 'link' ? [-56, -34] : [-37, -25], hz = o === 'link' ? [50, 64] : [42, 66];
@@ -482,23 +495,23 @@ function plots(o, H, face, a, dp, mu, p0, k, u, us, um){
   for (let i = 0; i <= 48; i++) xs.push(fx[0] + (fx[1] - fx[0]) * i / 48);
   for (const h of ys){ const zr = [], mr = [];
     for (const x of xs){ const ok = P.checks(o, h, x, dp).every(c => c[1]); const f = P.state(o, u, h, x, a, dp, mu).F;
-      zr.push(Math.log10(Math.max(f, 1e-3))); mr.push(ok ? null : 1); }
+      zr.push(Math.log10(Math.max(f, 1e-3) * K)); mr.push(ok ? null : 1); }
     Z.push(zr); M.push(mr); }
   Plotly.react('pm', [
-    {type: 'heatmap', x: xs, y: ys, z: Z, colorscale: 'Viridis', zmin: -1.5, zmax: 2.2,
-     colorbar: {title: 'log10 gf', len: 0.8}, hovertemplate: 'face X %{x:.1f}<br>axis Z %{y:.1f}<br>log10 gf %{z:.2f}<extra></extra>'},
+    {type: 'heatmap', x: xs, y: ys, z: Z, colorscale: 'Viridis', zmin: -1.5 + Math.log10(K), zmax: 2.2 + Math.log10(K),
+     colorbar: {title: 'log10 ' + fu, len: 0.8}, hovertemplate: 'face X %{x:.1f}<br>axis Z %{y:.1f}<br>log10 ' + fu + ' %{z:.2f}<extra></extra>'},
     {type: 'heatmap', x: xs, y: ys, z: M, colorscale: [[0, 'rgba(255,255,255,0.7)'], [1, 'rgba(255,255,255,0.7)']], showscale: false, hoverinfo: 'skip'},
     {x: [face], y: [H], mode: 'markers', marker: {symbol: 'star', size: 14, color: 'lime', line: {color: 'black', width: 1}}, name: 'current'}],
     lay(`Design map: ${name(o)} at this push and command (pale: not feasible)`, 'Ledex face X (mm)', 'Ledex axis Z (mm)', {showlegend: false}),
     {displayModeBar: false});
   const vs = [], A = [], B = [];
   for (let i = 0; i <= 40; i++){ const v = 0.5 + 9.5 * i / 40; vs.push(v); const ai = P.current(v);
-    A.push(P.state(o, 0, H, face, ai, dp, mu).F); B.push(P.state(other(o), 0, r.H, r.face, ai, dp, mu).F); }
+    A.push(P.state(o, 0, H, face, ai, dp, mu).F * K); B.push(P.state(other(o), 0, r.H, r.face, ai, dp, mu).F * K); }
   Plotly.react('pc', [
     {x: vs, y: A, name: name(o) + ' (this layout)', line: {color: '#c62828'}},
     {x: vs, y: B, name: name(other(o)) + ' (recommended)', line: {color: '#999', dash: 'dash'}}],
-    lay('Resistance at neutral vs AO0 command (Imax at minimum)', 'AO0 command (V)', 'gf',
-        {yaxis: {title: 'gf', rangemode: 'tozero'}}), {displayModeBar: false});
+    lay('Resistance at neutral vs AO0 command (Imax at minimum)', 'AO0 command (V)', fu,
+        {yaxis: {title: fu, rangemode: 'tozero'}}), {displayModeBar: false});
 }
 draw();
 </script></body></html>
