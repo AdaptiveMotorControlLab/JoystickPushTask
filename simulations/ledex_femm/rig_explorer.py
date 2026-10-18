@@ -363,8 +363,21 @@ for (const el of document.querySelectorAll('input[name=opt]')) el.onchange = () 
 $('imax').onchange = update; $('cut').onchange = update; $('rec').onclick = () => { setRec(); update(); };
 
 const fmt = (v, d) => (+v).toFixed(d);
+function feasibleRange(el, ok){
+  const lo0 = +el.min, hi0 = +el.max, step = 0.01; let lo = null, hi = null;
+  for (let v = lo0; v <= hi0 + 1e-9; v += step) if (ok(v)){ if (lo === null) lo = v; hi = v; }
+  return lo === null ? null : [lo, hi]; }
+const clampTo = (el, r) => { if (r) el.value = Math.min(Math.max(+el.value, r[0]), r[1]); };
+function limitInputs(o, dp){      // sliders cannot leave the feasible layout
+  const hOnly = c => /window|height|collar/.test(c[0]);
+  clampTo($('H'), feasibleRange($('H'), h => P.checks(o, h, D.rec[o].face, dp).filter(hOnly).every(c => c[1])));
+  const H = +$('H').value;
+  clampTo($('face'), feasibleRange($('face'), x => P.checks(o, H, x, dp).every(c => c[1])));
+}
 function draw(){
-  const o = opt(), face = +$('face').value, H = +$('H').value, Y = +$('Y').value, dp = +$('dp').value;
+  const o = opt(), dp = +$('dp').value;
+  limitInputs(o, dp);
+  const face = +$('face').value, H = +$('H').value, Y = +$('Y').value;
   const us = P.stopPush(dp), um = P.maxPush(dp);
   $('push').min = us.toFixed(2); $('push').max = um.toFixed(2);
   const u = Math.min(Math.max(+$('push').value, us), um), a = amps(), mu = +$('mu').value, p0 = 0, k = +$('k').value;
