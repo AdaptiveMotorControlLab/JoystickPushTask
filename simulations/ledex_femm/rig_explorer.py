@@ -80,7 +80,7 @@ def browser_data(wf, tab):
              SLOT_FAR_X=rg.SLOT_FAR_X, SLOT_Z=rg.SLOT_Z, ARCH_HALF_W=rg.ARCH_HALF_W, ARCH_BOTTOM=rg.ARCH_BOTTOM,
              WINDOW_TOP=rg.WINDOW_TOP, CON_OUTER=rg.CON_OUTER, CLEARANCE=rg.CLEARANCE,
              LINK_Z_MIN=rg.LINK_Z_MIN, LINK_Z_MAX=rg.LINK_Z_MAX, H_MIN=rf.H_RANGE[0], H_MAX=rf.H_RANGE[1],
-             CONTACT_MIN=rf.CONTACT_MIN, S_MIN=rf.STROKE_RANGE[0], S_MAX=rf.STROKE_RANGE[1], S_RET=round(59.7 - LX["protrude"] - 15.0, 2), MAX_PUSH=rf.MAX_PUSH,
+             CONTACT_MIN=rf.CONTACT_MIN, S_MIN=rf.STROKE_RANGE[0], S_MAX=rf.STROKE_RANGE[1], S_RET=round(59.7 - LX["protrude"] - 15.0, 2), MAX_PUSH=20.0,
              PIVOT=rg.PIVOT_DEPTH, PIVOT_MIN=PIVOT_RANGE[0], PIVOT_MAX=PIVOT_RANGE[1], g=pl.G,
              PLUNGER_G=pl.PLUNGER_G, PIN_FRICTION_GF=pl.PIN_FRICTION_GF)
     a, v = np.array(sorted(COMMAND_V.items())).T
@@ -122,7 +122,7 @@ function makePhys(D, dec){
     for (let i = 0; i < 60; i++){ const m = 0.5 * (lo + hi); if (pushForTilt(m, dp) < u) lo = m; else hi = m; }
     return 0.5 * (lo + hi); }
   const stopPush = dp => pushForTilt(Math.asin(G.SLOT_HOME_X / (G.SLOT_Z + dp)), dp);
-  const maxPush = dp => pushForTilt(Math.asin(G.SLOT_FAR_X / (G.SLOT_Z + dp)), dp);
+  const maxPush = dp => G.MAX_PUSH;                 // 20 mm at the cube (set in the viewer, not by the slot)
   const current = volts => volts <= 0 ? 0 : lerp(volts, D.cmd.volts, D.cmd.amps);
   function washerRatio(a){ const la = Math.log(Math.max(a, 1e-4)), c = W.cur, r = W.rat;
     if (la < c[0]) return Math.exp(r[0] + (r[1] - r[0]) / (c[1] - c[0]) * (la - c[0]));
@@ -431,7 +431,7 @@ const name = o => o === 'link' ? 'plunger link' : 'washer target';
 function plots(o, H, face, a, dp, mu, p0, k, u, us, um){
   const us_ = [], F = [], Fo = [], S = [], T = [];
   const r = D.rec[other(o)];
-  for (let i = 0; i <= 120; i++){ const x = us + (Math.min(um, 20) - us) * i / 120; us_.push(x);
+  for (let i = 0; i <= 120; i++){ const x = us + (um - us) * i / 120; us_.push(x);
     const s = P.state(o, x, H, face, a, dp, mu); F.push(Math.max(s.F, 1e-3));
     Fo.push(Math.max(P.state(other(o), x, r.H, r.face, a, dp, mu).F, 1e-3));
     const sp = P.spring(x, p0, k); S.push(sp); T.push(s.F + sp + (o === 'link' ? s.fric : 0)); }
