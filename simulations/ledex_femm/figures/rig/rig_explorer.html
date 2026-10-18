@@ -217,10 +217,14 @@ $('imax').onchange = update; $('cut').onchange = update; $('rec').onclick = () =
 
 const fmt = (v, d) => (+v).toFixed(d);
 function feasibleRange(el, ok){
-  const lo0 = +el.min, hi0 = +el.max, step = 0.01; let lo = null, hi = null;
+  if (!el.dataset.min){ el.dataset.min = el.min; el.dataset.max = el.max; }     // full design range
+  const lo0 = +el.dataset.min, hi0 = +el.dataset.max, step = 0.01; let lo = null, hi = null;
   for (let v = lo0; v <= hi0 + 1e-9; v += step) if (ok(v)){ if (lo === null) lo = v; hi = v; }
   return lo === null ? null : [lo, hi]; }
-const clampTo = (el, r) => { if (r) el.value = Math.min(Math.max(+el.value, r[0]), r[1]); };
+const clampTo = (el, r) => {      // the slider spans exactly the feasible range
+  if (!r) return;
+  const v = Math.min(Math.max(+el.value, r[0]), r[1]);
+  el.min = r[0].toFixed(2); el.max = r[1].toFixed(2); el.value = v; };
 function limitInputs(o, dp){      // sliders cannot leave the feasible layout
   const hOnly = c => /window|height|collar/.test(c[0]);
   clampTo($('H'), feasibleRange($('H'), h => P.checks(o, h, D.rec[o].face, dp).filter(hOnly).every(c => c[1])));
