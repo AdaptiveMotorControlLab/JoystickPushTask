@@ -40,10 +40,10 @@ button{font-size:12px}
 <h3>Return spring and friction</h3>
 <div class="row"><span id="k_lbl">spring stiffness (gf/mm)</span><input id="k" type="range" min="0" max="2" step="0.01"><input id="k_v" class="num" type="number" step="any"></div>
 <div class="row"><span title="Friction coefficient of the plunger sliding in the Ledex bearing (dry nylon on steel: 0.15 slippery, 0.3 typical, 0.4 sticky). Higher = more drag on the handle.">plunger friction (no unit)</span><input id="mu" type="range" min="0.1" max="0.5" step="0.01"><input id="mu_v" class="num" type="number" step="any"></div>
-<h3>Readout</h3><div id="read"></div>
 <h3>View</h3>
 <label><input type="checkbox" id="cut"> section at Y = 0 (hide the -Y half)</label><br>
 <div id="parts"></div>
+<h3>Readout</h3><div id="read"></div>
 <p><small>Forces: washers from the 3D model (offset sweep, +-40 %), plunger from FEMM anchored to the datasheet
 (+-15-20 %); current held constant. Spring as felt at the cube: k per mm from neutral.
 See simulations/ledex_femm/README.md.</small></p>
@@ -312,14 +312,13 @@ function draw(){
   const sp = P.spring(u, p0, k), fr = o === 'link' ? s.fric : 0;
   const s0 = P.state(o, 0, H, face, a, dp, mu);
   const pulled = s0.F > p0 + (o === 'link' ? s0.fric : 0);
-  const rows = [['coil current', fmt(a, 3) + ' A'], ['tilt', fmt(s.th * 180 / Math.PI, 2) + '&deg;']];
+  const rows = [['coil current', fmt(a, 3) + ' A'], ['joystick tilt', fmt(s.th * 180 / Math.PI, 2) + '&deg;']];
   if (o === 'washers') rows.push(['gap (tip to washers)', fmt(s.gap, 2) + ' mm'], ['tower centre above the axis', fmt(s.yoff, 2) + ' mm'],
-                                 ['pull on the tower', fF(s.pull, 3)], ['handle / tower lever', fmt(s.ratio, 3)]);
+                                 ['pull on the tower', fF(s.pull, 3)], ['handle / tower force ratio (no unit)', fmt(s.ratio, 3)]);
   else rows.push(['plunger stroke', fmt(s.stroke, 2) + ' mm (home ' + fmt(s.s0, 2) + ')'], ['link angle', fmt(s.linkDeg, 2) + '&deg;'],
-                 ['plunger pull', fF(s.pull, 1)], ['handle / plunger', fmt(s.ratio, 3)]);
-  rows.push(['<b>magnet resistance at the cube</b>', '<b>' + fF(s.F, s.F < 1 ? 3 : 1) + '</b>'], ['spring at the cube', fF(sp, 2)],
-            ['plunger friction at the cube', fF(fr, 2)], ['<b>push needed to hold here</b>', '<b>' + fF(s.F + sp + fr, 2) + '</b>'],
-            ['at home with this current', pulled ? `<span class="bad">pulled onto the stop (${fmt(us, 2)} mm)</span>` : '<span class="ok">stays at neutral</span>']);
+                 ['plunger pull', fF(s.pull, 1)], ['handle / plunger force ratio (no unit)', fmt(s.ratio, 3)]);
+  rows.push(['<b>magnet force at the cube</b>', '<b>' + fF(s.F, s.F < 1 ? 3 : 1) + '</b>'], ['spring force at the cube', fF(sp, 2)],
+            ['plunger friction at the cube', fF(fr, 2)], ['<b>push needed to hold here</b>', '<b>' + fF(s.F + sp + fr, 2) + '</b>']);
   $('read').innerHTML = '<table>' + rows.map(r => `<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join('') + '</table>';
   plots(o, H, face, a, dp, mu, p0, k, u, us, um);
 }
