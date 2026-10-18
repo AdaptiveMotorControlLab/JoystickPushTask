@@ -180,8 +180,8 @@ function makePhys(D, dec){
       const za = H - G.SHAFT_BASE, lo = link(us, H, face, 0, dp).stroke, hi = link(G.MAX_PUSH, H, face, 0, dp).stroke;
       out.push(['collar on the straight shaft, plunger under the window top', za >= G.LINK_Z_MIN - 1e-9 && za <= G.LINK_Z_MAX + 1e-9,
                 `link z ${za.toFixed(1)} in ${G.LINK_Z_MIN.toFixed(1)}-${G.LINK_Z_MAX.toFixed(1)}`]);
-      out.push(['plunger stays in its bearing (stroke limit)', lo >= G.S_MIN && hi <= G.S_RET,
-                `${lo.toFixed(2)}-${hi.toFixed(2)} mm of ${G.S_MIN}-${G.S_RET.toFixed(1)}` + (hi > G.S_MAX ? ` (pull extrapolated beyond ${G.S_MAX})` : '')]);
+      out.push(['plunger stays in its bearing (stroke limit)', lo >= 0 && hi <= G.S_RET,
+                `${lo.toFixed(2)}-${hi.toFixed(2)} mm of 0-${G.S_RET.toFixed(1)} (0 = seated)` + (hi > G.S_MAX ? ` (pull extrapolated beyond ${G.S_MAX})` : '') + (lo < G.S_MIN ? ` (below ${G.S_MIN} the pull is held at its ${G.S_MIN} mm value; seated it is higher)` : '')]);
     }
     return out; }
   const spring = (u, p0, k) => k * u;
