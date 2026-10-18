@@ -280,9 +280,6 @@ button{font-size:12px}
 <label><input type="checkbox" id="cut"> section at Y = 0 (hide the -Y half)</label><br>
 <div id="parts"></div>
 <h3>Readout</h3><div id="read"></div>
-<p><small>Forces: washers from the 3D model (offset sweep, +-40 %), plunger from FEMM anchored to the datasheet
-(+-15-20 %); current held constant. Spring as felt at the cube: k per mm from neutral.
-See simulations/ledex_femm/README.md.</small></p>
 </div>
 <div id="view"><div id="hint">drag: orbit, scroll: zoom, right-drag: pan</div></div>
 <div id="plots"><div id="pf" style="height:400px"></div><div id="pm" style="height:360px"></div><div id="pc" style="height:340px"></div></div>
