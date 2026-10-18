@@ -262,7 +262,7 @@ button{font-size:12px}
 <label><input type="radio" name="opt" value="washers"> washer target on the shaft</label><br>
 <button id="rec">set the recommended layout</button>
 <h3>Ledex holder</h3>
-<div class="row"><span>face X (distance)</span><input id="face" type="range" min="-46" max="-24" step="0.01"><span id="face_v"></span></div>
+<div class="row"><span>face X (distance)</span><input id="face" type="range" min="-100" max="-24" step="0.01"><span id="face_v"></span></div>
 <div class="row"><span>axis Z (height)</span><input id="H" type="range" min="__HMIN__" max="__HMAX__" step="0.01"><span id="H_v"></span></div>
 <input id="Y" type="hidden" value="0">
 <h3>Joystick and drive</h3>
