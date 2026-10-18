@@ -16,6 +16,7 @@ small{color:#555}
 table{border-collapse:collapse;width:100%}td{padding:1px 4px;vertical-align:top}td:last-child{text-align:right}
 #hint{position:absolute;bottom:8px;left:10px;color:#555;font-size:12px;background:rgba(255,255,255,.8);padding:3px 6px}
 button{font-size:12px}
+.btns{display:flex;gap:10px;margin:12px 0 4px}
 @media (max-width:1400px){body{grid-template-columns:320px 1fr;grid-template-rows:62vh 38vh}#ui{grid-row:1 / span 2}#plots{grid-column:2;grid-row:2;display:flex;overflow-x:auto}#plots>div{flex:0 0 440px;height:100%!important}}
 </style>
 <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
@@ -26,8 +27,7 @@ button{font-size:12px}
 <b>JoystickPushTask rig explorer</b>
 <h3>Magnet option</h3>
 <label><input type="radio" name="opt" value="link" checked> plunger linked to the shaft</label><br>
-<label><input type="radio" name="opt" value="washers"> washer target on the shaft</label><br>
-<button id="rec">set the recommended layout</button> <button id="unitBtn" title="switch every force between gram-force (gf) and newton (N)">force unit: gf</button>
+<label><input type="radio" name="opt" value="washers"> washer target on the shaft</label><div class="btns"><button id="rec" title="reset every slider to its default">set default</button><button id="unitBtn" title="switch every force between gram-force (gf) and newton (N)">force unit: gf</button></div>
 <h3>Magnet</h3>
 <div class="row"><span id="face_lbl">stroke length (mm)</span><input id="face" type="range" min="0" max="70" step="0.01"><input id="face_v" class="num" type="number" step="any"></div>
 <div class="row"><span title="height distance to pivot">magnet height (mm)</span><input id="H" type="range" min="15" max="65" step="0.01"><input id="H_v" class="num" type="number" step="any"></div>
@@ -239,7 +239,15 @@ for (const id of Object.keys(ctrl)){ const n = $(id + '_v');           // number
   n.onchange = () => { delete n.dataset.typing; const v = parseFloat(n.value); if (!isNaN(v)) $(id).value = id === 'k' ? v / kScale() : v; update(); };
   n.onblur = () => { delete n.dataset.typing; update(); }; }
 for (const el of document.querySelectorAll('input[name=opt]')) el.onchange = () => { setRec(); update(); };
-$('imax').onchange = update; $('cut').onchange = update; $('rec').onclick = () => { setRec(); update(); };
+function setDefaults(){          // every slider back to its default
+  $('dp').value = dpToUi(G.PIVOT).toFixed(2);
+  setRec();
+  $('push').value = 0; $('volts').value = 10; $('imax').checked = false;
+  $('k').value = D.spring.k; $('mu').value = D.spring.mu;
+  for (const id of Object.keys(ctrl)) delete $(id + '_v').dataset.typing;
+  update();
+}
+$('imax').onchange = update; $('cut').onchange = update; $('rec').onclick = setDefaults;
 
 const fmt = (v, d) => (+v).toFixed(d);
 let fu = 'gf';                                              // force unit shown: gf or N
