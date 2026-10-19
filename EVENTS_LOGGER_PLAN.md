@@ -56,8 +56,9 @@ Codes are permanent: never renumber or reuse a code; only add new ones.
 | code | name | logged where | value |
 |---|---|---|---|
 | 1 | session start | once, right after the file is opened, before the trial loop starts | 0 |
-| 2 | case entered | main loop, whenever the state changes (see step 3) | new case number (0-4) |
+| 2 | case entered | main loop, whenever the state changes (see step 3) | new case number (0-5) |
 | 3 | trial start | Case 2, next to the `TRIAL` file write | trial number if available, else 0 |
+| 6 | paw release | Case 5, when the rest pad is released after the Case 0 gate; the `move time` clock (`trail start`) starts here | 0 |
 | 4 | trial success | Case 4, next to the `REWARD` file write | 0 |
 | 5 | trial timeout / fail | Case 3, in the movement-window-timeout branch (before returning to Case 0) | 0 |
 | 10 | cue on | water loop, after `SuccessCue_Dev1` HIGH | 0 |
