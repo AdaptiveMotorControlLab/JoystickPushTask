@@ -114,10 +114,16 @@ def build(events_path, camera_path=None, out_path=None):
 
     # These checks catch EVENTS/REWARD/TRIAL files from different runs.
     event_trials = samples[codes == CODE_TRIAL_START]
-    if len(event_trials) != len(trial_samples) or np.any(event_trials != trial_samples):
+    # Same-run check: every TRIAL row must be an EVENTS trial start. The magnet loop can
+    # miss a trial-start occurrence (known bug), so EVENTS may have extra starts: warn only.
+    if not np.all(np.isin(trial_samples, event_trials)):
         raise CheckFailed(
             f"Trial starts in EVENTS {event_trials.astype(int).tolist()} do not match "
             f"TRIAL {trial_samples.astype(int).tolist()}. Are these files from the same run?")
+    if len(event_trials) != len(trial_samples):
+        print(f"WARNING: EVENTS has {len(event_trials)} trial starts but TRIAL has "
+              f"{len(trial_samples)} rows (magnet loop missed "
+              f"{len(event_trials) - len(trial_samples)} trial start(s)).")
     if len(reward_samples) == 0:
         raise CheckFailed("REWARD file is empty. The pipeline cannot sync video for a session "
                           "without rewards, so no LABVIEW file is written.")
