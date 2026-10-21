@@ -161,7 +161,7 @@ After the AO write of `mag`: code 20 (value = `mag`). After the AO write of 0: c
 ### Step 6. Save, run, commit
 
 Save both VIs and confirm the run arrow is unbroken. Commit the VIs together with this file's status
-notes in `.cursorrules`.
+notes in `docs/PROJECT_PLAN.md`.
 
 ## Bench validation (no animal)
 

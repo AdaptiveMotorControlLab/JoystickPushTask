@@ -1,0 +1,37 @@
+---
+description: Permanent workflow, safety and plan-maintenance rules for the JoystickPushTask repo (always applied)
+alwaysApply: true
+---
+
+# JoystickPushTask: permanent agent instructions
+
+Head-fixed mouse 1D forelimb object-push task (LabVIEW + NI-DAQ rig, forked from the Mathis joystick-pull rig). This rule holds only standing instructions. Project state, history, rig facts, decisions and test results live in `docs/PROJECT_PLAN.md`.
+
+## Before changing anything
+- Read and understand the relevant code, files and docs first (README, `RIG_INVENTORY.md`, `parameters/README.md`, the script or folder README you are touching). Never invent file paths, APIs, channel names or test results.
+- General engineering conduct (minimal targeted changes, root causes, no regressions, concise honest summaries) comes from the user's global rules; this file only adds project-specific requirements.
+
+## Project plan (`docs/PROJECT_PLAN.md`)
+- It is the living project record. At the start of any substantial task (feature, hardware/VI guidance, parameter or script work, analysis, multi-file change), read it first. Where it disagrees with older notes or other docs, the plan wins unless the code or data proves it stale; then fix the plan.
+- It tracks: overview, architecture, completed features, current objectives, remaining work, known bugs, technical decisions, validation results.
+- Update it after each meaningful implementation milestone and at the end of every substantial task. Replace stale items instead of appending logs. Keep it concise, accurate and in sync with the actual repo state.
+- Never mark something as verified, tested, bench-validated or fixed unless it was actually tested (by you with real output, or reported by the user). Otherwise record it as built / pending test / unverified, with what is still to check.
+- Do not touch the plan for trivial questions, explanations or unrelated edits.
+- Because it must carry context between separate Agent conversations, write entries so a fresh agent can act on them (what, where, status, next step).
+- The repo is public: keep the plan, commits and docs free of private chat, people's names and purchasing/admin details.
+
+## Safety rules (always)
+- Class 3B 635 nm laser on `PFI3` / terminal 42: keep keyed OFF. Never toggle PFI3 blind. Do not touch the laser pulse nodes in the magnet loop.
+- Never power the Ledex coil from AO0 (AO0 is only the 0–10 V command; PCIe-6321 AO limit ±5 mA).
+- The 1 A inline fuse must stay in the 12 V positive lead of the PVA/Ledex supply. Do not use the magnet's reserved 12 V Goobay supply for anything else.
+- Normal Stop only; toolbar Abort is emergency-only (skips cleanup frames and the auto timing file).
+- Never press an animal's paw onto the pad. Keep `mag = 0` until the unperturbed task is stable.
+- Never hand-edit `.vi` binaries or internal names. Do not Git-merge independently edited `.vi` files; the repo copy is the canonical hierarchy.
+
+## Working conventions
+- Two machines share the repo through GitHub `master`: the rig PC (Windows, LabVIEW, hardware, data) and a Mac (planning, docs, parameter files, Python scripts, CAD). Pull before editing. `git fetch origin` and check `git status` first; if the branch is both ahead and behind, do not merge, ask.
+- Never commit unless the user asks (pushing always needs explicit permission, per the global rules). When asked, commit after each finished step with the `maxchalabi` identity and an imperative sentence message ending in a period; no Cursor co-author trailer (a local commit-msg hook strips it).
+- VIs are edited by hand in LabVIEW on the rig PC. Guide changes one small step at a time (which node, which wire, how to check it) and wait for the user's confirmation before the next step. Prefer parameter files, front-panel controls and Python/scripts over diagram changes.
+- Bench-test everything animal-free first; change one variable at a time; no improvised circuit changes during an animal session.
+- Validate parameter files after every edit: exact row count, 27 tab-separated columns per row, consistent row definition.
+- Rig constraints: do not run two simultaneous AI tasks; keep the acquisition `Read` at 10 samples (not 100); do not upgrade the rig PC's Python 3.6.4 or numpy (`make_labview_timing.py` depends on it; use a throwaway venv for plotting).

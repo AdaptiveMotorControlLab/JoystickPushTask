@@ -14,7 +14,7 @@ available at the training rig. The Ledex `195224-230`, reserved 12 V / 1 A Gooba
 not yet been wired or powered together.
 
 This page is the handoff for the rig-PC AI agent. Guide the user through one checkpoint at a
-time, record actual measurements, and update `.cursorrules` after every completed step. Do not
+time, record actual measurements, and update `docs/PROJECT_PLAN.md` after every completed step. Do not
 skip ahead after a failed measurement.
 
 ## Safety and Sunday scope
@@ -170,4 +170,4 @@ Before animal use or any nonzero experiment file, the canonical VI still needs:
    end, matching the axial-resistance design.
 
 Record actual wiring, measurements and outcomes in `RIG_INVENTORY.md` and
-`calibration/README.md`, and update `.cursorrules` after each completed checkpoint.
+`calibration/README.md`, and update `docs/PROJECT_PLAN.md` after each completed checkpoint.
