@@ -33,5 +33,5 @@ Head-fixed mouse 1D forelimb object-push task (LabVIEW + NI-DAQ rig, forked from
 - Never commit unless the user asks (pushing always needs explicit permission, per the global rules). When asked, commit after each finished step with the `maxchalabi` identity and an imperative sentence message ending in a period; no Cursor co-author trailer (a local commit-msg hook strips it).
 - VIs are edited by hand in LabVIEW on the rig PC. Guide changes one small step at a time (which node, which wire, how to check it) and wait for the user's confirmation before the next step. Prefer parameter files, front-panel controls and Python/scripts over diagram changes.
 - Bench-test everything animal-free first; change one variable at a time; no improvised circuit changes during an animal session.
-- Validate parameter files after every edit: exact row count, 27 tab-separated columns per row, consistent row definition.
+- Validate parameter files after every edit: exact row count, 27 tab-separated columns per row (28 for velocity-mode files), consistent row definition.
 - Rig constraints: do not run two simultaneous AI tasks; keep the acquisition `Read` at 10 samples (not 100); do not upgrade the rig PC's Python 3.6.4 or numpy (`make_labview_timing.py` depends on it; use a throwaway venv for plotting).

@@ -36,6 +36,12 @@ confirmed on 29 Sep 2026 that this 27-column order is the correct one.
 | 24 | 25 | `spout settle` | ms. Bench **2000**. |
 | 25 | 26 | `consumption` | ms. Bench **2000**. |
 | 26 | 27 | `spout retract` | V. Bench **0**. |
+| 27 | 28 | `vel threshold` | **Optional, velocity mode (VI built 22 Oct, bench-tested by hand; mouse test pending).** V per 50 ms of `abs(d push) + abs(d lateral)` (50-sample lag); Case 3 pays when above it. 0 = off. 27-column files load it as 0. |
+
+Velocity-mode files (28 columns): `training/02_micro_touch_velocity_200ms_thr0p012.txt` and `_thr0p015.txt`
+(500 rows; home push 2.43-2.53, `home TO` 200, end box 0-1 V so only velocity pays, `move time` 5000).
+Noise on 20-21 Oct (paw on pad, cube untouched): 99.99th percentile 7.8-8.0 mV, max 9-11.6 mV (same at lag 10-50 ms). VI uses a 50 ms lag; 0.012 gave 0 noise onsets in 224 min.
+Bench-tested without a mouse on 22 Oct (touch pays, slow micro-push pays at lag 50); not yet run with a mouse.
 
 Boxes are two corners `(X1, Y1, X2, Y2)`. Write the smaller voltage first in
 each pair. **Do not trust the words X and Y.** The names in the loader are not
