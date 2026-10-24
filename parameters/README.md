@@ -43,6 +43,12 @@ Velocity-mode files (28 columns): `training/02_micro_touch_velocity_200ms_thr0p0
 Noise on 20-21 Oct (paw on pad, cube untouched): 99.99th percentile 7.8-8.0 mV, max 9-11.6 mV (same at lag 10-50 ms). VI uses a 50 ms lag; 0.012 gave 0 noise onsets in 224 min.
 Bench-tested without a mouse on 22 Oct (touch pays, slow micro-push pays at lag 50); not yet run with a mouse.
 
+Restored historical day-one files (exact copies from git, kept so every recorded session has its file;
+session map in `docs/PROJECT_PLAN.md`): `training/02_micro_push_day1_restpad_home2p475.txt` (16 Oct: home 2.475-2.51,
+success < 2.47, `home TO` 50, ITI 1500), `training/02_micro_push_day1_restpad_home2p44-2p49_hold100_end2p35.txt` and
+`_hold100_end2p40.txt` (19 Oct: home 2.44-2.49, `home TO` 100, success < 2.35 / < 2.40, ITI 1500). The current
+`_home2p44-2p49.txt` (from 20 Oct) has `home TO` 50 and success < 2.40.
+
 Boxes are two corners `(X1, Y1, X2, Y2)`. Write the smaller voltage first in
 each pair. **Do not trust the words X and Y.** The names in the loader are not
 the NI-MAX channel names. White / push goes in the **X** columns (1, 3, 11, 13).
