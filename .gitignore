@@ -124,3 +124,6 @@ ENV/
 
 # mypy
 .mypy_cache/
+
+# Temporary figures (not for GitHub)
+temp_figures/
