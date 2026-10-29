@@ -49,6 +49,8 @@ Velocity-mode files (28 columns): `training/02_micro_touch_velocity_200ms_thr0p0
 
 `02_micro_touch_velocity_50ms_thr0p006_smooth_1hr_3ul.txt` is the `_200ms_..._1hr_3ul` file with `home TO` = 50 ms instead of 200 ms (28 columns, 500 rows, `move time` 3600000, `watertime` 100 ms). Not yet run with a mouse.
 
+`02_micro_touch_velocity_100ms_thr0p006_smooth_1hr_2ul.txt` (29 Oct) is the `_50ms_..._1hr_3ul` file with `home TO` = 100 ms and `watertime` = 70 ms (~2 µl, interpolated as in `_1hr_2ul`; weigh it). 28 columns, 500 rows, `move time` 3600000. Not yet run with a mouse.
+
 `02_mixed_touch1_cube1_100ms_thr0p006_smooth_5s_1p5ul_3ul.txt` (29 Oct, for zuchon; 28 columns, 500 rows) alternates two row types, starting with a touch row.
 Odd rows (1, 3, ...) are the `01_pad_touch_100ms_release_3ul` row with `vel threshold` 0 and `watertime` 58 ms (~1.5 µl, interpolated like `_2s_1p5ul`; weigh it): joystick ignored, paid at pad release.
 Even rows are the `02_micro_touch_velocity_50ms_..._1hr_3ul` row with `home TO` 100 and `move time` 5000 (`watertime` stays 100 ms, ~3 µl, measured 3.2 µl): home push 2.43-2.53, paid only for a cube movement (velocity > 0.006) within 5 s of release.
