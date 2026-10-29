@@ -61,6 +61,7 @@ Codes are permanent: never renumber or reuse a code; only add new ones.
 | 6 | paw release | Case 5, when the rest pad is released after the Case 0 gate; the `move time` clock (`trail start`) starts here | 0 |
 | 4 | trial success | Case 4, next to the `REWARD` file write | 0 |
 | 5 | trial timeout / fail | Case 3, in the movement-window-timeout branch (before returning to Case 0) | 0 |
+| 7 | go cue burst start | go cue loop (True case), parallel to the first burst write on `GoCue_Dev1` (P0.2); fired by Set Occurrence in Case 0 when the `home TO` hold completes (built 29 Oct, untested) | 0 |
 | 10 | cue on | water loop, after `SuccessCue_Dev1` HIGH | 0 |
 | 11 | cue off | water loop, after `SuccessCue_Dev1` LOW | 0 |
 | 12 | reward delay end | water loop, after the reward-delay wait | 0 |
