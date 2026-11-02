@@ -69,11 +69,12 @@ SLOT_W = 4.0
 SLOT_Z = sum(CON_TOP) / 2 - SHAFT_BASE        # slot mid-plane on the shaft (lever z)
 SLOT_HOME_X = SLOT[0] + SHAFT_R               # shaft centre at the home stop (X at the slot)
 SLOT_FAR_X = SLOT[1] - SHAFT_R
-ARCH_HALF_W, ARCH_R = 8.0, 8.0
+ARCH_HALF_W, ARCH_R = CON_INNER, 8.0          # original arch half-width 8, radius 8; wide window = full cavity width
 ARCH_SPRING = CON_Z0 + 40.0                   # original part: straight sides end, semicircle centre (world Z)
 ARCH_BOTTOM = HOLDER_TOP                      # the holder frame fills the opening below this
-# Revision used here: the arch is cut square up to the cavity ceiling (window revision STEP/STL), same width.
-CON_WINDOW_FILE = "joystick_1d_axis_constrainer_38x38x56_ledex_window"
+# Revision used here: the home wall is open over the full cavity width (+-13) from the socket top (ARCH_BOTTOM)
+# up to the cavity ceiling (wide-window revision STEP/STL, make_wide_window.py).
+CON_WINDOW_FILE = "joystick_1d_axis_constrainer_38x38x56_ledex_wide_window"
 WINDOW_TOP = CON_TOP[0]
 ARCH_TOP = WINDOW_TOP
 

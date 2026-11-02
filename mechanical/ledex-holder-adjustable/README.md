@@ -43,7 +43,7 @@ and Z is the Ledex axis above the breadboard.
   the tip slot); nothing is drilled. Turn the plunger so the slot is vertical and the hole runs along Y
   (the plunger is round and can turn in its bore, so the leads can point any way). Pins: 2.5 mm brass or
   A2 stainless dowels, or M2.5 A2 screws with lock nuts, 10 mm long (the plunger pin must stay inside the
-  16 mm wide constrainer window); not plain steel next to the plunger tip.
+  constrainer window); not plain steel next to the plunger tip.
 - **Washer target:** tower centre on the axis, so Z 58.7. Gap 1 mm at neutral (1 mm gap, e.g. a 1 mm shim
   between the tip and the washers), which puts the face at X −29.3. The nut front is then 1.8 mm from the
   constrainer wall.
@@ -66,7 +66,7 @@ slot and 0.4 mm in the fork.
   them from outside with a hex key; the nuts stay reachable from the Ledex side as well.
 - Collar: slide it down the shaft before the cube goes on, set it with the fork's pin 17.5 mm above the
   shaft base and the fork facing the Ledex, then tighten the M2 set screw against the shaft.
-- The link needs the constrainer revision with the square window
+- The link needs the wide-window constrainer revision
   ([`../joystick-1d-axis-constrainer/`](../joystick-1d-axis-constrainer/)); with the original
   arch the plunger passes only 1 mm under its top.
 - Print the base and the upright flat on their bottom faces, the carriage on its outer flange face (the

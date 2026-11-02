@@ -148,7 +148,7 @@ shaft base.
 | shaft base (cone seated on the component's stub) | 43.18 |
 | constrainer (socket ledge on the frame top) | 15.41-71.41 |
 | washer tower (10 × M3 on the shaft cone) | 54.68-62.68 |
-| window in the constrainer's home wall (Y ±8, square top; the original arch top was 63.41) | 68.41 |
+| window in the constrainer's home wall (Y ±13, from the frame top Z 25.41; square top; the original arch top was 63.41) | 68.41 |
 | constrainer slot plate | 68.41-71.41 |
 | cube push contact | 135.58 |
 
@@ -160,8 +160,9 @@ shaft base.
   the cube** (home side of the vertical, i.e. of the spring's neutral); its far end allows 36.0 mm. A
   15 mm push tilts the shaft 7.4°.
 - Constrainer: the model uses the window revision
-  (`mechanical/joystick-1d-axis-constrainer/*_ledex_window.step`): the home-wall arch is cut
-  square up to the cavity ceiling, same 16 mm width, so the plunger and the link pin have room.
+  (`mechanical/joystick-1d-axis-constrainer/*_ledex_wide_window.step`): the home wall is open over
+  the full 26 mm cavity width from the frame top (Z 25.41) up to the cavity ceiling, so the plunger and the
+  link pin have room.
 - Ledex placement limits: the plunger (+1 mm) passes through the window, so its axis must be at Z
   30.3-63.5; the M14 nut must stay 1 mm clear of the constrainer's outer wall (X −19), so the body face
   must be at X ≤ −28.5; the Ledex holder covers axis heights 38-78.
