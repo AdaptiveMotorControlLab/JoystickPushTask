@@ -1,7 +1,35 @@
 # Joystick home voltage and volts → mm
 
-Training rig · 8 September 2026 · eyeball 10 mm on the fitted printed handle.
+Training rig · measured 3 November 2026 (current mount) · first eyeball check 8 September 2026.
 Do not trim the red joystick regulator.
+
+## Push-axis scale (measured 3 Nov 2026, use this)
+
+Current mount: cube on the shaft, Ledex holder, constrainer and plunger link fitted (1 Nov).
+At home the cube is **2 mm** from the rest platform (the rest pad sits on the same platform).
+Displacement is forward from home, at the cube.
+
+| Push (mm) | `ai1` (V) |
+| ---: | ---: |
+| 0 (home) | 2.470 (approximate) |
+| 2 | 2.425 |
+| 4 | 2.365 |
+| 6 | 2.305 |
+| 8 | 2.235 |
+
+Linear fit (least squares, all five points):
+
+```text
+V  =  2.478  −  0.0295 × mm        R² = 0.995, residuals ≤ 8 mV
+mm =  (2.478 − V) × 33.9           (relative: Δmm = ΔV × 33.9, i.e. 10 mV ≈ 0.34 mm)
+```
+
+![Push voltage versus push displacement](joystick-volts-mm.svg)
+
+The scale is slightly steeper further out: 0.0225 V/mm from 0 to 2 mm, 0.030 from 2 to 6 mm, 0.035 from 6 to 8 mm.
+Near home the fit therefore underestimates small pushes a little (from the 0–2 mm segment, 20 mV is ~0.9 mm rather than 0.68 mm).
+This agrees with the 8 Sep eyeball scale (0.030 V/mm), not with the lever model in `simulations/ledex_femm` (~0.049 V/mm).
+Rest drifts between sessions (2.44–2.48 V seen in October), so re-centre home boxes on the measured rest; use the slope, not the absolute volts, to convert distances.
 
 ## Axis map (confirmed 8 Sep 2026)
 
@@ -23,7 +51,7 @@ NI-MAX: **Voltage_1 / `Dev1/ai1` = push**. **Voltage_0 / `Dev1/ai0` = lateral**.
 
 Mathis demo rest was **2.55 V**. 2.50 V is close enough; leave the regulator alone.
 
-## Push-axis scale (provisional)
+## Push-axis scale (provisional, 8 Sep 2026; superseded by the 3 Nov measurement above)
 
 Pushing ~10 mm dropped the white trace from **2.50 V → 2.20 V** (Δ = 0.30 V).
 

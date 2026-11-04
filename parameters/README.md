@@ -64,6 +64,12 @@ Both rows use ITI 2000 ms. Untested: that the VI applies each row's boxes, `vel 
 
 `03_push_distance_200ms_home2p46-2p51_end2p43_1s_1p5ul.txt` (2 Nov) is identical to `03_push_distance_200ms_20mV_1s_1p5ul.txt` except home push 2.46-2.51 V and success when push ≤ 2.43 V (end box 0-2.43 V; 30 mV gap below home). 28 columns, 500 rows. Not bench-tested, not run with a mouse.
 
+`03_push_distance_200ms_home2p46-2p51_end2p40_1s_1p5ul.txt` (3 Nov) is identical to the `_end2p43_` file except success when push ≤ 2.40 V (end box 0-2.40 V; 60 mV gap below home). 28 columns, 500 rows. Not bench-tested, not run with a mouse.
+
+`training/01_pad_touch_200ms_release_2ul.txt` (3 Nov) is `01_pad_touch_200ms_release_3ul.txt` with `watertime` = 70 ms (~2 µl, interpolated between the 50 ms / 1.2 µl and 100 ms / 3.2 µl calibration points; weigh it, measure before use). 250 rows, 27 columns, nothing else changed. Not bench-tested, not run with a mouse.
+
+`training/01_pad_touch_50ms_release_2ul.txt` and `training/01_pad_touch_100ms_release_2ul.txt` (3 Nov) are the matching `_3ul` files with `watertime` = 70 ms (~2 µl, interpolated as above; measure before use). 250 rows, 27 columns, nothing else changed. Not bench-tested, not run with a mouse.
+
 Noise on 20-21 Oct (paw on pad, cube untouched): 99.99th percentile 7.8-8.0 mV, max 9-11.6 mV (same at lag 10-50 ms). VI uses a 50 ms lag; 0.012 gave 0 noise onsets in 224 min.
 Bench-tested without a mouse on 22 Oct (touch pays, slow micro-push pays at lag 50); not yet run with a mouse.
 
