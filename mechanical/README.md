@@ -20,7 +20,7 @@ README (printed holes come out ~0.3-0.4 mm small; print `fit_test` first).
 | `joystick/` | `joystick_89mm` | printed, on the rig | 89 mm shaft (conical body, 4 mm radius base to 1.5 mm radius tip) that screws onto the thumbstick stub; handles slide onto its tip. |
 | `TS-1D1S00A-1294_stripped/` | `TS-1D1S00A-1294_stripped` | reference, not printed | Measured APEM TS-1D1S00A-1294 Hall base (castle cap removed). |
 | `joystick-holder/` | `joystick_holder` | printed, on the rig | Breadboard holder for the component. |
-| `joystick-handle-cube/` | `joystick_handle_cube_11p5` | chosen 17 Oct, not yet printed | Narrow rounded-cube push object, 11.5 × 11.5 × 10 mm. |
+| `joystick-handle-cube/` | `joystick_handle_cube_11p5`, `..._h14p1`, `..._h15p1_d3p3_dp4p2`, `make_handle_cube.py` | chosen 17 Oct; newest revision (15.1 mm tall, 3.3 mm holes, 4.2 mm deep) not yet printed | Narrow rounded-cube push object, 11.5 × 11.5 mm; the script regenerates the revisions. |
 | `joystick-1d-axis-constrainer/` | `..._38x38x56_ledex_wide_window`, `make_wide_window.py` | new wide-window revision, not yet printed | Stepped hollow box that limits the joystick to one axis; home wall open over almost its whole width for the plunger link. |
 | `ledex-holder-adjustable/` | base, upright, carriage, `link_collar`, `link_bar`, `fit_test`, `make_ledex_holder.py` | not printed | Adjustable Ledex holder and plunger link (see its README). |
 | `ledex-195224-model/` | `ledex_body`, `ledex_plunger` | reference, not printed | Ledex body and plunger from the datasheet drawing. |
