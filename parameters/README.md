@@ -74,6 +74,8 @@ Both rows use ITI 2000 ms. Untested: that the VI applies each row's boxes, `vel 
 
 `push_bench_joystick-only.txt` (5 Nov) is the first joystick-only file: the `03_push_distance_200ms_home2p46-2p51_end2p40_1s_1p5ul` row with `reward on touch` 0 and `joystick only` 1 appended. 500 rows, 30 columns. Joystick home 2.46-2.51 V held 200 ms, paid when push ≤ 2.40 V within 1 s; the pad is not used. Needs the session-mode VI edit; on a VI without it (Array Subset 29) the 30th value should simply be ignored, so it would run as the normal pad-release file (unchecked). Not bench-tested, not run with a mouse.
 
+`push_bench_row-mapping.txt` (5 Nov) is the bench file for the parameter-row mapping fix (`docs/PROJECT_PLAN.md`, "Parameter-row mapping"). 40 rows, 28 columns. Odd rows are touch-and-release (all boxes 0-5 V, pay at pad release); even rows need a push (home push 2.43-2.53 V, end push 0-2.40 V). Every row has its own `watertime` (50 + row number, 51-90 ms) and `move time` (2000 + 50 × row number, 2050-4000 ms), so `scripts/check_row_mapping.py` can tell which row each code 15 value and timeout came from. All rows `home TO` 100, ITI 2000, cue 50 ms, delay 0, consumption 1500, spout columns 0, `mag` 0, `vel threshold` 0. No animal. Not bench-tested.
+
 `training/01_pad_touch_50ms_release_2ul.txt` and `training/01_pad_touch_100ms_release_2ul.txt` (3 Nov) are the matching `_3ul` files with `watertime` = 70 ms (~2 µl, interpolated as above; measure before use). 250 rows, 27 columns, nothing else changed. Not bench-tested, not run with a mouse.
 
 Noise on 20-21 Oct (paw on pad, cube untouched): 99.99th percentile 7.8-8.0 mV, max 9-11.6 mV (same at lag 10-50 ms). VI uses a 50 ms lag; 0.012 gave 0 noise onsets in 224 min.
