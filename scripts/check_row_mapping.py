@@ -1,17 +1,20 @@
 #!/usr/bin/env python3
-"""Check from EVENTS that trial n used row n of the parameter file.
+"""Check from EVENTS that every trial used the parameter row it should have.
 
-Trial n is the n-th arming (EVENTS code 6, 8 or 9; 1-based). For every trial the
-script compares what the VI did with row n of the parameter file:
+Trial n is the n-th arming (EVENTS code 6, 8 or 9; 1-based). Trial 1 uses row 1;
+each later trial uses the next row, except after a timeout on a row whose
+column 30 `repeat trials` is nonzero (31-column files), which repeats that row.
+Without repeats, trial n uses row n. For every trial the script compares what
+the VI did with its expected row r:
 
-- code 3 value: the trial number n (only once the VI logs it; all-zero values
+- code 3 value: the row number r (only once the VI logs it; all-zero values
   are reported as "not logged").
 - code 15 value (water pulse, ms): column 17 `watertime`.
 - timeout length (arming to code 5): column 19 `move time`, within --tol ms.
 - trials armed beyond the last row of the file.
 
-On a mismatch it lists which nearby rows (n-3 .. n+3) the value matches, so an
-offset such as "row n+1" is visible. Rows that repeat (e.g. alternating files)
+On a mismatch it lists which nearby rows (r-3 .. r+3) the value matches, so an
+offset such as "row n+1" (one after the expected row) is visible. Rows that repeat (e.g. alternating files)
 match several offsets; use a file with distinct per-row values to pin them down.
 
 Usage:
@@ -27,7 +30,7 @@ import numpy as np
 
 ARM_CODES = (6, 8, 9)
 CODE_TRIAL_START, CODE_SUCCESS, CODE_TIMEOUT, CODE_WATER_ON, CODE_MAGNET_ON = 3, 4, 5, 15, 20
-COL_WATERTIME, COL_MOVE_TIME = 17, 19
+COL_WATERTIME, COL_MOVE_TIME, COL_REPEAT = 17, 19, 30
 OFFSETS = (-3, -2, -1, 1, 2, 3)
 
 
@@ -61,21 +64,23 @@ def main():
 
     params = read_parameters(args.parameters)
     water, move = params[:, COL_WATERTIME], params[:, COL_MOVE_TIME]
+    repeat = params[:, COL_REPEAT] if params.shape[1] > COL_REPEAT else np.zeros(len(params))
     ev = np.fromfile(args.events, ">f8").reshape(-1, 4)
     ev = ev[np.argsort(ev[:, 2], kind="mergesort")]
     codes = ev[:, 0]
     arms = np.flatnonzero(np.isin(codes, ARM_CODES))
     code3_logged = bool(np.any(ev[codes == CODE_TRIAL_START, 3] != 0))
 
-    print(f"{len(arms)} armed trials, {len(params)} parameter rows; code 3 trial number "
+    print(f"{len(arms)} armed trials, {len(params)} parameter rows, "
+          f"{int(np.count_nonzero(repeat))} with repeat trials on; code 3 row number "
           f"{'logged' if code3_logged else 'not logged (all 0)'}")
-    print("   n  outcome  code3  water(ms) exp   timeout(ms) exp    magnet  problems")
+    print("   n  row  outcome  code3  water(ms) exp   timeout(ms) exp    magnet  problems")
     n_fail = 0
     tally = {"code3": 0, "water": 0, "timeout": 0, "beyond": 0, "unpaid": 0, "magnet": 0}
+    r = 0
     for n, i in enumerate(arms, 1):
         j = arms[n] if n < len(arms) else len(ev)
         seg = ev[i:j]
-        r = n - 1
         problems = []
 
         def first(code):
@@ -93,8 +98,8 @@ def main():
             tally["magnet"] += 1
 
         c3 = "-" if e3 is None else f"{e3[3]:.0f}"
-        if code3_logged and (e3 is None or e3[3] != n):
-            problems.append(f"code 3 value {c3} != {n}")
+        if code3_logged and (e3 is None or e3[3] != r + 1):
+            problems.append(f"code 3 value {c3} != {r + 1}")
             tally["code3"] += 1
 
         w_txt, wexp_txt = "-", "-"
@@ -121,8 +126,10 @@ def main():
 
         n_fail += bool(problems)
         if problems or not args.quiet:
-            print(f"{n:4d}  {outcome:7s}  {c3:>5s}  {w_txt:>5s} {wexp_txt:>5s}   {t_txt:>6s} {texp_txt:>6s}"
+            print(f"{n:4d} {r + 1:4d}  {outcome:7s}  {c3:>5s}  {w_txt:>5s} {wexp_txt:>5s}   {t_txt:>6s} {texp_txt:>6s}"
                   f"    {'ok' if e20 is not None else 'MISS':>4s}    {'; '.join(problems)}")
+        if not (outcome == "timeout" and r < len(params) and repeat[r] != 0):
+            r += 1
 
     print(f"\n{n_fail} of {len(arms)} trials with problems: " +
           ", ".join(f"{k} {v}" for k, v in tally.items()))
