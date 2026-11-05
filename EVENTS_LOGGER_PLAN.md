@@ -61,7 +61,9 @@ Codes are permanent: never renumber or reuse a code; only add new ones.
 | 6 | paw release | Case 5, when the rest pad is released after the Case 0 gate; the `move time` clock (`trail start`) starts here | 0 |
 | 4 | trial success | Case 4, next to the `REWARD` file write | 0 |
 | 5 | trial timeout / fail | Case 3, in the movement-window-timeout branch (before returning to Case 0) | 0 |
-| 7 | go cue burst start | go cue loop (True case), parallel to the first burst write on `GoCue_Dev1` (P0.2); fired by Set Occurrence in Case 0 when the `home TO` hold completes (built 29 Oct, untested) | 0 |
+| 7 | go cue burst start | go cue loop (True case), parallel to the first burst write on `GoCue_Dev1` (P0.2); fired by Set Occurrence in Case 0 when the `home TO` hold completes (built 29 Oct, untested); not fired in joystick-only sessions | 0 |
+| 8 | touch-mode pass | Case 5, instead of code 6 when `reward on touch` = 1 (paw still on the pad); `trail start` starts here | 0 |
+| 9 | joystick-only arm | Case 5, instead of code 6 / 8 when `joystick only` = 1 (rest pad ignored, no go cue); `trail start` starts here (planned 5 Nov, not built) | 0 |
 | 10 | cue on | water loop, after `SuccessCue_Dev1` HIGH | 0 |
 | 11 | cue off | water loop, after `SuccessCue_Dev1` LOW | 0 |
 | 12 | reward delay end | water loop, after the reward-delay wait | 0 |

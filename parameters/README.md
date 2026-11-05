@@ -37,6 +37,8 @@ confirmed on 29 Sep 2026 that this 27-column order is the correct one.
 | 25 | 26 | `consumption` | ms. Bench **2000**. |
 | 26 | 27 | `spout retract` | V. Bench **0**. |
 | 27 | 28 | `vel threshold` | **Optional, velocity mode (VI built 22 Oct, bench-tested by hand; mouse test pending).** V per 50 ms of `abs(d push) + abs(d lateral)` (50-sample lag); Case 3 pays when above it. 0 = off. 27-column files load it as 0. |
+| 28 | 29 | `reward on touch` | **Optional, VI edit in progress (4 Nov; VI built, load-checked, trial logic not yet bench-tested).** 0 = pay on pad release (as before); 1 = pay when the `home TO` hold completes, paw still on the pad (EVENTS code 8 instead of 6), and the paw must lift before the next trial can start. 27- and 28-column files load it as 0; a touch-mode file needs all 29 columns. Ignored when `joystick only` = 1. |
+| 29 | 30 | `joystick only` | **Optional, VI edit planned (5 Nov; not built, not tested).** 0 = rest-pad sequence (pad hold, go cue, release or touch per column 29, then joystick). 1 = joystick-only: the rest pad is ignored (no pad hold, no release, no re-arm) and no go cue; a trial arms when the joystick is held in the home box for `home TO` and the ITI has elapsed (EVENTS code 9), then the usual start box, end box / `end TO`, `vel threshold`, `move time` and reward columns apply. 27- to 29-column files load it as 0; a joystick-only file needs all 30 columns. |
 
 Velocity-mode files (28 columns): `training/02_micro_touch_velocity_200ms_thr0p012.txt` and `_thr0p015.txt`
 (500 rows; home push 2.43-2.53, `home TO` 200, end box 0-1 V so only velocity pays, `move time` 5000).
@@ -67,6 +69,10 @@ Both rows use ITI 2000 ms. Untested: that the VI applies each row's boxes, `vel 
 `03_push_distance_200ms_home2p46-2p51_end2p40_1s_1p5ul.txt` (3 Nov) is identical to the `_end2p43_` file except success when push ≤ 2.40 V (end box 0-2.40 V; 60 mV gap below home). 28 columns, 500 rows. Not bench-tested, not run with a mouse.
 
 `training/01_pad_touch_200ms_release_2ul.txt` (3 Nov) is `01_pad_touch_200ms_release_3ul.txt` with `watertime` = 70 ms (~2 µl, interpolated between the 50 ms / 1.2 µl and 100 ms / 3.2 µl calibration points; weigh it, measure before use). 250 rows, 27 columns, nothing else changed. Not bench-tested, not run with a mouse.
+
+`training/01_pad_touch_100ms_touch_2ul.txt` (4 Nov) is the first reward-on-touch file: the `01_pad_touch_100ms_release_2ul` row with ITI 2000 ms (was 1500, avoids the unpaid-success bug), `vel threshold` 0 and `reward on touch` 1. 500 rows, 29 columns. Needs the reward-on-touch VI edit; on the current VI (Array Subset 28) the 29th value should simply be ignored, so it would pay on release (unchecked). Not bench-tested, not run with a mouse.
+
+`push_bench_joystick-only.txt` (5 Nov) is the first joystick-only file: the `03_push_distance_200ms_home2p46-2p51_end2p40_1s_1p5ul` row with `reward on touch` 0 and `joystick only` 1 appended. 500 rows, 30 columns. Joystick home 2.46-2.51 V held 200 ms, paid when push ≤ 2.40 V within 1 s; the pad is not used. Needs the session-mode VI edit; on a VI without it (Array Subset 29) the 30th value should simply be ignored, so it would run as the normal pad-release file (unchecked). Not bench-tested, not run with a mouse.
 
 `training/01_pad_touch_50ms_release_2ul.txt` and `training/01_pad_touch_100ms_release_2ul.txt` (3 Nov) are the matching `_3ul` files with `watertime` = 70 ms (~2 µl, interpolated as above; measure before use). 250 rows, 27 columns, nothing else changed. Not bench-tested, not run with a mouse.
 
