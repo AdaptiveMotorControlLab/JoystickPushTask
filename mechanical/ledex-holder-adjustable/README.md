@@ -66,9 +66,10 @@ slot and 0.4 mm in the fork.
   them from outside with a hex key; the nuts stay reachable from the Ledex side as well.
 - Collar: slide it down the shaft before the cube goes on, set it with the fork's pin 17.5 mm above the
   shaft base and the fork facing the Ledex, then tighten the M2 set screw against the shaft.
-- The link needs the wide-window constrainer revision
-  ([`../joystick-1d-axis-constrainer/`](../joystick-1d-axis-constrainer/)); with the original
-  arch the plunger passes only 1 mm under its top.
+- The link needs a constrainer with an open home-wall window: the 16 mm window revision (on the rig since
+  1 Nov, now in `archive/`) or the wide-window revision
+  ([`../joystick-1d-axis-constrainer/`](../joystick-1d-axis-constrainer/), not yet printed); with the
+  original arch the plunger passes only 1 mm under its top.
 - Print the base and the upright flat on their bottom faces, the carriage on its outer flange face (the
   nut pockets face up; the cradle's curved face needs light support), the fit test flat,
   the collar on its end face, and the link bar flat. PETG or PLA, ≥ 40 % infill; check that the boss
@@ -76,4 +77,7 @@ slot and 0.4 mm in the fork.
 - Order of setting: lateral (Y) so the plunger lines up with the shaft, then height (Z) on the scale,
   then distance (X) with a gauge. Re-check that the handle returns to home and that nothing touches the
   constrainer over the full push before powering the Ledex.
-- Not printed or fit-checked yet.
+- Status: base, upright, carriage, link collar and link bar printed and mounted on the rig on 1 Nov 2026
+  with the 16 mm window constrainer; Ledex-off hand check passed (full return to home, no binding or
+  collisions). Not yet done: powered direction and release check (Checkpoint 5 in `MAGNET_COMMISSIONING.md`)
+  and force at the cube with a gram scale.

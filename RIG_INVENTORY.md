@@ -59,6 +59,7 @@ Other devices visible in NI-MAX:
 - `MagnetPush_Dev1`
 - `Water_Dev1`
 - `SuccessCue_Dev1`
+- `GoCue_Dev1` (added 29 Oct 2026, after the 20 Aug NI-MAX backup)
 - `LickSpout_Dev1`
 - `rest_pad_test_Dev1`
 - `success_cue_test_Dev1`
@@ -149,7 +150,9 @@ simultaneously; the rest pad responded as expected.
 `joysticklickframe_push`; original hierarchy remains pointed at `joysticklickframe`.
 - Working-copy main VI Case 0 now reads queue element index 2 into a `rest pad voltage` indicator;
 `rest pad voltage > rest pad threshold (V)` now drives a `paw on rest pad` Boolean indicator.
-Starting threshold is 0.10 V pending animal-mounted calibration.
+Starting threshold was 0.10 V (FSR era). Current state: the rest pad is `joystick pos` index 3
+(moved 1 Oct 2026 so the joystick file is Y, X, 0, rest pad for DataJoint) and the threshold is
+2.5 V for the capacitive pad (default saved in the VI, 14 Oct 2026).
 - A new AND combines the original X/Y home-ROI result with `paw on rest pad` before the existing
 `home TO` hold logic. The separate inter-trial timeout gate is unchanged.
 - Runtime test passed: index-2 rest-pad voltage and `paw on rest pad` changed correctly when Case 0 became
@@ -325,7 +328,7 @@ Digital port 0:
 
 
 
-### Physically occupied terminals (surveyed 04/08/26)
+### Physically occupied terminals (surveyed 04/08/26, later additions included)
 
 
 | Terminal | Signal       | Connected to                             |
@@ -344,7 +347,10 @@ Digital port 0:
 | 52       | P0.0         | water solenoid                           |
 | 18       | D GND        | water solenoid return                    |
 | 17       | P0.1         | Adafruit success buzzer positive         |
-| 15       | D GND        | Adafruit success buzzer return           |
+| 15       | D GND        | Adafruit success and go-cue buzzer returns |
+| 49       | P0.2         | Go-cue buzzer positive (1 kΩ in series)  |
+| 22       | AO 0         | PVA 1.6 command input `H` (Ledex)        |
+| 55       | AO GND       | PVA 1.6 command input `G`                |
 | 14       | +5 V         | red regulator module `IN+`               |
 | 50       | D GND        | red regulator module `IN−`               |
 | 42       | PFI 3 / P1.3 | 635 nm 200 mW laser control              |
@@ -355,10 +361,10 @@ Digital port 0:
 
 ### Terminals confirmed physically empty
 
-- **22 (AO 0)** — axial-resistance magnet command, wired to PVA `H` (with 55 AO GND to PVA `G`) on 7 Oct 2026
 - 37 (PFI 8) and 40 (PFI 13) — not in the occupied list
 - AI10 terminal 31 remains unused because AI2 uses RSE, not differential
-- Remaining unused P0 lines: P0.2–P0.7
+- Remaining unused P0 lines: P0.3–P0.7 (P0.2 is the go cue since 29 Oct 2026; AO0 terminal 22 is the
+  PVA command since 7 Oct 2026)
 
 
 
@@ -366,7 +372,8 @@ Digital port 0:
 
 AO1 terminal 21 is now physically wired to the Actuonix command input. AO0 terminal 22 is wired
 to the PVA 1.6 command input `H` (terminal 55 AO GND to `G`) since 7 Oct 2026; the Ledex is
-bench-commissioned but not yet mounted. The old `Magnets_Dev1` task still
+bench-commissioned (11 Oct) and mounted with its plunger linked to the joystick shaft (1 Nov),
+but not yet force-calibrated. The old `Magnets_Dev1` task still
 contains both channels but is not used by the working push VI; `MagnetPush_Dev1` owns AO0 and
 `LickSpout_Dev1` owns AO1.
 
@@ -375,18 +382,14 @@ Consequences:
 - An AO channel **is** available for the Actuonix, so the lick spout is no longer blocked.
 - Confirmed 12/08/26: this behavioural training rig had **no perturbation magnet hardware**.
 - Perturbation magnet hardware already exists on the mesoscope rig (original Mathis tubular solenoid).
-- Ordered 27/08/26 from Contact Evolution SA, Payerne and received 02/09/26:
-  **Ledex / Johnson Electric `195224-230`** (tubular STA 75L pull, 12 VDC, 7 W)
-  (https://shop.contact-evolution.ch/en/home/26325-195224-230.html).
-  The Ledex is the Swiss/EU equivalent of the original McMaster `69905K25`. Bench-commissioned through
-  the PVA on 11 Oct 2026 (current vs AO0 in `calibration/README.md`); not yet mounted (holder not printed).
-  Install **axially** (opposing the push), not laterally.
-  Coil driver ordered 25/09/26: Hydraulik-Kompetenz **PVA 1.6 0–10 V**
-  (CHF 260; not the 4–20 mA SKU). It is a current-regulated PWM amplifier. AO0 is the
-  0–10 V command, and coil power comes from the reserved 12 V supply, not the DAQ pin.
-  The Bürkert Type 8605 (`316532`) ordered earlier remains the ~2 December spare unless
-  that order is cancelled. Mesoscope-rig drive copying is not the plan.
-  Include a steel ring / ferromagnetic target on the push object (Mathis 2017).
+- Training-rig magnet: **Ledex / Johnson Electric `195224-230`** (tubular STA pull, 12 VDC, 7 W), the
+  Swiss/EU equivalent of the original McMaster `69905K25`. Bench-commissioned through the PVA on
+  11 Oct 2026 (current vs AO0 in `calibration/README.md`); mounted **axially** on the home side
+  (opposing the push) in the adjustable holder on 1 Nov 2026, with the plunger linked to the joystick
+  shaft (the steel-washer target of the original plan was rejected; see `docs/PROJECT_PLAN.md`).
+  Coil driver: Hydraulik-Kompetenz **PVA 1.6 0–10 V** (not the 4–20 mA variant), a current-regulated
+  PWM amplifier. AO0 is the 0–10 V command, and coil power comes from the reserved 12 V supply through
+  the 1 A fuse, never from the DAQ pin. A Bürkert Type 8605 (`316532`) driver was the planned fallback.
   Force-calibrate on the bench; do not assume the paper 2.2 V / 100 ms pulse transfers.
   Keep `mag = 0` until the unperturbed task is stable.
 - `Magnets_Dev1` must no longer reserve AO1. Target split: one-channel on-demand magnet task on AO0
@@ -435,7 +438,8 @@ length was measured 08/09/26; see
   exact pulse equivalence has not been electrically measured; functional calibration should use
   delivered water mass/volume.
 - Random/Fixed perturbation blocks have not yet been physically bench-tested on this training rig;
-  install the ordered PVA 1.6 driver and validate its hardware mapping, force and sign before enabling them.
+  finish magnet Checkpoint 5 (direction and release), force-calibrate at the cube and add the LabVIEW
+  magnet safety (guaranteed 0 V on every exit path) before enabling them.
 
 
 
@@ -443,7 +447,8 @@ length was measured 08/09/26; see
 
 - The joystick task runs in **differential** mode, so it physically consumes AI 0, AI 8, AI 1 and
 AI 9 (terminals 68, 34, 33, 66). `ai2` and above are the genuinely free analog inputs.
-- `P0.0` (terminal 52) is the water valve. `P0.1`–`P0.7` are candidate buzzer lines.
+- `P0.0` (terminal 52) is the water valve, `P0.1` (17) the success buzzer and `P0.2` (49) the go-cue
+  buzzer. `P0.3`–`P0.7` are free.
 - Port 0 lines can source up to 24 mA; PFI lines only 16 mA. The Adafruit #1536 buzzer draws roughly
 24 mA at 5 V, so it must use a **port 0** line, and even then it sits at the specification limit —
 add a small transistor/MOSFET driver if the tone is weak or the line is loaded.
@@ -456,16 +461,17 @@ add a small transistor/MOSFET driver if the tone is weak or the line is loaded.
 - [x] `Magnets_Dev1`: `Dev1/ao0` + `Dev1/ao1`, −10 V to +10 V, on-demand
 - [x] AO1 terminal 21 is occupied by the Actuonix command; AO0 terminal 22 remains empty for the magnet
 - [x] Confirmed 12/08/26: no perturbation magnet then on training rig; magnet existed on mesoscope rig only
-- [x] Ordered 27/08/26: Ledex `195224-230` from Contact Evolution SA (Payerne), the Swiss/EU equivalent of McMaster `69905K25`
-- [x] Ledex `195224-230` received 02/09/26; holder STEP model added 03/09/26
-- [x] Ordered 25/09/26: Hydraulik-Kompetenz PVA 1.6 0–10 V (CHF 260) as the Ledex coil driver. Not the 4–20 mA SKU. Bürkert Type 8605 / `316532` stays the ~2 December spare unless cancelled
+- [x] Ledex `195224-230` (Swiss/EU equivalent of McMaster `69905K25`) on the training rig; holder STEP model added 03/09/26
+- [x] Hydraulik-Kompetenz PVA 1.6 0–10 V as the Ledex coil driver (not the 4–20 mA variant)
 - [x] PVA driver installed (1 A fuse in the 12 V lead) and AO0 terminal 22 wired; coil current vs AO0 measured 11/10/26
 - [x] Adjustable Ledex holder (slotted base, upright, carriage), gauges and plunger-link parts generated 15/10/26 (`mechanical/ledex-holder-adjustable/`); the washer target is rejected
-- [x] Ledex body and plunger modelled from the datasheet drawing (factory 2.5/2.6 mm cross hole 4.76 mm from the tip, nothing to drill); constrainer window revision for the link (`joystick-1d-axis-constrainer/*_ledex_window.step/.stl`)
+- [x] Ledex body and plunger modelled from the datasheet drawing (factory 2.5/2.6 mm cross hole 4.76 mm from the tip, nothing to drill); constrainer window revision for the link (16 mm window, now in `archive/joystick-1d-axis-constrainer/`)
 - [ ] Caliper-check the plunger (slot width, cross hole, seated protrusion, length) and the M14 nut
 - [x] Holder revision: shaft seated on the component stub in the model, 14 mm link, simplified collar (M2 set screw), carriage on 4 × M3 with captive nuts reachable with the Ledex fitted, FDM fit allowances and `fit_test` part
-- [ ] Print `fit_test` and adjust the `FIT` allowances in `make_ledex_holder.py` if needed
-- [ ] Print/fit the window constrainer, adjustable holder and plunger link and force-calibrate with a gram scale at the cube
+- [x] Holder, link collar, link bar and 16 mm window constrainer printed and mounted 01/11/26; Ledex-off hand check: full return to home, no binding
+- [ ] Print and fit the wide-window constrainer (`mechanical/joystick-1d-axis-constrainer/`, CAD only)
+- [ ] Magnet Checkpoint 5 (powered direction and release) and force calibration with a gram scale at the cube
+- [x] Go-cue buzzer on P0.2 (terminal 49, 1 kΩ series, return to D GND 15) with NI-MAX task `GoCue_Dev1`, 29/10/26 (user-reported audible burst test)
 - [x] `Water_Dev1`: `Dev1/port0/line0`, digital line output, on-demand, not inverted in NI-MAX
 - [x] `frame counter_Dev1`: `Dev1/ctr0`, rising edges from `PFI8`
 - [x] `MyPulseOutputTask`: `Dev1/ctr1` output on `PFI13`, continuous 50 Hz pulse train
@@ -482,15 +488,16 @@ add a small transistor/MOSFET driver if the tone is weak or the line is loaded.
 
 
 
-## New channels and planned magnet installation
+## New channels for the push task
 
 
 | Component             | Channel            | SCB-68A terminals                                                                           | Status                                                                                                  |
 | --------------------- | ------------------ | ------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
 | Capacitive rest pad (Arduino Nano) | `Dev1/ai2` | D2 → 65, GND → AI GND (64), 5V → +5 V (**8**, not 14)                        | installed and bench-validated 14/10/26; 0 V untouched / 5 V touched; threshold 2.5 V; see `arduino/touch_pad/README.md` |
-| Adafruit #1536 buzzer | `Dev1/port0/line1` | `+` → 17 (P0.1), `−` → 15 (D GND)                                                           | installed; NI-MAX and 50 ms LabVIEW success-cue tests passed                                            |
+| Adafruit #1536 buzzer (success cue) | `Dev1/port0/line1` | `+` → 17 (P0.1), `−` → 15 (D GND)                                                           | installed; NI-MAX and 50 ms LabVIEW success-cue tests passed                                            |
+| Adafruit #1536 buzzer (go cue) | `Dev1/port0/line2` | `+` → 49 (P0.2) through 1 kΩ, `−` → 15 (D GND) | installed 29/10/26, task `GoCue_Dev1`; burst 1 ms on / 1 ms off × 50 from the go-cue loop (EVENTS code 7); user-reported bench test passed, actual burst length unmeasured. Never cover its hole (it stops oscillating) |
 | Actuonix lick spout   | `Dev1/ao1`         | signal → 21, reference → AO GND (54), motor power from separate 12 V PSU with shared ground | installed; `LickSpout_Dev1` and full extend/water/retract sequence passed across three spaced trials    |
-| Axial magnet Ledex `195224-230` | `Dev1/ao0` | command → 22, AO GND shared with drive electronics; coil power **not** from the DAQ pin | PVA 1.6 0–10 V driver wired (22 → `H`, 55 → `G`, coil on `C`/`A`, Enable `J` on a removable lead); bench-commissioned 11/10/26, 10 V gives 0.31 A at minimum Imax. Not mounted. Mount axially; steel target on push object |
+| Axial magnet Ledex `195224-230` | `Dev1/ao0` | command → 22, AO GND shared with drive electronics; coil power **not** from the DAQ pin | PVA 1.6 0–10 V driver wired (22 → `H`, 55 → `G`, coil on `C`/`A`, Enable `J` on a removable lead); bench-commissioned 11/10/26, 10 V gives 0.31 A at minimum Imax. Mounted axially 01/11/26 with the plunger linked to the shaft; not force-calibrated, keep `mag = 0` |
 
 
 `ao0` (terminal 22) belongs to the Ledex; keep the PVA Enable open unless a test needs the coil.
@@ -642,6 +649,9 @@ inventory connector hardware before wiring.
 
 ### Push-object placement redesign — 04/09/26
 
+(Historical. The steel washer target was later rejected in favour of linking the Ledex plunger to the
+shaft, and the handle is now the narrow cube; current state in `mechanical/README.md`.)
+
 - 3D-model a replacement handle that connects directly to the joystick and places its contact
 surface below the mouse in the natural forelimb workspace.
 - Shape the interface to encourage a forward push and discourage grasping/holding as on the original
@@ -667,9 +677,12 @@ volts-to-mm and force calibration.
 
 - The rest pad is the capacitive Arduino sensor (see `arduino/touch_pad/README.md`); the earlier FSR 402
   bench logs are in `archive/FSR_rest_pad_history.md`.
-- Working push task uses `joysticklickframe_push`; the rest-pad voltage is queue element index 2 (`ai2`, RSE, 0-5 V).
+- Working push task uses `joysticklickframe_push` (`ai2`, RSE, 0-5 V); in the VI the rest pad is
+  `joystick pos` index 3 (Y, X, 0, rest pad), threshold 2.5 V.
 - Case 0 requires joystick home X/Y AND `paw on rest pad`, then applies the existing home hold. The state
-  initializer is 0 so the first trial cannot bypass the gate.
+  initializer is 0 so the first trial cannot bypass the gate. Case 5 then waits for paw release, which
+  starts the movement window (EVENTS code 6); the optional `reward on touch` and `joystick only` columns
+  change this (see `parameters/README.md`).
 - The PCIe-6321 has one analog-input timing engine: never run a standalone test task (such as the old
   `rest_pad_test_Dev1`) at the same time as `joysticklickframe_push`.
 

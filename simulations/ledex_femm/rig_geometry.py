@@ -6,8 +6,8 @@ World frame (all models and the rig explorer): X along the push (+X away from th
 the breadboard top, origin under the joystick axis. The lever models (lever.py, plunger_link.py, rig_forces.py)
 use x = X and z = height above the shaft base (Z - SHAFT_BASE), with the pivot at z = -d_p.
 
-Measured from the CAD in mechanical (joystick-holder, TS-1D1S00A-1294_stripped, joystick, joystick-handle-cube,
-joystick-1d-axis-constrainer):
+Measured from the CAD in mechanical (joystick-holder, TS-1D1S00A-1294_stripped, joystick,
+joystick-1d-axis-constrainer) and the 10 mm tall narrow cube in archive/joystick-handle-cube:
 - Holder: base 86 x 31.8 x 5 mm (long side along Y), corner posts, top frame z 20.41-25.41 with a 25.3 mm hole.
 - Component: body 25.3 mm dia x 11.53 mm drops through the hole, flange (29.75 mm) rests on the frame -> body
   bottom at Z 13.88; stub top at component z 29.3.
@@ -51,7 +51,7 @@ HOLES = (("hole y 0.55", 2.05), ("hole y 4.25", 5.75), ("hole y 7.95", 9.45))  #
 CUBE_HOLE = 0                                  # shaft in the front hole (nearest the push face, the mouse side)
 CUBE_HOLE_Y = float(HOLES[CUBE_HOLE][0].split()[-1])   # that hole's y in the cube STL (STL y runs along the push axis)
 FACE = HOLES[CUBE_HOLE][1]
-CUBE_STL = "joystick-handle-cube/joystick_handle_cube_11p5.stl"   # narrow cube, 11.5 x 11.5 x 10 mm
+CUBE_STL = "../archive/joystick-handle-cube/joystick_handle_cube_11p5.stl"   # narrow cube, 11.5 x 11.5 x 10 mm
 
 # ------------------------------------------------------------------ pivot
 PIVOT_COMP_Z = COMP_BODY_H / 2

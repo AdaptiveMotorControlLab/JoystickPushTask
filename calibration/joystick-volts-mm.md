@@ -37,12 +37,18 @@ NI-MAX: **Voltage_1 / `Dev1/ai1` = push**. **Voltage_0 / `Dev1/ai0` = lateral**.
 
 | Physical | Graph | DAQ | LabVIEW name | Queue index | Param-file box |
 | --- | --- | --- | --- | --- | --- |
-| **Push** | white | `ai1` | **Y** (`Y_POS`) | **0** | 2nd and 4th numbers |
-| **Lateral** | red | `ai0` | **X** (`X_POS`) | **1** | 1st and 3rd numbers |
+| **Push** | white | `ai1` | **Y** (`Y_POS`) | **0** | loader **X** slots: 1st and 3rd numbers |
+| **Lateral** | red | `ai0` | **X** (`X_POS`) | **1** | loader **Y** slots: 2nd and 4th numbers |
 
-`joysticklickframe_push` order is `[ai1, ai0, ai2]` = Y, X, rest pad. Matches this.
+`joysticklickframe_push` order is `[ai1, ai0, ai2]` = Y, X, rest pad. The param-file column was
+corrected by the 09/09/26 hand test (push follows the loader's X slots; see `parameters/README.md`);
+the 8 Sep analysis of the old pull file further down predates that test.
 
-## Rest (home)
+## Rest (home), 8 Sep 2026
+
+Historical values from the first setup. Current push rest is ~2.44–2.48 V (see above); measured 1 kHz
+noise with the paw on the pad is ~1 mV SD per channel, so the ±0.035 V below is the live-graph view, not
+the logged noise.
 
 | Axis | LabVIEW live graph | Rest | Noise |
 | --- | --- | --- | --- |

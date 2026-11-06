@@ -157,9 +157,9 @@ shaft base.
 - Pivot: not published; taken at the middle of the component body, **23.5 mm below the shaft base**,
   with 19.3 and 27.3 mm (body z 10 and 2) as the bounds in every figure.
 - The constrainer slot runs from Y −2 to 17 (4 mm wide). Its home end stops the shaft at **−1.15 mm at
-  the cube** (home side of the vertical, i.e. of the spring's neutral); its far end allows 36.0 mm. A
+  the cube** (home side of the vertical, i.e. of the spring's neutral); its far end allows 35.9 mm. A
   15 mm push tilts the shaft 7.4°.
-- Constrainer: the model uses the window revision
+- Constrainer: the model uses the wide-window revision
   (`mechanical/joystick-1d-axis-constrainer/*_ledex_wide_window.step`): the home wall is open over
   the full 26 mm cavity width from the frame top (Z 25.41) up to the cavity ceiling, so the plunger and the
   link pin have room.
@@ -189,7 +189,7 @@ handle into tower motion, gap and resistance (`results/lever/lever_table.csv`,
   printed shaft screwed onto the lever stub. Heights from the measured component and holder
   (section above); pivot 23.5 mm below the shaft base (19.3-27.3).
 - Ten M3 washers seat on the cone at 11.5-19.5 mm above the shaft base; the cube handle spans
-  87.4-97.4 mm (push taken at 92.4 mm). The three cube holes change the result by < 0.02 mm; the models use the narrow 11.5 × 11.5 × 10 mm cube (`CUBE_STL`) in the front hole (`CUBE_HOLE` in `rig_geometry.py`, push face 2.05 mm from the shaft axis), which changed the forces by < 1 %.
+  87.4-97.4 mm (push taken at 92.4 mm). The three cube holes change the result by < 0.02 mm; the models use the narrow 11.5 × 11.5 × 10 mm cube (`CUBE_STL`, now in `archive/joystick-handle-cube/`; the newer 14.1 and 15.1 mm tall revisions are not modelled) in the front hole (`CUBE_HOLE` in `rig_geometry.py`, push face 2.05 mm from the shaft axis), which changed the forces by < 1 %.
 - The tower moves about a third of the push (rigid rotation, not small-angle):
 
 | push at the cube | 1 mm | 2 mm | 5 mm | 10 mm | 15 mm |

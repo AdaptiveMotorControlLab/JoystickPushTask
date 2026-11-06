@@ -9,8 +9,10 @@ The push object is a compact rounded cube that sits below the mouse in the natur
 presents a push-biased surface that discourages grasping like the original pull handles. Add new parts as a
 named subfolder (STEP + STL, descriptive filenames) and a row in the table below; no README per folder.
 
-Still to do: print and fit-check the window constrainer, holder and link; spring return to home; final
-volts-to-mm calibration (`calibration/joystick-volts-mm.md`).
+On the rig since 1 Nov 2026: the adjustable Ledex holder, link collar and link bar, and the 16 mm window
+constrainer (now archived); Ledex-off hand check passed (full return to home, no binding). Still to do: print
+and fit-check the wide-window constrainer and the newest cube revision; measure the return spring with a gram
+scale. The push axis is calibrated for 0-8 mm (`calibration/joystick-volts-mm.md`, 3 Nov).
 
 Print notes: PETG or PLA, orientation and fit allowances for the holder parts are in the Ledex holder
 README (printed holes come out ~0.3-0.4 mm small; print `fit_test` first).
@@ -20,9 +22,9 @@ README (printed holes come out ~0.3-0.4 mm small; print `fit_test` first).
 | `joystick/` | `joystick_89mm` | printed, on the rig | 89 mm shaft (conical body, 4 mm radius base to 1.5 mm radius tip) that screws onto the thumbstick stub; handles slide onto its tip. |
 | `TS-1D1S00A-1294_stripped/` | `TS-1D1S00A-1294_stripped` | reference, not printed | Measured APEM TS-1D1S00A-1294 Hall base (castle cap removed). |
 | `joystick-holder/` | `joystick_holder` | printed, on the rig | Breadboard holder for the component. |
-| `joystick-handle-cube/` | `joystick_handle_cube_11p5`, `..._h14p1`, `..._h15p1_d3p3_dp4p2`, `make_handle_cube.py` | chosen 17 Oct; newest revision (15.1 mm tall, 3.3 mm holes, 4.2 mm deep) not yet printed | Narrow rounded-cube push object, 11.5 × 11.5 mm; the script regenerates the revisions. |
-| `joystick-1d-axis-constrainer/` | `..._38x38x56_ledex_wide_window`, `make_wide_window.py` | new wide-window revision, not yet printed | Stepped hollow box that limits the joystick to one axis; home wall open over almost its whole width for the plunger link. |
-| `ledex-holder-adjustable/` | base, upright, carriage, `link_collar`, `link_bar`, `fit_test`, `make_ledex_holder.py` | not printed | Adjustable Ledex holder and plunger link (see its README). |
+| `joystick-handle-cube/` | `joystick_handle_cube_11p5_h15p1_d3p3_dp4p2`, `make_handle_cube.py` | newest revision (5 Nov), not yet printed; older revisions archived | Narrow rounded-cube push object, 11.5 × 11.5 × 15.1 mm; the script regenerates it. |
+| `joystick-1d-axis-constrainer/` | `..._38x38x56_ledex_wide_window`, `make_wide_window.py` | wide-window revision, not yet printed | Stepped hollow box that limits the joystick to one axis; home wall open over almost its whole width for the plunger link. |
+| `ledex-holder-adjustable/` | base, upright, carriage, `link_collar`, `link_bar`, `fit_test`, `make_ledex_holder.py` | holder, collar and link printed and mounted 1 Nov | Adjustable Ledex holder and plunger link (see its README). |
 | `ledex-195224-model/` | `ledex_body`, `ledex_plunger` | reference, not printed | Ledex body and plunger from the datasheet drawing. |
 
 ## Joystick component and holder
@@ -39,13 +41,24 @@ README (printed holes come out ~0.3-0.4 mm small; print `fit_test` first).
 
 ## Handles
 
-- **Narrow cube (11.5 mm wide, chosen 17 Oct):** 11.5 × 11.5 × 10 mm, 3 mm corner radius, 2.5 mm top fillets,
-  three blind 3.2 mm holes 3.2 mm deep along the push axis (push face 2.05 / 5.75 / 9.45 mm from the shaft
-  axis). The shaft goes in the front hole (nearest the mouse) so the paw cannot touch cube and rest pad
-  together. Volume 1131 mm³ (effective mass 4.2 g). Force models unchanged from the 20 mm cube. Position on
-  the rig: front face 6 mm from the platform edge, 7 mm from the rest-pad edge.
-- **Original 20 mm cube** (used from the first mouse session, 16 Oct) is archived in
-  [`archive/joystick-handle-cube/`](../archive/joystick-handle-cube/).
+- **Narrow cube (11.5 mm wide, chosen 17 Oct):** 11.5 × 11.5 mm footprint, 3 mm corner radius, 2.5 mm top
+  fillets, three blind holes along the push axis (push face 2.05 / 5.75 / 9.45 mm from the shaft axis). The
+  shaft goes in the front hole (nearest the mouse) so the paw cannot touch cube and rest pad together. At home
+  the cube is 2 mm from the rest platform (3 Nov). `make_handle_cube.py` (CadQuery, ball-ended holes) writes
+  the newest revision and can rebuild the 14.1 mm one for comparison; only the newest is kept here:
+
+  | Revision | Height | Holes (diameter × depth) | Volume | Where |
+  | --- | --- | --- | --- | --- |
+  | `joystick_handle_cube_11p5` (17 Oct) | 10.0 mm | 3.2 × 3.2 mm | 1130 mm³ | archive; still used by the force and geometry models |
+  | `joystick_handle_cube_11p5_h14p1` (28 Oct) | 14.1 mm | 3.2 × 3.2 mm | 1641 mm³ | archive |
+  | `joystick_handle_cube_11p5_h15p1_d3p3_dp4p2` (5 Nov) | 15.1 mm | 3.3 × 4.2 mm | 1736 mm³ | here; not yet printed |
+
+  Which revision is currently printed on the rig is not recorded. The models
+  (`simulations/ledex_femm/rig_geometry.py`, `CUBE_STL`) still use the 10 mm cube; the taller cubes (and the deeper
+  holes of the newest one) change the contact height, so update `CUBE_STL` and the cube placement and rerun the
+  models before relying on force estimates at the cube.
+- **Original 20 mm cube** (used from the first mouse session, 16 Oct) and the older narrow-cube revisions are
+  archived in [`archive/joystick-handle-cube/`](../archive/joystick-handle-cube/).
 - **38 × 3 × 3.1 mm bar handle** (never fitted) is archived in [`archive/joystick-handle-bar/`](../archive/joystick-handle-bar/).
 
 ## 1D-axis constrainer (wide-window revision)
@@ -55,9 +68,9 @@ README (printed holes come out ~0.3-0.4 mm small; print `fit_test` first).
 cavity ceiling (part z 53, world Z 68.41); the 3 mm socket ring below z 10 is closed again, and the top plate
 with its 1D slot is unchanged. Generated by `joystick-1d-axis-constrainer/make_wide_window.py` from the
 original part in `archive/`. On the rig it spans world Z 15.41-71.41 on the holder frame. The earlier 16 mm
-window revision (printed and installed 1 Nov) and the original arched version are in
-[`archive/joystick-1d-axis-constrainer/`](../archive/joystick-1d-axis-constrainer/). Check that the holder's
-cable still exits where it did (the socket opening in the home wall is now closed).
+window revision (printed and installed 1 Nov, still the one on the rig) and the original arched version are in
+[`archive/joystick-1d-axis-constrainer/`](../archive/joystick-1d-axis-constrainer/). Before swapping, check
+that the holder's cable still exits where it did (the socket opening in the home wall is now closed).
 
 ## Ledex 195224-230 reference model
 

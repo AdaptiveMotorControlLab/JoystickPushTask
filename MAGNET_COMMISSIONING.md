@@ -1,17 +1,19 @@
 # Ledex / PVA 1.6 commissioning handoff
 
-**Status 11/10/2026:** Checkpoints 1–4 done on the bench (wiring verified, 1 A fuse fitted, coil
+**Status 5/11/2026:** Checkpoints 1–4 done on the bench 11/10 (wiring verified, 1 A fuse fitted, coil
 current vs AO0 measured: 10 V gives 0.31 A at minimum `Imax`; table in `calibration/README.md`).
-Checkpoint 5 waits for the printed holder. Plunger must stay fitted and seated (without it the
-coil gives no usable pull). A FEMM estimate of the pull on the washer target, calibrated against
-the datasheet force-stroke curves, is in `simulations/ledex_femm/` (see its "Calibration against
-the datasheet" section): about 1 g at 2 mm and 10 V for five M3 washers, roughly ∝ current², so
-only ~0.06 g at 1 V; falls ~2× per mm. Measure it with a jig before use.
+Mechanical mount done 1/11: adjustable holder, link collar and link bar printed and installed with
+the 16 mm window constrainer; the plunger is linked to the joystick shaft (the steel-washer target
+is rejected, so the washer wording in the checkpoints below is historical). Ledex-off hand check
+passed (full return to home, no binding). **Checkpoint 5 is partial:** the powered direction and
+release check and a gram-scale force measurement at the cube are still to do. Plunger must stay
+fitted and seated (without it the coil gives no usable pull). Model estimate for the link
+(`simulations/ledex_femm/`, README "Plunger link"): resistance at the cube from home to a 15 mm
+push of about 2.3 → 0.6 gf at 1 V, 13 → 4 gf at 5 V and 40 → 11 gf at 10 V; measure before use.
+LabVIEW magnet safety (see the end of this page) is still required before any nonzero `mag`.
 
-**Status 27/09/2026:** The Hydraulik-Kompetenz **PVA 1.6 0–10 V** driver is now physically
-available at the training rig. The Ledex `195224-230`, reserved 12 V / 1 A Goobay supply,
-`MagnetPush_Dev1` NI-MAX task and LabVIEW AO0 path already exist, but the driver and coil have
-not yet been wired or powered together.
+**Status 27/09/2026 (historical):** the PVA 1.6 0–10 V driver arrived at the training rig; driver
+and coil were not yet wired together.
 
 This page is the handoff for the rig-PC AI agent. Guide the user through one checkpoint at a
 time, record actual measurements, and update `docs/PROJECT_PLAN.md` after every completed step. Do not
@@ -136,11 +138,11 @@ disabled; it must be below 5 mA. Recheck the DMM lead sockets before returning t
 
 ## Checkpoint 5 — mechanical direction
 
-Mount the Ledex on the **home side** of the object so attraction toward the steel washer opposes
-the forward push. Start with a generous air gap and the lowest proven command. Verify:
+Mount the Ledex on the **home side** of the object so the plunger pull (through the link to the
+shaft) opposes the forward push. Start with the lowest proven command. Verify:
 
 - resistance is backward, not assistive;
-- the object and target cannot collide with the Ledex;
+- the object, collar and link cannot collide with the Ledex or the constrainer over the full push;
 - the spring returns the object;
 - the 1D mechanism does not bind;
 - current returns to zero and force releases at 0 V.

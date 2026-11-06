@@ -11,5 +11,5 @@ constrainer slot plate,68.41,"world Z, to 71.41"
 cube push contact,135.58,world Z
 pivot depth below the shaft base,23.54,mm (19.30-27.30)
 home stop at the cube (vs vertical shaft),-1.15,mm push
-slot limit at the cube,36.03,mm push
-tilt for a 15 mm push,7.41,deg
+slot limit at the cube,35.85,mm push
+tilt for a 15 mm push,7.43,deg

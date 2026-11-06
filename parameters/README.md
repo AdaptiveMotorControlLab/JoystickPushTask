@@ -1,9 +1,13 @@
 # Parameter files
 
-Tab-separated doubles, **27 columns**, one line = one trial. The loader in
-`Push Behaviour_MCHALABI.vi` reads all 27. Columns 22–27 are reward delay, cue
-duration, spout extend, spout settle, consumption, and spout retract. User
-confirmed on 29 Sep 2026 that this 27-column order is the correct one.
+Tab-separated doubles, one line = one trial. The base format has **27 columns**;
+columns 22–27 are reward delay, cue duration, spout extend, spout settle,
+consumption, and spout retract (order confirmed 29 Sep 2026). Three optional
+columns follow: 28 `vel threshold`, 29 `reward on touch`, 30 `joystick only`,
+31 `repeat trials`. The loader in `Push Behaviour_MCHALABI.vi` reads up to 31
+columns (since 5 Nov 2026) and loads any missing optional column as 0, so
+27-, 28-, 29- and 30-column files behave as before. Every row of a file must have the same number of columns, and
+every file keeps `mag` = 0.
 
 ## Column map (confirmed)
 
@@ -36,10 +40,10 @@ confirmed on 29 Sep 2026 that this 27-column order is the correct one.
 | 24 | 25 | `spout settle` | ms. Bench **2000**. |
 | 25 | 26 | `consumption` | ms. Bench **2000**. |
 | 26 | 27 | `spout retract` | V. Bench **0**. |
-| 27 | 28 | `vel threshold` | **Optional, velocity mode (VI built 22 Oct, bench-tested by hand; mouse test pending).** V per 50 ms of `abs(d push) + abs(d lateral)` (50-sample lag); Case 3 pays when above it. 0 = off. 27-column files load it as 0. |
-| 28 | 29 | `reward on touch` | **Optional, VI edit in progress (4 Nov; VI built, load-checked, trial logic not yet bench-tested).** 0 = pay on pad release (as before); 1 = pay when the `home TO` hold completes, paw still on the pad (EVENTS code 8 instead of 6), and the paw must lift before the next trial can start. 27- and 28-column files load it as 0; a touch-mode file needs all 29 columns. Ignored when `joystick only` = 1. |
-| 29 | 30 | `joystick only` | **Optional (VI built 5 Nov; bench test pending).** 0 = rest-pad sequence (pad hold, go cue, release or touch per column 29, then joystick). 1 = joystick-only: the rest pad is ignored (no pad hold, no release, no re-arm) and no go cue; a trial arms when the joystick is held in the home box for `home TO` and the ITI has elapsed (EVENTS code 9), then the usual start box, end box / `end TO`, `vel threshold`, `move time` and reward columns apply. 27- to 29-column files load it as 0; a joystick-only file needs all 30 columns. |
-| 30 | 31 | `repeat trials` | **Optional, VI edit planned (5 Nov; not built, not tested).** 0 = the next trial uses the next row (as now). 1 = if this row's trial times out (`move time`, EVENTS code 5), the next trial uses the same row again; a success still moves on to the next row. Read from the row that just ran, so a file can mix repeating and non-repeating rows. 27- to 30-column files load it as 0; a repeat file needs all 31 columns. With repeats, trial n is no longer row n: the EVENTS code 3 value is the 1-based row number. |
+| 27 | 28 | `vel threshold` | **Optional, velocity mode (VI built 22 Oct, in mouse sessions since 22 Oct).** `abs(d push) + abs(d lateral)` over a 200-sample look-back, computed on push and lateral smoothed by a 10-sample moving average (since the 22 Oct edit; it was a raw 50-sample lag before); Case 3 pays when above it. 0 = off. 27-column files load it as 0. Current files use 0.006; the 0.012 / 0.015 files were sized for the old raw rule. |
+| 28 | 29 | `reward on touch` | **Optional (VI built 4 Nov; user-reported animal-free bench test passed 4 Nov; no mouse session yet).** 0 = pay on pad release (as before); 1 = pay when the `home TO` hold completes, paw still on the pad (EVENTS code 8 instead of 6), and the paw must lift before the next trial can start. 27- and 28-column files load it as 0; a touch-mode file needs all 29 columns. Ignored when `joystick only` = 1. |
+| 29 | 30 | `joystick only` | **Optional (VI built 5 Nov; bench test pending, nothing verified at runtime).** 0 = rest-pad sequence (pad hold, go cue, release or touch per column 29, then joystick). 1 = joystick-only: the rest pad is ignored (no pad hold, no release, no re-arm) and no go cue; a trial arms when the joystick is held in the home box for `home TO` and the ITI has elapsed (EVENTS code 9), then the usual start box, end box / `end TO`, `vel threshold`, `move time` and reward columns apply. 27- to 29-column files load it as 0; a joystick-only file needs all 30 columns. |
+| 30 | 31 | `repeat trials` | **Optional (5 Nov; loader step 1 done, Case 3 timeout logic built, bench test pending).** 0 = the next trial uses the next row (as now). 1 = if this row's trial times out (`move time`, EVENTS code 5), the next trial uses the same row again; a success still moves on to the next row. Read from the row that just ran, so a file can mix repeating and non-repeating rows. 27- to 30-column files load it as 0; a repeat file needs all 31 columns. With repeats, trial n is no longer row n: the EVENTS code 3 value is the 1-based row number. |
 
 Velocity-mode files (28 columns): `training/02_micro_touch_velocity_200ms_thr0p012.txt` and `_thr0p015.txt`
 (500 rows; home push 2.43-2.53, `home TO` 200, end box 0-1 V so only velocity pays, `move time` 5000).
@@ -71,13 +75,19 @@ Both rows use ITI 2000 ms. Untested: that the VI applies each row's boxes, `vel 
 
 `training/01_pad_touch_200ms_release_2ul.txt` (3 Nov) is `01_pad_touch_200ms_release_3ul.txt` with `watertime` = 70 ms (~2 µl, interpolated between the 50 ms / 1.2 µl and 100 ms / 3.2 µl calibration points; weigh it, measure before use). 250 rows, 27 columns, nothing else changed. Not bench-tested, not run with a mouse.
 
-`training/01_pad_touch_100ms_touch_2ul.txt` (4 Nov) is the first reward-on-touch file: the `01_pad_touch_100ms_release_2ul` row with ITI 2000 ms (was 1500, avoids the unpaid-success bug), `vel threshold` 0 and `reward on touch` 1. 500 rows, 29 columns. Needs the reward-on-touch VI edit; on the current VI (Array Subset 28) the 29th value should simply be ignored, so it would pay on release (unchecked). Not bench-tested, not run with a mouse.
+`training/01_pad_touch_100ms_touch_2ul.txt` (4 Nov) is the first reward-on-touch file: the `01_pad_touch_100ms_release_2ul` row with ITI 2000 ms (was 1500, avoids the unpaid-success bug), `vel threshold` 0 and `reward on touch` 1. 500 rows, 29 columns. Used for the 4 Nov animal-free bench test of the touch mode (user-reported OK); not run with a mouse.
 
 `training/01_pad_touch_200ms_touch_1p5ul.txt` (5 Nov) is `01_pad_touch_100ms_touch_2ul.txt` with `home TO` = 200 ms (was 100) and `watertime` = 58 ms (~1.5 µl, interpolated as in `_2s_1p5ul`; below the range the fit is stated valid for, so measure before use). 500 rows, 29 columns, nothing else changed. Not bench-tested, not run with a mouse.
 
 `training/02_micro_touch_velocity_200ms_thr0p006_smooth_2s_home2p46-2p51_1p5ul.txt` (5 Nov) is `02_micro_touch_velocity_100ms_thr0p006_smooth_2s_home2p46-2p51_1p5ul.txt` with `home TO` (rest-pad hold) = 200 ms (was 100). Nothing else changed. Not bench-tested, not run with a mouse.
 
-`push_bench_joystick-only.txt` (5 Nov) is the first joystick-only file: the `03_push_distance_200ms_home2p46-2p51_end2p40_1s_1p5ul` row with `reward on touch` 0 and `joystick only` 1 appended. 500 rows, 30 columns. Joystick home 2.46-2.51 V held 200 ms, paid when push ≤ 2.40 V within 1 s; the pad is not used. Needs the session-mode VI edit; on a VI without it (Array Subset 29) the 30th value should simply be ignored, so it would run as the normal pad-release file (unchecked). Not bench-tested, not run with a mouse.
+`push_bench_joystick-only.txt` (5 Nov) is the first joystick-only file: the `03_push_distance_200ms_home2p46-2p51_end2p40_1s_1p5ul` row with `reward on touch` 0 and `joystick only` 1 appended. 500 rows, 30 columns. Joystick home 2.46-2.51 V held 200 ms, paid when push ≤ 2.40 V within 1 s; the pad is not used. For the pending joystick-only bench test (checklist in `docs/PROJECT_PLAN.md`); not run with a mouse.
+
+`training/02_pad_velocity_100ms_thr0p006_smooth_5s_1p5ul_iti1p5.txt` (30 Oct, for zuchon; 28 columns, 500 identical rows) uses only the cube row of the 29 Oct mixed file (no touch-only trials) with water 58 ms (~1.5 µl, interpolated; weigh it; was 100), ITI 1500 (was 2000) and consumption 1000 ms (was 1500): `home TO` 100, home push 2.43-2.53, end box 0-1 V (only velocity pays), `vel threshold` 0.006, `move time` 5000. Not bench-tested, not run with a mouse.
+
+`training/02_micro_touch_velocity_100ms_thr0p006_smooth_2s_home2p46-2p51_1p5ul.txt` (4 Nov; 28 columns, 500 rows) is the `_3s_home2p46-2p51_1p5ul` file with `move time` 2000 ms (was 3000). Not bench-tested, not run with a mouse.
+
+`training/04_broad_zone_4-8mm_hold50ms_home2p46-2p51_1s_1p5ul.txt` (4 Nov; 28 columns, 500 rows) is `03_push_distance_200ms_home2p46-2p51_end2p40_1s_1p5ul.txt` with the end push box 2.235-2.365 V (8 / 4 mm from home on the 3 Nov calibration) and `end TO` 50 ms ("hold50ms" in the name; the pad hold `home TO` stays 200 ms). Pushing past 8 mm leaves the zone. Re-centre on the measured rest voltage if it is not ~2.47 V. Not bench-tested, not run with a mouse.
 
 `push_bench_row-mapping.txt` (5 Nov) is the bench file for the parameter-row mapping fix (`docs/PROJECT_PLAN.md`, "Parameter-row mapping"). 40 rows, 28 columns. Odd rows are touch-and-release (all boxes 0-5 V, pay at pad release); even rows need a push (home push 2.43-2.53 V, end push 0-2.40 V). Every row has its own `watertime` (50 + row number, 51-90 ms) and `move time` (2000 + 50 × row number, 2050-4000 ms), so `scripts/check_row_mapping.py` can tell which row each code 15 value and timeout came from. All rows `home TO` 100, ITI 2000, cue 50 ms, delay 0, consumption 1500, spout columns 0, `mag` 0, `vel threshold` 0. No animal. Not bench-tested.
 
@@ -85,8 +95,7 @@ Both rows use ITI 2000 ms. Untested: that the VI applies each row's boxes, `vel 
 
 `training/01_pad_touch_50ms_release_2ul.txt` and `training/01_pad_touch_100ms_release_2ul.txt` (3 Nov) are the matching `_3ul` files with `watertime` = 70 ms (~2 µl, interpolated as above; measure before use). 250 rows, 27 columns, nothing else changed. Not bench-tested, not run with a mouse.
 
-Noise on 20-21 Oct (paw on pad, cube untouched): 99.99th percentile 7.8-8.0 mV, max 9-11.6 mV (same at lag 10-50 ms). VI uses a 50 ms lag; 0.012 gave 0 noise onsets in 224 min.
-Bench-tested without a mouse on 22 Oct (touch pays, slow micro-push pays at lag 50); not yet run with a mouse.
+Raw-rule history (before the 22 Oct smoothing edit): noise on 20-21 Oct (paw on pad, cube untouched) had a 99.99th percentile of 7.8-8.0 mV and a max of 9-11.6 mV (same at lag 10-50 ms); with the 50 ms lag, 0.012 gave 0 noise onsets in 224 min. Bench-tested without a mouse on 22 Oct (touch pays, slow micro-push pays at lag 50). The smoothed rule's noise max is ~0.0045, hence the 0.006 files.
 
 Restored historical day-one files (exact copies from git, kept so every recorded session has its file;
 session map in `docs/PROJECT_PLAN.md`): `training/02_micro_push_day1_restpad_home2p475.txt` (16 Oct: home 2.475-2.51,
@@ -105,8 +114,9 @@ still compares index 0 to the X box and index 1 to the Y box.
 
 ## Shared settings
 
-Scale is the 08/09/26 eyeball **0.030 V/mm** (lower V = forward). Remeasure
-with a ruler before treating millimetres as final.
+Scale measured 3 Nov 2026 on the current mount: **0.0295 V/mm** over 0–8 mm
+(lower V = forward; 10 mV ≈ 0.34 mm; `calibration/joystick-volts-mm.md`). The
+older stage files below were written with the 08/09/26 eyeball 0.030 V/mm.
 
 Home voltage is not a fixed rig constant. It changes when the joystick shaft
 or the object is fitted or removed. Remeasure before loading a file from
@@ -138,6 +148,11 @@ Advance a stage after the criterion on **two consecutive days**. Change only
 one important thing at a time.
 
 ## Files that exist
+
+This table covers the original stage files and bench presets; files added from
+16 Oct 2026 on (touch-and-release, velocity, mixed, distance, broad-zone,
+reward-on-touch and joystick-only) are described above, and the session → file
+map is in `docs/PROJECT_PLAN.md`.
 
 | File | Stage | Push end box (X) | ~mm from rest | `end TO` | Rows | Extra |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -175,8 +190,8 @@ from the older expert-mouse file `training/07_expert.txt`: push/white
 The success threshold remains the wider bench range 0.00–2.22 V rather than
 the expert file's narrow target. Before Run:
 
-1. Keep the Class 3B laser keyed off. Do not power the unfused PVA/Ledex.
-   The file commands `mag=0`.
+1. Keep the Class 3B laser keyed off. Leave the PVA/Ledex supply unplugged
+   and the Enable clip off. The file commands `mag=0`.
 2. Stop the manual-reward and standalone rest-pad test VIs. Prime the water line
    until it is bubble-free.
 3. Position the base so both live signals are inside the expert home box:
@@ -202,8 +217,8 @@ Suggested sequence:
 
 The parameter file can select criteria and output timings, but operator
 actions determine whether the rest-pad gate, timeout and success branches are
-actually exercised. It cannot safely test the magnet until the required 1 A
-inline fuse is installed and magnet commissioning resumes.
+actually exercised. It does not test the magnet; magnet tests follow
+`MAGNET_COMMISSIONING.md`.
 
 ## Stages that are **not** a parameter file
 
@@ -212,7 +227,7 @@ inline fuse is installed and magnet commissioning resumes.
 | 1 Habituation (cue → water, no push) | Water loop only wakes on Case 4 | Run `deliverWater_RIG1_cue.vi` once per manual reward. It gives a fixed 50 ms cue, then water for the front-panel `Water on time (ms)` value. |
 | Pad-contact shaping (supervised fallback) | Rewards pad contact without requiring joystick movement | Use `training/01_pad_contact_shaping_50ms.txt` (or `_250ms`) only after a hand-contact bench test. Its full-range home/end boxes make joystick position irrelevant within 0–5 V. It does not require release-to-rearm, so held contact can earn another reward after each 2 s ITI; supervise reward count and stop if this is not intended. |
 | 6 Delay / retractable spout | Files exist (`06_delay_*`) | Load 0 → 250 → 500; use 1000 only if desired and tolerated. Do not change the zone in those sessions. |
-| 8 Shadow block labels | No column for block ID; magnet still absent | Run `08_shadow` as one 300-trial zero-force session. Split 50/75/100/75 later if needed. |
+| 8 Shadow block labels | No column for block ID; magnet not yet force-calibrated | Run `08_shadow` as one 300-trial zero-force session. Split 50/75/100/75 later if needed. |
 | 9 Experiment (Baseline / Random / Fixed / Washout) | Random/Fixed need a force-calibrated magnet | Baseline ≈ `07_expert`. Do not write `mag ≠ 0` files yet. |
 
 ## Front panel during these files
@@ -232,10 +247,14 @@ changing the working underlying labels.
 
 ## Loader
 
-`Push Behaviour_MCHALABI.vi` on `master` already loads 27 columns and the
-water loop already uses those fields. Cases 21–26 are `reward delay`,
+`Push Behaviour_MCHALABI.vi` on `master` loads up to 31 columns and the
+water loop uses columns 22–27. Loader cases 21–26 are `reward delay`,
 `cue duration`, `spout extend`, `spout settle`, `consumption`, and
-`spout retract`. Do not expand the cluster or add those cases again.
+`spout retract`; cases 27–30 are `vel threshold`, `reward on touch`,
+`joystick only`, and `repeat trials`, each added as the LAST entry of the
+`exp values` and `exp para array` clusters (default 0). A new optional column
+needs the same pattern: new last cluster entry, new loader case, Array Subset
+length + 1.
 
 On 27/09/26 the loader cluster and the water-loop cluster had `reward delay`
 and `spout retract` swapped because the clusters were the same type of

@@ -2,10 +2,10 @@
 
 > ⚠️ **Work in progress.** This repository adapts the 2-axis joystick rig from
 > [Mathis et al., 2017](https://doi.org/10.1016/j.neuron.2017.02.049) into a **1D forelimb object-push task**.
-> The working rig VIs have been imported, and the rest-pad-to-reward success path is bench-tested.
-> The push object is now a 3D-modeled joystick shaft with interchangeable tip-mounted handles
-> (bar or rounded cube) meant to sit below the mouse.
-> Animal-specific calibration, training presets and safety/edge-case validation remain in progress.
+> The rig runs mouse training sessions (since 16 October 2026) with the axial-resistance magnet mounted but
+> kept at 0 V. Push-stage training, magnet force calibration and the perturbation sessions remain in progress.
+> The living project record (status, decisions, open bugs, validation) is
+> [`docs/PROJECT_PLAN.md`](docs/PROJECT_PLAN.md).
 
 Forked and adapted from the original [JoystickControlSystem](https://github.com/AdaptiveMotorControlLab/JoystickControlSystem)
 (Mathis lab). The original rig trained head-fixed mice to *pull* a 2-axis joystick against a lateral
@@ -17,129 +17,141 @@ task into a goal-directed forward *push*.
 Each trial:
 
 ```
-forepaw on rest pad  →  trial starts  →  reach to object  →  push forward
-  →  (optional axial resistance; hardware not yet active)  →  object held in target band
+forepaw on rest pad (held `home TO`)  →  go cue  →  paw release starts the trial  →  reach to object
+  →  push forward  →  (optional axial resistance; magnet kept at 0 V for now)  →  object in target band
   →  auditory success cue  →  short delay  →  lick spout extends  →  water reward  →  spout retracts
 ```
 
 Key differences from the original task:
 
 - **1D push** instead of 2D pull — the task-relevant axis remains in the existing coordinate structure;
-  the lateral axis is physically limited by the existing **1D-axis constrainer**.
-- **Bounded target zone** — reward requires the object to *end and remain* within a target distance band (overshoot fails).
-- **Rest-pad initiation** — a trial can only start when the object is home (spring-loaded) **and** the
-  forepaw is on the rest pad, giving a clean pre-contact trial-start state.
+  the lateral axis is physically limited by the **1D-axis constrainer**.
+- **Target band** — reward requires the object to stay inside a target band for `end TO`. Overshoot is
+  not an abort, but leaving the band resets the dwell. An optional velocity rule pays any cube movement
+  above a threshold instead (shaping).
+- **Rest-pad initiation** — a trial can only arm when the object is home (spring-loaded) **and** the
+  forepaw is on the capacitive rest pad; the movement window starts when the paw is released.
+  Optional session modes pay on the pad hold itself (`reward on touch`) or ignore the pad entirely
+  (`joystick only`).
 - **Axial-resistance perturbation** (opposing the push) instead of a lateral kick. The mesoscope
-  rig uses the original Mathis solenoid (McMaster `69905K25`). The training-rig copy is Ledex
-  `195224-230`, received 02/09/26 but not yet installed. Its coil driver, Hydraulik-Kompetenz
-  PVA 1.6 0–10 V, was ordered 25/09/26. `Dev1/ao0` / `MagnetPush_Dev1` is reserved for the command.
+  rig uses the original Mathis solenoid (McMaster `69905K25`). The training rig uses a Ledex
+  `195224-230` driven by a Hydraulik-Kompetenz PVA 1.6 (0–10 V command on `Dev1/ao0` /
+  `MagnetPush_Dev1`), with the plunger linked to the joystick shaft. It is electrically commissioned
+  and mounted; force calibration and the LabVIEW magnet safety work are still to do, so every
+  parameter file keeps `mag = 0`.
 - **Delayed, retractable reward** with an immediate auditory success cue, separating push execution from
   licking/reward for cleaner neural alignment.
 - **Planned session blocks** (via parameter files): Baseline → Random perturbation → Fixed perturbation → Washout.
 
 ## Current status
 
-- Canonical VIs imported from the behavioural rig and pushed on 18 August 2026.
-- Bench-validated path: object home + rest-pad paw gate → trial → success cue → adjustable delay → spout
-  extension → water → consumption wait → spout retraction.
-- The acquisition helper reads joystick X/Y, lick/frame signals and the new rest-pad channel.
-- A fresh GitHub copy now opens and completes the full bench sequence on the rig PC using the
-  compatible repository helper VIs.
-- Safe startup now commands water/cue LOW, spout retract and magnet 0 V. One canonical Stop cleanly
-  ends every parallel loop; idle, reward-delay and spout-extended Stop tests passed.
-- `deliverWater_RIG1_cue.vi` provides manual day-1 habituation rewards: one Run gives a fixed
-  50 ms auditory cue followed by the front-panel-selected water pulse, with no joystick requirement.
-- Remaining validation includes repeated-cycle testing and explicit fail/timeout checks. LabVIEW's
-  toolbar Abort remains emergency-only because it bypasses normal cleanup.
-- STEP models exist for an 89 mm joystick shaft plus a tip-mounted rounded cube handle (a 38 mm bar
-  handle is archived) with three offset holes. See [`mechanical/README.md`](mechanical/README.md).
-- A printed joystick, handle and 1D-axis constrainer are already fitted on the rig.
-  The rest pad is a capacitive touch sensor (Arduino Nano, see
-  [`arduino/touch_pad/`](arduino/touch_pad/README.md)), installed and bench-validated. Remaining build
-  work includes spring return, linking the Ledex plunger to the joystick shaft, force-calibrating the Ledex, mouse-specific calibration and training-stage
-  controls/presets.
+Validated on the bench or in sessions (details and dates in the project plan):
 
+- Rest-pad gate → trial → success cue → adjustable delay → spout extension → water → consumption wait →
+  spout retraction. Safe startup (water/cue LOW, spout retract, magnet 0 V) and one canonical Stop that
+  ends every parallel loop. LabVIEW's toolbar Abort remains emergency-only because it skips cleanup.
+- Capacitive rest pad (Arduino Nano, mains-filtered sketch) on `ai2`, confirmed in mouse sessions.
+- EVENTS logger (`EVENTS_<name>`: trial, state, reward, water-loop, magnet and heartbeat events with
+  sample index and Unix time) and the automatic `TIMESTAMPS_LABVIEW_<name>.npy` file for video sync,
+  written at Stop.
+- Trial start at paw release (Case 5), go cue at the end of the pad hold (second buzzer on P0.2),
+  velocity reward mode (column 28) and reward-on-touch mode (column 29).
+- `deliverWater_RIG1_cue.vi` for manual habituation rewards (50 ms cue, then water; no joystick
+  requirement, does not move the spout).
 
+Built but not yet bench-tested: the joystick-only session mode (column 30). Open bugs (unpaid
+successes, occasional acquisition stalls, a missed magnet-loop occurrence) are tracked in the project plan.
+
+Mechanics: printed 89 mm joystick shaft with a narrow rounded-cube handle, 1D-axis constrainer, adjustable
+Ledex holder and plunger link, all on the rig. CAD and print status in
+[`mechanical/README.md`](mechanical/README.md); superseded parts in [`archive/`](archive/).
 
 ## Hardware
 
 Existing rig hardware:
 
-- NI-DAQ card, **PCIe-6321** (`Dev1` on the live rig)
-- Joystick base/readout (Digi-Key 679-2501-ND)
-- 3D-printed **1D-axis constrainer** ([window revision](mechanical/README.md))
-- 3D-modeled **joystick shaft** and interchangeable handles
-  ([cube](mechanical/README.md))
-
-Mechanical adaptation in progress:
-
-- One printed joystick, handle and 1D-axis constrainer are fitted for bench testing. Compare the rounded cube's three offset holes when
-  freezing the final mouse-relative reach and object weight.
-- Add spring return to home and link the Ledex plunger to the joystick shaft for axial resistance.
+- NI-DAQ card, **PCIe-6321** (`Dev1` on the live rig), SCB-68A breakout
+- Joystick base/readout: APEM TS-1D1S00A-1294 Hall thumbstick (Digi-Key 679-2501-ND)
+- 3D-printed joystick shaft, cube handle and **1D-axis constrainer** ([mechanical](mechanical/README.md))
 
 New components for the push task:
-
 
 | Role                   | Component                                                                      | DAQ channel          |
 | ---------------------- | ------------------------------------------------------------------------------ | -------------------- |
 | Rest-pad paw sensor    | **Capacitive touch pad** (Arduino Nano, 10×10 mm copper tape, 0 V / 5 V output)| `Dev1/ai2`           |
 | Retractable lick spout | **Actuonix L12-30-50-12-I** linear actuator (0–5 V position mode, 12 V supply) | `Dev1/ao1`           |
 | Auditory success cue   | **Adafruit 5 V active buzzer** (#1536)                                         | `Dev1/port0/line1`   |
-| Axial resistance       | Ledex **`195224-230`** (received 02/09/26; not installed). Driver ordered 25/09/26: Hydraulik-Kompetenz PVA 1.6 0–10 V | reserved `Dev1/ao0`  |
+| Go cue                 | second Adafruit #1536 buzzer, 1 kΩ in series, burst-modulated from LabVIEW     | `Dev1/port0/line2`   |
+| Axial resistance       | Ledex **`195224-230`** via Hydraulik-Kompetenz **PVA 1.6** (0–10 V), plunger linked to the shaft | `Dev1/ao0` (command only) |
 | Water valve            | existing solenoid                                                              | `Dev1/port0/line0`   |
 
+> The live NI-MAX configuration, SCB-68A wiring and bench-test history are documented in
+> [`RIG_INVENTORY.md`](RIG_INVENTORY.md); the magnet wiring and commissioning steps in
+> [`MAGNET_COMMISSIONING.md`](MAGNET_COMMISSIONING.md).
 
-> The validated live NI-MAX configuration, SCB-68A wiring and bench-test history are documented in
-> [`RIG_INVENTORY.md`](RIG_INVENTORY.md).
-
-> The PCIe-6321 has two AO channels. The working design reserves AO0 for axial resistance and uses
-> AO1 for the lick-spout actuator; the auditory cue therefore uses a digital line.
-
-
+> The PCIe-6321 has two AO channels. AO0 is the magnet command (never coil power) and AO1 drives the
+> lick-spout actuator, so both cues use digital lines.
 
 ## Software
 
 The main VI is `Push Behaviour_MCHALABI.vi`. Its required local dependencies are
-`avg joystick and frame trig lick3.vi`, `frame counter.vi` and `PushTask Globals.vi`.
+`avg joystick and frame trig lick3.vi` (acquisition), `frame counter.vi`, `PushTask Globals.vi` (shared
+`stop all` and `sample count`) and `Log Event.vi` (EVENTS logger). `deliverWater_RIG1_cue.vi` is the
+stand-alone habituation reward VI.
 
-The program retains the original occurrence-driven five-state architecture and trajectory logging while
-adding the rest-pad gate, digital success cue, retractable-spout reward sequence and shared normal-stop
-signal for all asynchronous loops. It requires LabVIEW and NI-DAQmx. Saved NI-MAX tasks are
-machine-local and must be imported or configured on each rig. The validated task/channel map is
-documented in [`RIG_INVENTORY.md`](RIG_INVENTORY.md), with the 20 August 2026 NI-DAQmx backup stored at
-[`ni-max/JoystickPushTask_NIMAX_2026-08-20.nce`](ni-max/JoystickPushTask_NIMAX_2026-08-20.nce).
+The program keeps the original occurrence-driven state machine and trajectory logging, and adds the
+rest-pad gate, the paw-release state (Case 5), the go-cue loop, the EVENTS writer loop, the digital
+success cue, the retractable-spout reward sequence and a shared normal-stop signal for all asynchronous
+loops. It requires LabVIEW and NI-DAQmx. Saved NI-MAX tasks are machine-local and must be imported or
+configured on each rig; the 20 August 2026 NI-DAQmx backup is
+[`ni-max/JoystickPushTask_NIMAX_2026-08-20.nce`](ni-max/JoystickPushTask_NIMAX_2026-08-20.nce)
+(it predates the go-cue task `GoCue_Dev1`).
+
+At Stop the VI runs [`scripts/run_timing.bat`](scripts/run_timing.bat), which calls
+[`scripts/make_labview_timing.py`](scripts/make_labview_timing.py) (numpy only; the rig PC's Python 3.6.4
+must not be upgraded). The EVENTS format is specified in [`EVENTS_LOGGER_PLAN.md`](EVENTS_LOGGER_PLAN.md).
+The rest-pad Arduino sketch is in [`arduino/touch_pad/`](arduino/touch_pad/README.md).
 
 ## Experimental settings file
 
-The experimental parameters are loaded from a text file, one line per trial
-(**27 tab-separated columns**). Columns 1–21 were mapped on 8 September 2026;
-reward delay, cue duration and spout timing/voltages were added as columns
-22–27 and runtime-tested on the rig on 9 September:
-[`parameters/README.md`](parameters/README.md). Push = Y / `ai1`; lateral = X /
-`ai0`. Column 19 is Case 0 `timeout`; column 20 is Case 3 `move time`.
+The experimental parameters are loaded from a tab-separated text file, one line per trial. The base
+format has **27 columns** (boxes, timings, water, cue and spout settings). Three optional columns
+switch on newer modes: 28 `vel threshold` (velocity reward), 29 `reward on touch`, 30 `joystick only`.
+Shorter files load the missing columns as 0, so older files behave as before. Column map, the
+X/Y naming trap and every file's purpose: [`parameters/README.md`](parameters/README.md).
+Push = Y / `ai1`; lateral = X / `ai0`, but push values go in the loader's **X** columns.
 
-Push training files (stages 2–8, including reward-delay ramping) live in
-[`parameters/training/`](parameters/README.md). Habituation and perturbation
-experiment blocks are not yet file-only stages.
-
-The old front-panel controls remain temporarily as references/fallbacks, but
-the live rig water loop now reads those six settings from each trial row. The
-edited VI binary still needs transferring back from the rig PC into this
-repository.
+Training files live in [`parameters/training/`](parameters/training/); bench presets
+(`push_bench_*.txt`) sit in [`parameters/`](parameters/). Habituation and perturbation blocks are not
+yet file-only stages.
 
 ## Calibration
 
 Water-valve pulse length was measured on the training rig on 8 September 2026.
-Use **130 / 185 / 240 ms** for **4 / 6 / 8 µl**. The 200 ms bench default delivered
-6.6 µl. Full table, fit and figures:
+Use **130 / 185 / 240 ms** for **4 / 6 / 8 µl** (100 ms measured 3.2 µl). Full table, fit and figures:
 [`calibration/water-volume.md`](calibration/water-volume.md).
 
-Joystick map (8 September 2026): **push = Y = `Dev1/ai1`** (white), **lateral = X =
-`Dev1/ai0`** (red). Home is **2.50 V** / **2.525 V**. An eyeball 10 mm push was
-2.50 → 2.20 V (~0.030 V/mm at this handle, vs the old demo 0.05 V/mm). See
-[`calibration/joystick-volts-mm.md`](calibration/joystick-volts-mm.md).
-Remeasure with a ruler before writing training files. Test all channels in
-NI-MAX before running.
+Joystick map: **push = Y = `Dev1/ai1`** (white), **lateral = X = `Dev1/ai0`** (red); forward push
+lowers the voltage. Measured 3 November 2026 on the current mount: **0.0295 V/mm** over 0–8 mm
+(10 mV ≈ 0.34 mm), home ~2.47 V. Rest drifts between sessions (2.44–2.48 V seen), so re-centre home
+boxes on the measured rest before each session. See
+[`calibration/joystick-volts-mm.md`](calibration/joystick-volts-mm.md) and
+[`calibration/README.md`](calibration/README.md) (also magnet coil current vs AO0).
+
+## Repository layout
+
+| Path | Contents |
+| --- | --- |
+| `*.vi` (root) | Canonical LabVIEW hierarchy (edit only in LabVIEW on the rig PC; never Git-merge `.vi` files) |
+| `parameters/` | Parameter files and their README |
+| `scripts/` | Timing-file script run at Stop |
+| `calibration/` | Water, joystick and magnet calibrations |
+| `arduino/touch_pad/` | Capacitive rest-pad sketch and wiring |
+| `mechanical/` | Current CAD (STEP + STL) and generator scripts |
+| `simulations/ledex_femm/` | Ledex force models, rig geometry and the rig explorer |
+| `archive/` | Superseded CAD, the FSR rest-pad history and retired scripts |
+| `ni-max/` | NI-DAQmx configuration backup |
+| `docs/PROJECT_PLAN.md` | Project state, decisions, known bugs and validation status |
 
 ## Citation
 

@@ -5,10 +5,13 @@ at z = -1.5. Three blind holes open in the bottom face for the shaft (front hole
 Each hole is a cylinder with a hemispherical (ball-end) tip; "depth" below is to the tip apex.
 
     python make_handle_cube.py                 # writes the current revision (h15p1, d3.3, depth 4.2)
-    python make_handle_cube.py --check-old     # rebuilds h14p1 (d3.2, depth 3.2) and compares to its STEP
+    python make_handle_cube.py --check-old     # rebuilds h14p1 (d3.2, depth 3.2) and compares to its archived STEP
 """
+import os
 import sys
 import cadquery as cq
+
+ARCHIVE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "archive", "joystick-handle-cube")
 
 W, Y0, Y1, Z0 = 11.5, -1.5, 10.0, -1.5
 R_CORNER, R_TOP, R_BOTTOM = 3.0, 2.5, 0.1
@@ -37,7 +40,7 @@ def build(height, hole_d, hole_depth):
 
 if __name__ == "__main__":
     if "--check-old" in sys.argv:
-        old = cq.importers.importStep("joystick_handle_cube_11p5_h14p1.step").val()
+        old = cq.importers.importStep(os.path.join(ARCHIVE, "joystick_handle_cube_11p5_h14p1.step")).val()
         new = build(14.1, 3.2, 3.2).val()
         print("old", old.Volume(), "rebuild", new.Volume(),
               "old-new", old.cut(new).Volume(), "new-old", new.cut(old).Volume())

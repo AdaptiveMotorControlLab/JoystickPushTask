@@ -68,7 +68,8 @@ coverage.xml
 *.pot
 
 # Django stuff:
-*.log*.ckpt
+*.log
+*.ckpt
 snapshot-*
 
 # Byte-compiled / optimized / DLL files
@@ -113,7 +114,7 @@ ENV/
 .spyderproject
 .spyproject
 .vscode/*
-# Force-tracked so the Mac and rig PCs share one plan. The ignore rule does not untrack it.
+# Legacy agent notes file, replaced by docs/PROJECT_PLAN.md and .cursor/rules/.
 .cursorrules
 
 # Rope project settings
