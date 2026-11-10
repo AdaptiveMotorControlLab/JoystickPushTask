@@ -17,10 +17,11 @@ const uint16_t TARE_READINGS = 64;
 const unsigned long CS_TIMEOUT_MS = 10; // keeps the loop responsive if the pad is shorted
 
 // Mains rejection: a mouse on the pad picks up 50 Hz hum. Readings are averaged over exactly
-// one mains period (two half-windows of DECISION_US), so the hum cancels; a new touch decision
-// is made every half-window. Set DECISION_US to 8333 on 60 Hz mains.
-const unsigned long DECISION_US = 10000;
-const unsigned long DECISION_MS = DECISION_US / 1000;
+// one mains period (N_BINS bins of BIN_US), so the hum cancels; the window slides by one bin,
+// so a new touch decision is made every BIN_US. Set MAINS_PERIOD_US to 16667 on 60 Hz mains.
+const unsigned long MAINS_PERIOD_US = 20000;
+const uint8_t N_BINS = 10;
+const unsigned long BIN_US = MAINS_PERIOD_US / N_BINS;
 
 // Sensitivity: the pot sets the ON threshold (in raw counts above baseline) on an
 // exponential scale between these limits. Clockwise = more sensitive (lower threshold).
@@ -28,9 +29,10 @@ const float THR_MIN = 20.0;
 const float THR_MAX = 5000.0;
 const float OFF_FRACTION = 0.5;        // OFF threshold = 0.5 x ON (hysteresis)
 const unsigned long TOUCH_HOLD_MS = 20;   // above ON for this long before D2 goes HIGH
-const unsigned long RELEASE_HOLD_MS = 40; // below OFF for this long before D2 goes LOW
+const unsigned long RELEASE_HOLD_MS = 4;  // below OFF for this long before D2 goes LOW
 
-// Baseline tracking (only while released), per decision step
+// Baseline tracking (only while released), one step every BASELINE_STEP_MS
+const unsigned long BASELINE_STEP_MS = 10;
 const float DRIFT_ALPHA = 0.0025;      // slow upward/downward drift (~4 s)
 const float DROP_ALPHA = 0.22;         // fast follow when the reading falls below baseline (~40 ms)
 
@@ -42,16 +44,19 @@ const unsigned long FAULT_BLINK_MS = 50;
 
 CapacitiveSensor cs(PIN_SEND, PIN_PAD);
 
-struct HalfWindow {
-  long sum;
-  uint16_t n;
+// Readings last ~0.5-10 ms (longer while touched), so each one is weighted by its duration
+// and split across the bins it overlaps; the window then covers exactly one mains period.
+struct Bin {
+  long sum;          // raw x microseconds
+  unsigned long us;  // microseconds covered by readings
   long lo;
   long hi;
 };
 
-HalfWindow cur;
-HalfWindow prev;
-unsigned long halfStartUs = 0;
+// One spare slot: the open bin, which is not part of the decision window.
+Bin bins[N_BINS + 1];
+uint8_t openBin = 0;
+unsigned long binStartUs = 0;
 
 float baseline = 0;
 float potFiltered = 0;
@@ -65,6 +70,7 @@ unsigned long pendingSince = 0;
 bool printing = true;
 
 unsigned long lastPot = 0;
+unsigned long lastBaseline = 0;
 unsigned long lastPrint = 0;
 unsigned long lastBlink = 0;
 bool blinkState = false;
@@ -85,24 +91,24 @@ void updateThresholds() {
   offThr = onThr * OFF_FRACTION;
 }
 
-void clearHalf(HalfWindow &h) {
-  h.sum = 0;
-  h.n = 0;
-  h.lo = 2147483647L;
-  h.hi = 0;
+void clearBin(Bin &b) {
+  b.sum = 0;
+  b.us = 0;
+  b.lo = 2147483647L;
+  b.hi = 0;
 }
 
-void addReading(HalfWindow &h, long raw) {
-  h.sum += raw;
-  h.n++;
-  if (raw < h.lo) h.lo = raw;
-  if (raw > h.hi) h.hi = raw;
+void addReading(Bin &b, long raw, unsigned long us) {
+  b.sum += raw * (long)us;
+  b.us += us;
+  if (raw < b.lo) b.lo = raw;
+  if (raw > b.hi) b.hi = raw;
 }
 
 void resetWindow() {
-  clearHalf(cur);
-  clearHalf(prev);
-  halfStartUs = micros();
+  for (uint8_t i = 0; i <= N_BINS; i++) clearBin(bins[i]);
+  openBin = 0;
+  binStartUs = micros();
 }
 
 // The pad must be untouched during tare.
@@ -156,9 +162,12 @@ void decide(unsigned long now, long avg, long ripple) {
     pending = false;
   }
 
-  if (!touched && delta <= onThr) {
-    float alpha = (delta < 0) ? DROP_ALPHA : DRIFT_ALPHA;
-    baseline += alpha * delta;
+  if (now - lastBaseline >= BASELINE_STEP_MS) {
+    lastBaseline = now;
+    if (!touched && delta <= onThr) {
+      float alpha = (delta < 0) ? DROP_ALPHA : DRIFT_ALPHA;
+      baseline += alpha * delta;
+    }
   }
   setOutput(touched);
 
@@ -203,7 +212,9 @@ void loop() {
     updateThresholds();
   }
 
+  unsigned long startUs = micros();
   long raw = readRaw();
+  unsigned long endUs = micros();
   if (raw < 0) {
     fault = true;
     touched = false;
@@ -225,19 +236,37 @@ void loop() {
     resetWindow();
   }
 
-  addReading(cur, raw);
+  if ((long)(startUs - binStartUs) < 0) startUs = binStartUs;  // started before a window reset
+  uint8_t closed = 0;
+  while (endUs - binStartUs >= BIN_US) {
+    unsigned long binEndUs = binStartUs + BIN_US;
+    if ((long)(binEndUs - startUs) > 0) {
+      addReading(bins[openBin], raw, binEndUs - startUs);
+      startUs = binEndUs;
+    }
+    binStartUs = binEndUs;
+    openBin = (openBin + 1) % (N_BINS + 1);
+    clearBin(bins[openBin]);
+    if (++closed > N_BINS) {  // fell behind (serial, tare)
+      resetWindow();
+      return;
+    }
+  }
+  if ((long)(endUs - startUs) > 0) addReading(bins[openBin], raw, endUs - startUs);
+  if (closed == 0) return;
 
-  unsigned long nowUs = micros();
-  if (nowUs - halfStartUs < DECISION_US) return;
-  halfStartUs += DECISION_US;
-  if (nowUs - halfStartUs >= DECISION_US) halfStartUs = nowUs;  // fell behind (serial, tare)
+  long sum = 0;
+  unsigned long us = 0;
+  long lo = 2147483647L;
+  long hi = 0;
+  for (uint8_t i = 0; i <= N_BINS; i++) {
+    if (i == openBin) continue;
+    sum += bins[i].sum;
+    us += bins[i].us;
+    lo = min(lo, bins[i].lo);
+    hi = max(hi, bins[i].hi);
+  }
+  if (us == 0) return;
 
-  long sum = prev.sum + cur.sum;
-  uint16_t n = prev.n + cur.n;
-  long lo = min(prev.lo, cur.lo);
-  long hi = max(prev.hi, cur.hi);
-  prev = cur;
-  clearHalf(cur);
-
-  decide(millis(), sum / n, hi - lo);
+  decide(millis(), sum / (long)us, hi - lo);
 }

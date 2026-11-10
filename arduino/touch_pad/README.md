@@ -64,10 +64,15 @@ cannot short it.
 A mouse on the pad is an antenna for mains hum: the readings swing at 50 Hz, and `ripple` can be
 as large as the touch signal itself. The first mouse session (16 Oct 2026) with the old sketch
 showed `ai2` toggling every ~20 ms (high ~13 ms, low ~8 ms) whenever the threshold sat near the
-paw signal, so a 100 ms `home TO` hold almost never completed. The sketch now averages over
-exactly one mains period (cancels the hum), uses wider hysteresis (`OFF_FRACTION` 0.5) and needs
-`delta` below `off_thr` for 40 ms before releasing. Output timing: touch-on ~30–50 ms after
-contact, release ~50–60 ms after lift-off.
+paw signal, so a 100 ms `home TO` hold almost never completed. The sketch averages over
+exactly one mains period (cancels the hum) and uses wide hysteresis (`OFF_FRACTION` 0.5).
+Each reading is weighted by its duration (touched readings last several ms) and split across
+2 ms bins, so the window is exactly 20 ms long; it slides every 2 ms, and `delta` must stay
+below `off_thr` for 4 ms before releasing. The first mains-filter version (16 Oct) decided only
+every 10 ms and needed 40 ms below `off_thr`, so it released ~50–60 ms after lift-off. In a
+simulation with synthetic hum (not yet bench-measured) the current version releases ~15–20 ms
+after the signal drops (median), with no false releases for hum up to the size of the touch
+signal; touch-on takes ~30–40 ms.
 
 Grounding the mouse removes most of the hum at its source: with the Fluke on Ω check whether the
 metal head-fixation clamp is connected to AI GND (SCB-68A terminal 64). If not, run one wire from
@@ -104,8 +109,8 @@ interference remains.
 |----------|---------|--------|
 | `N_SAMPLES` | 20 | Samples per reading; higher = less noise, slower |
 | `THR_MIN`, `THR_MAX` | 20, 5000 | Knob range of the ON threshold (raw counts) |
-| `DECISION_US` | 10000 | Half a mains period; readings are averaged over two of these (20 ms). Use 8333 on 60 Hz mains |
+| `MAINS_PERIOD_US`, `N_BINS` | 20000, 10 | Averaging window (one mains period) and number of steps it slides in (2 ms). Use 16667 on 60 Hz mains |
 | `OFF_FRACTION` | 0.5 | Release threshold as a fraction of ON (hysteresis) |
-| `TOUCH_HOLD_MS`, `RELEASE_HOLD_MS` | 20, 40 | Time above ON / below OFF needed to switch |
-| `DRIFT_ALPHA`, `DROP_ALPHA` | 0.0025, 0.22 | Baseline tracking per 10 ms step while released (~4 s drift, ~40 ms drop) |
+| `TOUCH_HOLD_MS`, `RELEASE_HOLD_MS` | 20, 4 | Time above ON / below OFF needed to switch |
+| `DRIFT_ALPHA`, `DROP_ALPHA` | 0.0025, 0.22 | Baseline tracking per `BASELINE_STEP_MS` (10 ms) step while released (~4 s drift, ~40 ms drop) |
 | `PRINT_INTERVAL_MS` | 20 | Serial output interval |

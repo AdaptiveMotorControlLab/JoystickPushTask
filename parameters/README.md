@@ -81,6 +81,8 @@ Both rows use ITI 2000 ms. Untested: that the VI applies each row's boxes, `vel 
 
 `training/02_micro_touch_velocity_200ms_thr0p006_smooth_2s_home2p46-2p51_1p5ul.txt` (5 Nov) is `02_micro_touch_velocity_100ms_thr0p006_smooth_2s_home2p46-2p51_1p5ul.txt` with `home TO` (rest-pad hold) = 200 ms (was 100). Nothing else changed. Not bench-tested, not run with a mouse.
 
+`training/02_micro_touch_velocity_200ms_thr0p006_smooth_1hr_home2p46-2p51_1p5ul.txt` (9 Nov) is the `_2s_home2p46-2p51_1p5ul` file with `move time` = 3600000 ms (1 h) instead of 2000. 500 identical rows, 28 columns. Not bench-tested, not run with a mouse.
+
 `push_bench_joystick-only.txt` (5 Nov) is the first joystick-only file: the `03_push_distance_200ms_home2p46-2p51_end2p40_1s_1p5ul` row with `reward on touch` 0 and `joystick only` 1 appended. 500 rows, 30 columns. Joystick home 2.46-2.51 V held 200 ms, paid when push ≤ 2.40 V within 1 s; the pad is not used. For the pending joystick-only bench test (checklist in `docs/PROJECT_PLAN.md`); not run with a mouse.
 
 `training/02_pad_velocity_100ms_thr0p006_smooth_5s_1p5ul_iti1p5.txt` (30 Oct, for zuchon; 28 columns, 500 identical rows) uses only the cube row of the 29 Oct mixed file (no touch-only trials) with water 58 ms (~1.5 µl, interpolated; weigh it; was 100), ITI 1500 (was 2000) and consumption 1000 ms (was 1500): `home TO` 100, home push 2.43-2.53, end box 0-1 V (only velocity pays), `vel threshold` 0.006, `move time` 5000. Not bench-tested, not run with a mouse.
@@ -88,6 +90,8 @@ Both rows use ITI 2000 ms. Untested: that the VI applies each row's boxes, `vel 
 `training/02_micro_touch_velocity_100ms_thr0p006_smooth_2s_home2p46-2p51_1p5ul.txt` (4 Nov; 28 columns, 500 rows) is the `_3s_home2p46-2p51_1p5ul` file with `move time` 2000 ms (was 3000). Not bench-tested, not run with a mouse.
 
 `training/04_broad_zone_4-8mm_hold50ms_home2p46-2p51_1s_1p5ul.txt` (4 Nov; 28 columns, 500 rows) is `03_push_distance_200ms_home2p46-2p51_end2p40_1s_1p5ul.txt` with the end push box 2.235-2.365 V (8 / 4 mm from home on the 3 Nov calibration) and `end TO` 50 ms ("hold50ms" in the name; the pad hold `home TO` stays 200 ms). Pushing past 8 mm leaves the zone. Re-centre on the measured rest voltage if it is not ~2.47 V. Not bench-tested, not run with a mouse.
+
+`training/04_broad_zone_4-8mm_hold50ms_home2p46-2p51_1s_1p5ul_repeat.txt` (9 Nov; 31 columns, 500 identical rows) is `05_narrow_zone_4p5-6p5mm_hold50ms_home2p46-2p51_1s_1p5ul.txt` (`repeat trials` = 1) with the end push box widened back to 2.235-2.365 V (4-8 mm, as in the `04_broad_zone` file). Not bench-tested, not run with a mouse.
 
 `push_bench_row-mapping.txt` (5 Nov) is the bench file for the parameter-row mapping fix (`docs/PROJECT_PLAN.md`, "Parameter-row mapping"). 40 rows, 28 columns. Odd rows are touch-and-release (all boxes 0-5 V, pay at pad release); even rows need a push (home push 2.43-2.53 V, end push 0-2.40 V). Every row has its own `watertime` (50 + row number, 51-90 ms) and `move time` (2000 + 50 × row number, 2050-4000 ms), so `scripts/check_row_mapping.py` can tell which row each code 15 value and timeout came from. All rows `home TO` 100, ITI 2000, cue 50 ms, delay 0, consumption 1500, spout columns 0, `mag` 0, `vel threshold` 0. No animal. Not bench-tested.
 
