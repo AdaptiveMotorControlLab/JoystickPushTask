@@ -93,6 +93,22 @@ Both rows use ITI 2000 ms. Untested: that the VI applies each row's boxes, `vel 
 
 `training/04_broad_zone_4-8mm_hold50ms_home2p46-2p51_1s_1p5ul_repeat.txt` (9 Nov; 31 columns, 500 identical rows) is `05_narrow_zone_4p5-6p5mm_hold50ms_home2p46-2p51_1s_1p5ul.txt` (`repeat trials` = 1) with the end push box widened back to 2.235-2.365 V (4-8 mm, as in the `04_broad_zone` file). Not bench-tested, not run with a mouse.
 
+`training/05_narrow_zone_4p5-7p5mm_hold50ms_home2p46-2p51_1s_1p5ul_repeat.txt` (10 Nov; 31 columns, 500 identical rows) is that repeat broad-zone file with the end push box 2.251-2.349 V (7.5 / 4.5 mm: a 3 mm band centered on the 4-8 mm zone). Bounds use the same 4 mm = 2.365 V / 8 mm = 2.235 V interpolation as `05_narrow_zone_4p5-6p5mm_...` (0.0325 V/mm, rounded to mV); the voltage midpoint stays 2.300 V. `repeat trials` stays 1. The 4.5-6.5 mm file is a different band (2 mm, centered at 5.5 mm). Not bench-tested, not run with a mouse.
+
+`home2p45-2p51` copies (10 Nov): each training file whose home push box was 2.46-2.51 V has a duplicate with column 1 = 2.45 and column 3 still 2.51. The name token `home2p46-2p51` is `home2p45-2p51`. Row count, column count and every other field match the source. The mixed-file copy changes only the 250 cube rows; its touch rows stay home 0-5 V. Originals are unchanged. Not bench-tested, not run with a mouse.
+
+- `02_micro_touch_velocity_100ms_thr0p006_smooth_2s_home2p45-2p51_1p5ul.txt`
+- `02_micro_touch_velocity_100ms_thr0p006_smooth_3s_home2p45-2p51_1p5ul.txt`
+- `02_micro_touch_velocity_200ms_thr0p006_smooth_1hr_home2p45-2p51_1p5ul.txt`
+- `02_micro_touch_velocity_200ms_thr0p006_smooth_2s_home2p45-2p51_1p5ul.txt`
+- `02_mixed_touch1_cube1_100ms_thr0p006_smooth_10s_home2p45-2p51_2ul.txt`
+- `03_push_distance_200ms_home2p45-2p51_end2p40_1s_1p5ul.txt`
+- `03_push_distance_200ms_home2p45-2p51_end2p43_1s_1p5ul.txt`
+- `04_broad_zone_4-8mm_hold50ms_home2p45-2p51_1s_1p5ul.txt`
+- `04_broad_zone_4-8mm_hold50ms_home2p45-2p51_1s_1p5ul_repeat.txt`
+- `05_narrow_zone_4p5-6p5mm_hold50ms_home2p45-2p51_1s_1p5ul.txt`
+- `05_narrow_zone_4p5-7p5mm_hold50ms_home2p45-2p51_1s_1p5ul_repeat.txt`
+
 `push_bench_row-mapping.txt` (5 Nov) is the bench file for the parameter-row mapping fix (`docs/PROJECT_PLAN.md`, "Parameter-row mapping"). 40 rows, 28 columns. Odd rows are touch-and-release (all boxes 0-5 V, pay at pad release); even rows need a push (home push 2.43-2.53 V, end push 0-2.40 V). Every row has its own `watertime` (50 + row number, 51-90 ms) and `move time` (2000 + 50 × row number, 2050-4000 ms), so `scripts/check_row_mapping.py` can tell which row each code 15 value and timeout came from. All rows `home TO` 100, ITI 2000, cue 50 ms, delay 0, consumption 1500, spout columns 0, `mag` 0, `vel threshold` 0. No animal. Not bench-tested.
 
 `push_bench_repeat-trials.txt` (5 Nov) is the bench file for `repeat trials`: `push_bench_row-mapping.txt` with `reward on touch` 0, `joystick only` 0 and `repeat trials` appended. 40 rows, 31 columns. `repeat trials` is 0 on rows 4, 8, ..., 40 and 1 on every other row, so even rows 2, 6, 10, ... repeat after a timeout and rows 4, 8, 12, ... do not; odd rows pay at release and test that a success still advances with the flag on. `scripts/check_row_mapping.py` follows the repeats (expected row, code 3 value, `watertime`, timeout length). No animal. Not bench-tested.
