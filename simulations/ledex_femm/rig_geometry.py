@@ -7,13 +7,15 @@ the breadboard top, origin under the joystick axis. The lever models (lever.py, 
 use x = X and z = height above the shaft base (Z - SHAFT_BASE), with the pivot at z = -d_p.
 
 Measured from the CAD in mechanical (joystick-holder, TS-1D1S00A-1294_stripped, joystick,
-joystick-1d-axis-constrainer) and the 10 mm tall narrow cube in archive/joystick-handle-cube:
+joystick-1d-axis-constrainer, joystick-handle-cube):
 - Holder: base 86 x 31.8 x 5 mm (long side along Y), corner posts, top frame z 20.41-25.41 with a 25.3 mm hole.
 - Component: body 25.3 mm dia x 11.53 mm drops through the hole, flange (29.75 mm) rests on the frame -> body
   bottom at Z 13.88; stub top at component z 29.3.
 - Shaft: its 5 mm x 2.7 mm bottom bore holds a glued screw head; the screw goes into the stub and the cone sits
   directly on the stub top -> shaft base at Z 43.18; cone r 4 -> 1.5 over 12 mm; 89 mm long.
-- Cube handle: narrow 11.5 x 11.5 x 10 mm cube, front hole (nearest the push face), push face 2.05 mm from the shaft axis, contact at shaft z 92.4 (cube z 87.4-97.4).
+- Cube handle: narrow 11.5 x 11.5 x 15.1 mm cube (5 Nov revision, on the rig), front hole (nearest the push face),
+  push face 2.05 mm from the shaft axis, contact at mid-height, shaft z 94.0 (cube z 86.45-101.55). The 10 mm cube
+  used until 15 Nov sat at z 87.4-97.4 (contact 92.4).
 - Constrainer: lower 10 mm is a socket (inner 32 mm) over the frame -> spans Z 15.41-71.41; walls 6 mm above the
   socket (inner +-13); top plate Z 68.41-71.41 with the 4 mm slot from X -2 to 17; home wall has an arch 16 mm wide
   (straight to Z 55.41, radius 8, top Z 63.41), cut square to Z 68.41 in the window revision.
@@ -45,13 +47,18 @@ SHAFT_BASE = COMP_Z0 + COMP_TOP                 # cone seated on the stub top (s
 SHAFT_LEN = 89.0
 SHAFT_R = 1.5
 SHAFT_CONE = ((0.0, 4.0), (12.0, 1.5))   # (z, r) on the shaft
-CUBE_Z = (87.4, 97.4)
-HANDLE_Z = sum(CUBE_Z) / 2
+CUBE_STL = "joystick-handle-cube/joystick_handle_cube_11p5_h15p1_d3p3_dp4p2.stl"   # 11.5 x 11.5 x 15.1 mm, on the rig
+CUBE_H, CUBE_HOLE_D, CUBE_HOLE_DEPTH = 15.1, 3.3, 4.2   # height; ball-ended hole diameter and depth to the tip apex
+CUBE_STL_Z0 = -1.5                             # cube bottom face in its STL frame (make_handle_cube.py)
+# Shaft z of the cube STL origin: the shaft end sits level with the centre of the hole's ball end (the same rule gave
+# 88.9 for the 10 mm cube, 3.2 x 3.2 mm holes). Not measured on the rig; printed holes come out slightly small.
+CUBE_MOUNT = SHAFT_LEN - (CUBE_STL_Z0 + CUBE_HOLE_DEPTH - CUBE_HOLE_D / 2)
+CUBE_Z = (CUBE_MOUNT + CUBE_STL_Z0, CUBE_MOUNT + CUBE_STL_Z0 + CUBE_H)
+HANDLE_Z = sum(CUBE_Z) / 2                     # push taken at the cube's mid-height
 HOLES = (("hole y 0.55", 2.05), ("hole y 4.25", 5.75), ("hole y 7.95", 9.45))  # (name, push-face offset mm)
 CUBE_HOLE = 0                                  # shaft in the front hole (nearest the push face, the mouse side)
 CUBE_HOLE_Y = float(HOLES[CUBE_HOLE][0].split()[-1])   # that hole's y in the cube STL (STL y runs along the push axis)
 FACE = HOLES[CUBE_HOLE][1]
-CUBE_STL = "../archive/joystick-handle-cube/joystick_handle_cube_11p5.stl"   # narrow cube, 11.5 x 11.5 x 10 mm
 
 # ------------------------------------------------------------------ pivot
 PIVOT_COMP_Z = COMP_BODY_H / 2
@@ -176,7 +183,7 @@ PARTS = {
                     lambda t: _swap(t, dz=CON_Z0), False),
     "shaft": ("joystick/joystick_89mm.stl", lambda t: t + np.array([0.0, 0.0, SHAFT_BASE]), True),
     "cube": (CUBE_STL,
-             lambda t: _swap(t, dx=-CUBE_HOLE_Y, dz=88.9 + SHAFT_BASE), True),
+             lambda t: _swap(t, dx=-CUBE_HOLE_Y, dz=CUBE_MOUNT + SHAFT_BASE), True),
 }
 
 

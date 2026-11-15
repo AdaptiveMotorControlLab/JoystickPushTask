@@ -117,11 +117,13 @@ def stl_tetra(path):
     return vol, v.sum(axis=1) / 4.0
 
 
-def inertia_about_pivot(d_p):
-    """Moment of inertia (g mm^2) of the printed shaft + cube about the pivot axis (solid PLA)."""
+def inertia_about_pivot(d_p, z_a=REC["z_a"]):
+    """Moment of inertia (g mm^2) of the parts turning with the shaft about the pivot axis (solid PLA): printed shaft,
+    cube and link collar (collar at shaft z z_a)."""
     total = 0.0
     parts = [("joystick/joystick_89mm.stl", lambda c: (c[:, 0], c[:, 2])),
-             (CUBE_STL, lambda c: (c[:, 1] - CUBE_HOLE_Y, c[:, 2] + 88.9))]
+             (CUBE_STL, lambda c: (c[:, 1] - CUBE_HOLE_Y, c[:, 2] + rg.CUBE_MOUNT)),
+             ("ledex-holder-adjustable/link_collar.stl", lambda c: (c[:, 0], c[:, 2] + z_a))]
     for rel, xz in parts:
         vol, cen = stl_tetra(os.path.join(CAD, rel))
         x, z = xz(cen)
@@ -129,11 +131,19 @@ def inertia_about_pivot(d_p):
     return abs(total)
 
 
+def link_bar_g():
+    vol, _ = stl_tetra(os.path.join(CAD, "ledex-holder-adjustable", "link_bar.stl"))
+    return abs(PLA * vol.sum())
+
+
 def effective_mass_g(d_p, z_a, s0, plunger=True):
+    """Mass felt at the cube (g): inertia about the pivot / cube arm^2, plus the plunger and link bar, which translate
+    along the Ledex axis (ratio^2 of their mass). Not included: the thumbstick's internal lever, the steel pins and the
+    set screw (each under ~0.1 g at the cube). Solid PLA: a part printed with sparse infill is lighter."""
     arm = HANDLE_Z + d_p
-    m = inertia_about_pivot(d_p) / arm ** 2
+    m = inertia_about_pivot(d_p, z_a) / arm ** 2
     if plunger:
-        m += PLUNGER_G * kinematics(0.0, d_p, z_a, s0)["ratio"][0] ** 2
+        m += (PLUNGER_G + link_bar_g()) * kinematics(0.0, d_p, z_a, s0)["ratio"][0] ** 2
     return m
 
 
@@ -361,7 +371,7 @@ def main():
     for mu in MU:
         print("mu", mu, "friction at handle %.2f gf" % friction_handle_gf(mu, d_p, z_a, s0))
     print("effective mass at the cube %.2f g (inertia %.0f g mm^2)" % (effective_mass_g(d_p, z_a, s0),
-                                                                      inertia_about_pivot(d_p)))
+                                                                      inertia_about_pivot(d_p, z_a)))
 
 
 if __name__ == "__main__":

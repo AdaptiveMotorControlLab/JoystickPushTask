@@ -150,7 +150,7 @@ shaft base.
 | washer tower (10 × M3 on the shaft cone) | 54.68-62.68 |
 | window in the constrainer's home wall (Y ±13, from the frame top Z 25.41; square top; the original arch top was 63.41) | 68.41 |
 | constrainer slot plate | 68.41-71.41 |
-| cube push contact | 135.58 |
+| cube push contact (15.1 mm cube, mid-height; 135.58 with the 10 mm cube used before 15 Nov) | 137.18 |
 
 - Shaft seat: a small screw has its head glued in the shaft's 5 mm × 2.7 mm bottom bore and goes into
   the component's stub, so the shaft's cone sits directly on the stub top (component z 29.3).
@@ -189,7 +189,7 @@ handle into tower motion, gap and resistance (`results/lever/lever_table.csv`,
   printed shaft screwed onto the lever stub. Heights from the measured component and holder
   (section above); pivot 23.5 mm below the shaft base (19.3-27.3).
 - Ten M3 washers seat on the cone at 11.5-19.5 mm above the shaft base; the cube handle spans
-  87.4-97.4 mm (push taken at 92.4 mm). The three cube holes change the result by < 0.02 mm; the models use the narrow 11.5 × 11.5 × 10 mm cube (`CUBE_STL`, now in `archive/joystick-handle-cube/`; the newer 14.1 and 15.1 mm tall revisions are not modelled) in the front hole (`CUBE_HOLE` in `rig_geometry.py`, push face 2.05 mm from the shaft axis), which changed the forces by < 1 %.
+  87.4-97.4 mm (push taken at 92.4 mm). The three cube holes change the result by < 0.02 mm; since 15 Nov `rig_geometry.py` uses the 15.1 mm cube on the rig (`CUBE_STL`, contact at shaft z 94.0); the figures and tables on this page still come from the 10 mm cube (contact 92.4, lever ratios ~1-2 % different) until they are rerun. The cube sits in the front hole (`CUBE_HOLE` in `rig_geometry.py`, push face 2.05 mm from the shaft axis), which changed the forces by < 1 %.
 - The tower moves about a third of the push (rigid rotation, not small-angle):
 
 | push at the cube | 1 mm | 2 mm | 5 mm | 10 mm | 15 mm |

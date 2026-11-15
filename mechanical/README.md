@@ -11,10 +11,11 @@ named subfolder (STEP + STL, descriptive filenames) and a row in the table below
 
 On the rig: the adjustable Ledex holder, link collar and link bar (since 1 Nov 2026), and now the wide-window
 constrainer and the 15.1 mm cube (fitted after 5 Nov, date not recorded; they replaced the 16 mm window
-constrainer, now archived). The Ledex-off hand check (full return to home, no binding) was done on the 1 Nov
-mount and is not recorded for the current parts. Still to do: measure the return spring with a gram scale;
-re-measure the push axis volts → mm (the 0-8 mm calibration in `calibration/joystick-volts-mm.md`, 3 Nov,
-predates the current cube and constrainer); update the models to the 15.1 mm cube.
+constrainer, now archived). The Ledex-off hand check (full return to home, no binding) passed on the current
+parts (15 Nov), and 17 hand releases from 2-37 mm all settled within ±3.6 mV of home. Still to do: measure the
+return spring statically with weights; re-measure the push axis volts → mm after the stereo calibration (the
+0-8 mm calibration in `calibration/joystick-volts-mm.md`, 3 Nov, predates the current cube and constrainer).
+`rig_geometry.py` now uses the 15.1 mm cube (15 Nov); the force figures are not yet rerun.
 
 Print notes: PETG or PLA, orientation and fit allowances for the holder parts are in the Ledex holder
 README (printed holes come out ~0.3-0.4 mm small; print `fit_test` first).
@@ -51,14 +52,14 @@ README (printed holes come out ~0.3-0.4 mm small; print `fit_test` first).
 
   | Revision | Height | Holes (diameter × depth) | Volume | Where |
   | --- | --- | --- | --- | --- |
-  | `joystick_handle_cube_11p5` (17 Oct) | 10.0 mm | 3.2 × 3.2 mm | 1130 mm³ | archive; still used by the force and geometry models |
+  | `joystick_handle_cube_11p5` (17 Oct) | 10.0 mm | 3.2 × 3.2 mm | 1130 mm³ | archive; used by the force models until 15 Nov |
   | `joystick_handle_cube_11p5_h14p1` (28 Oct) | 14.1 mm | 3.2 × 3.2 mm | 1641 mm³ | archive |
   | `joystick_handle_cube_11p5_h15p1_d3p3_dp4p2` (5 Nov) | 15.1 mm | 3.3 × 4.2 mm | 1736 mm³ | here; on the rig |
 
-  The 15.1 mm revision is the one on the rig. The models
-  (`simulations/ledex_femm/rig_geometry.py`, `CUBE_STL`) still use the 10 mm cube; the taller cubes (and the deeper
-  holes of the newest one) change the contact height, so update `CUBE_STL` and the cube placement and rerun the
-  models before relying on force estimates at the cube.
+  The 15.1 mm revision is the one on the rig and, since 15 Nov, in `simulations/ledex_femm/rig_geometry.py`
+  (`CUBE_STL`, placement from the hole geometry: cube at shaft z 86.45-101.55, contact at mid-height z 94.0 instead
+  of 92.4). The force figures and README tables there still come from the 10 mm cube (lever ratios change by
+  ~1-2 %); rerun them after the spring curve is measured.
 - **Original 20 mm cube** (used from the first mouse session, 16 Oct) and the older narrow-cube revisions are
   archived in [`archive/joystick-handle-cube/`](../archive/joystick-handle-cube/).
 - **38 × 3 × 3.1 mm bar handle** (never fitted) is archived in [`archive/joystick-handle-bar/`](../archive/joystick-handle-bar/).
