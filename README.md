@@ -55,15 +55,16 @@ Validated on the bench or in sessions (details and dates in the project plan):
   sample index and Unix time) and the automatic `TIMESTAMPS_LABVIEW_<name>.npy` file for video sync,
   written at Stop.
 - Trial start at paw release (Case 5), go cue at the end of the pad hold (second buzzer on P0.2),
-  velocity reward mode (column 28) and reward-on-touch mode (column 29).
+  velocity reward mode (column 28), reward-on-touch mode (column 29) and repeat-on-timeout trials
+  (column 31), all used in mouse sessions.
 - `deliverWater_RIG1_cue.vi` for manual habituation rewards (50 ms cue, then water; no joystick
   requirement, does not move the spout).
 
 Built but not yet bench-tested: the joystick-only session mode (column 30). Open bugs (unpaid
-successes, occasional acquisition stalls, a missed magnet-loop occurrence) are tracked in the project plan.
+successes, occasional acquisition stalls, missed magnet-loop occurrences) are tracked in the project plan.
 
-Mechanics: printed 89 mm joystick shaft with a narrow rounded-cube handle, 1D-axis constrainer, adjustable
-Ledex holder and plunger link, all on the rig. CAD and print status in
+Mechanics: printed 89 mm joystick shaft with a narrow rounded-cube handle (15.1 mm revision), wide-window
+1D-axis constrainer, adjustable Ledex holder and plunger link, all on the rig. CAD and print status in
 [`mechanical/README.md`](mechanical/README.md); superseded parts in [`archive/`](archive/).
 
 ## Hardware
@@ -115,8 +116,9 @@ The rest-pad Arduino sketch is in [`arduino/touch_pad/`](arduino/touch_pad/READM
 ## Experimental settings file
 
 The experimental parameters are loaded from a tab-separated text file, one line per trial. The base
-format has **27 columns** (boxes, timings, water, cue and spout settings). Three optional columns
-switch on newer modes: 28 `vel threshold` (velocity reward), 29 `reward on touch`, 30 `joystick only`.
+format has **27 columns** (boxes, timings, water, cue and spout settings). Four optional columns
+switch on newer modes: 28 `vel threshold` (velocity reward), 29 `reward on touch`, 30 `joystick only`,
+31 `repeat trials` (a timed-out trial reruns the same row).
 Shorter files load the missing columns as 0, so older files behave as before. Column map, the
 X/Y naming trap and every file's purpose: [`parameters/README.md`](parameters/README.md).
 Push = Y / `ai1`; lateral = X / `ai0`, but push values go in the loader's **X** columns.

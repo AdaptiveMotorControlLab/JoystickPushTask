@@ -66,9 +66,9 @@ slot and 0.4 mm in the fork.
   them from outside with a hex key; the nuts stay reachable from the Ledex side as well.
 - Collar: slide it down the shaft before the cube goes on, set it with the fork's pin 17.5 mm above the
   shaft base and the fork facing the Ledex, then tighten the M2 set screw against the shaft.
-- The link needs a constrainer with an open home-wall window: the 16 mm window revision (on the rig since
-  1 Nov, now in `archive/`) or the wide-window revision
-  ([`../joystick-1d-axis-constrainer/`](../joystick-1d-axis-constrainer/), not yet printed); with the
+- The link needs a constrainer with an open home-wall window: the wide-window revision
+  ([`../joystick-1d-axis-constrainer/`](../joystick-1d-axis-constrainer/), on the rig now) or the 16 mm
+  window revision (on the rig from 1 Nov until the wide window replaced it, now in `archive/`); with the
   original arch the plunger passes only 1 mm under its top.
 - Print the base and the upright flat on their bottom faces, the carriage on its outer flange face (the
   nut pockets face up; the cradle's curved face needs light support), the fit test flat,

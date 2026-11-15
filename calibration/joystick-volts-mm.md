@@ -1,11 +1,13 @@
 # Joystick home voltage and volts → mm
 
-Training rig · measured 3 November 2026 (current mount) · first eyeball check 8 September 2026.
+Training rig · measured 3 November 2026 (1 Nov mount, since changed) · first eyeball check 8 September 2026.
 Do not trim the red joystick regulator.
 
 ## Push-axis scale (measured 3 Nov 2026, use this)
 
-Current mount: cube on the shaft, Ledex holder, constrainer and plunger link fitted (1 Nov).
+Mount at the time: cube on the shaft, Ledex holder, 16 mm window constrainer and plunger link fitted (1 Nov).
+The rig has since received the 15.1 mm cube (higher contact point) and the wide-window constrainer, so
+re-measure this scale on the current mount before relying on mm values.
 At home the cube is **2 mm** from the rest platform (the rest pad sits on the same platform).
 Displacement is forward from home, at the cube.
 

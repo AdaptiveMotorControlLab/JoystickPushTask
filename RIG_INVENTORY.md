@@ -469,7 +469,7 @@ add a small transistor/MOSFET driver if the tone is weak or the line is loaded.
 - [ ] Caliper-check the plunger (slot width, cross hole, seated protrusion, length) and the M14 nut
 - [x] Holder revision: shaft seated on the component stub in the model, 14 mm link, simplified collar (M2 set screw), carriage on 4 × M3 with captive nuts reachable with the Ledex fitted, FDM fit allowances and `fit_test` part
 - [x] Holder, link collar, link bar and 16 mm window constrainer printed and mounted 01/11/26; Ledex-off hand check: full return to home, no binding
-- [ ] Print and fit the wide-window constrainer (`mechanical/joystick-1d-axis-constrainer/`, CAD only)
+- [x] Print and fit the wide-window constrainer (`mechanical/joystick-1d-axis-constrainer/`) and the 15.1 mm cube: both on the rig (user-reported 15/11/26, date fitted not recorded); Ledex-off hand check not yet recorded for these parts
 - [ ] Magnet Checkpoint 5 (powered direction and release) and force calibration with a gram scale at the cube
 - [x] Go-cue buzzer on P0.2 (terminal 49, 1 kΩ series, return to D GND 15) with NI-MAX task `GoCue_Dev1`, 29/10/26 (user-reported audible burst test)
 - [x] `Water_Dev1`: `Dev1/port0/line0`, digital line output, on-demand, not inverted in NI-MAX

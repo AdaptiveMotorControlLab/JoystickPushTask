@@ -70,9 +70,10 @@ Each reading is weighted by its duration (touched readings last several ms) and 
 2 ms bins, so the window is exactly 20 ms long; it slides every 2 ms, and `delta` must stay
 below `off_thr` for 4 ms before releasing. The first mains-filter version (16 Oct) decided only
 every 10 ms and needed 40 ms below `off_thr`, so it released ~50–60 ms after lift-off. In a
-simulation with synthetic hum (not yet bench-measured) the current version releases ~15–20 ms
-after the signal drops (median), with no false releases for hum up to the size of the touch
-signal; touch-on takes ~30–40 ms.
+simulation with synthetic hum the current version releases ~15–20 ms after the signal drops
+(median), with no false releases for hum up to the size of the touch signal; touch-on takes
+~30–40 ms. The current version is on the rig Nano and passed a bench check; its release lag
+has not been measured on the rig.
 
 Grounding the mouse removes most of the hum at its source: with the Fluke on Ω check whether the
 metal head-fixation clamp is connected to AI GND (SCB-68A terminal 64). If not, run one wire from

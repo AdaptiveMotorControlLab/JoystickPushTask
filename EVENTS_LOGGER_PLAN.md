@@ -60,12 +60,12 @@ Codes are permanent: never renumber or reuse a code; only add new ones.
 |---|---|---|---|
 | 1 | session start | once, right after the file is opened, before the trial loop starts | 0 |
 | 2 | case entered | main loop, whenever the state changes (see step 3) | new case number (0-5) |
-| 3 | trial start | Case 2, next to the `TRIAL` file write | trial number if available, else 0 |
+| 3 | trial start | Case 2, next to the `TRIAL` file write | 1-based parameter row number of this trial (since the 5 Nov row-mapping fix; equals the trial number unless `repeat trials` reruns a row); 0 in older sessions |
 | 6 | paw release | Case 5, when the rest pad is released after the Case 0 gate; the `move time` clock (`trail start`) starts here | 0 |
 | 4 | trial success | Case 4, next to the `REWARD` file write | 0 |
 | 5 | trial timeout / fail | Case 3, in the movement-window-timeout branch (before returning to Case 0) | 0 |
 | 7 | go cue burst start | go cue loop (True case), parallel to the first burst write on `GoCue_Dev1` (P0.2); fired by Set Occurrence in Case 0 when the `home TO` hold completes (built 29 Oct; user-reported bench test passed); not fired in joystick-only sessions | 0 |
-| 8 | touch-mode pass | Case 5, instead of code 6 when `reward on touch` = 1 (paw still on the pad); `trail start` starts here (built 4 Nov; user-reported bench test passed) | 0 |
+| 8 | touch-mode pass | Case 5, instead of code 6 when `reward on touch` = 1 (paw still on the pad); `trail start` starts here (built 4 Nov; user-reported bench test passed; in mouse sessions since 4 Nov) | 0 |
 | 9 | joystick-only arm | Case 5, instead of code 6 / 8 when `joystick only` = 1 (rest pad ignored, no go cue); `trail start` starts here (built 5 Nov, bench test pending) | 0 |
 | 10 | cue on | water loop, after `SuccessCue_Dev1` HIGH | 0 |
 | 11 | cue off | water loop, after `SuccessCue_Dev1` LOW | 0 |
