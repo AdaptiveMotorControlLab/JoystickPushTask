@@ -35,10 +35,10 @@ Key differences from the original task:
   (`joystick only`).
 - **Axial-resistance perturbation** (opposing the push) instead of a lateral kick. The mesoscope
   rig uses the original Mathis solenoid (McMaster `69905K25`). The training rig uses a Ledex
-  `195224-230` driven by a Hydraulik-Kompetenz PVA 1.6 (0–10 V command on `Dev1/ao0` /
-  `MagnetPush_Dev1`), with the plunger linked to the joystick shaft. It is electrically commissioned
-  and mounted; force calibration and the LabVIEW magnet safety work are still to do, so every
-  parameter file keeps `mag = 0`.
+  `195224-230` driven by a Bürkert Type 8605 (`316532`, 0–10 V command on `Dev1/ao0` /
+  `MagnetPush_Dev1`), with the plunger linked to the joystick shaft. The driver was swapped
+  and a pull was felt on 22 Nov 2026; the holder is not yet locked, and force calibration
+  and the LabVIEW magnet safety work are still to do, so every parameter file keeps `mag = 0`.
 - **Delayed, retractable reward** with an immediate auditory success cue, separating push execution from
   licking/reward for cleaner neural alignment.
 - **Planned session blocks** (via parameter files): Baseline → Random perturbation → Fixed perturbation → Washout.
@@ -83,7 +83,7 @@ New components for the push task:
 | Retractable lick spout | **Actuonix L12-30-50-12-I** linear actuator (0–5 V position mode, 12 V supply) | `Dev1/ao1`           |
 | Auditory success cue   | **Adafruit 5 V active buzzer** (#1536)                                         | `Dev1/port0/line1`   |
 | Go cue                 | second Adafruit #1536 buzzer, 1 kΩ in series, burst-modulated from LabVIEW     | `Dev1/port0/line2`   |
-| Axial resistance       | Ledex **`195224-230`** via Hydraulik-Kompetenz **PVA 1.6** (0–10 V), plunger linked to the shaft | `Dev1/ao0` (command only) |
+| Axial resistance       | Ledex **`195224-230`** via Bürkert **8605** `316532` (0–10 V), plunger linked to the shaft | `Dev1/ao0` (command only) |
 | Water valve            | existing solenoid                                                              | `Dev1/port0/line0`   |
 
 > The live NI-MAX configuration, SCB-68A wiring and bench-test history are documented in

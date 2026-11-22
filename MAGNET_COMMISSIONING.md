@@ -1,4 +1,6 @@
-# Ledex / PVA 1.6 commissioning handoff
+# Ledex coil-driver commissioning handoff
+
+**Status 22/11/2026:** the coil driver is the Bürkert Type 8605 DIN-rail `316532`, not the PVA. Wiring, menu and the 22 Nov current readings are in `docs/PROJECT_PLAN.md` and `calibration/README.md`. The link had come off; with it refitted the user reported a stiffer push at 5 V. The holder still shifts under a push with the coil on. There is no Enable pin: unplug the 12 V supply before starting or stopping AO0. The checks below are the PVA record and stay historical.
 
 **Status 5/11/2026:** Checkpoints 1–4 done on the bench 11/10 (wiring verified, 1 A fuse fitted, coil
 current vs AO0 measured: 10 V gives 0.31 A at minimum `Imax`; table in `calibration/README.md`).

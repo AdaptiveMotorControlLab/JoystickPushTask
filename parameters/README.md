@@ -133,6 +133,8 @@ With `repeat trials` = 1 a row only advances on a success, so each block length 
 
 `training/06_spout_blocks_narrow30_then_zone_spout2p6-3p5_cons2s_iti3s.txt` (19 Nov; 31 columns, 500 rows) is `06_spout_blocks_narrow30_then_velocity_spout2p6-3p5_cons4s_iti5s.txt` with rows 31-500 paid on the 4.5-7.5 mm zone instead of velocity: end box 2.251-2.349 V, `end TO` 50, `vel threshold` 0; consumption 2000 ms and ITI 3000 ms (were 4000 / 5000). Home push 2.45-2.52 V on every row, as in the source. Rows 1-30 are unchanged (same zone, spout held at 3.5 V, `move time` 1000, consumption 1000, ITI 1500); rows 31-500 keep the source's `move time` 2000 and the moving spout 3.5 → 2.6 V, settle 300. Retract write at 2.41 s, ~0.59 s margin before the go cue. Set `Session start spout (V)` to 3.5. Not bench-tested, not run with a mouse.
 
+`training/06_spout_2mm_spout2p6-3p5_home2p45-2p52_move2s_cons2s_iti3s.txt` (20 Nov; 31 columns, 500 identical rows) has no stationary-spout block: every row is row 31 of `06_spout_blocks_narrow30_then_2mm_spout2p6-3p5_cons2s_iti3s.txt` (push ≤ 2.425 V, about 2 mm, end box 0-2.425, `end TO` 0 so reaching it pays, `vel threshold` 0; spout 3.5 → 2.6 V, settle 300, consumption 2000 ms, ITI 3000 ms; 58 ms water, cue 50, `home TO` 200, `repeat trials` 1) with home push 2.45-2.52 V (was 2.51) and `move time` 2000 ms (was 1000). Retract write at 2.41 s, ~0.59 s margin before the go cue. Set `Session start spout (V)` to 3.5. Not bench-tested, not run with a mouse.
+
 `push_bench_spout2p6-3p5_water-loop.txt` (17 Nov; 31 columns, 23 rows) is the bench file for that training file, animal-free, built while it had consumption 3500 / ITI 4300 (kept at those values as the record of what was tested). Rows 1-3 are its stationary rows 1-3 (4.5-7.5 mm zone, spout held at 3.5 V); rows 4-23 are its row 31 at that time (push ≤ 2.425 V, spout 3.5 → 2.6 V, settle 300, consumption 3500, ITI 4300), repeated 20 times. `repeat trials` = 1. Set `Session start spout (V)` to 3.5. Trigger each trial by hand: finger on the pad, wait for the go cue, lift, push the cube; to stress the ITI, re-touch the pad and hold the cube home straight after each success. Checks:
 - codes 13 / 18 = 3.5 / 3.5 on rows 1-3 and 3.5 / 2.6 from row 4;
 - code 4 → code 18 ≈ 3.91 s; code 18 → next code 7 ≥ ~0.39 s, and by eye and ear the spout is back at 2.6 V (and any whine has stopped) before the go cue;
@@ -250,8 +252,8 @@ from the older expert-mouse file `training/07_expert.txt`: push/white
 The success threshold remains the wider bench range 0.00–2.22 V rather than
 the expert file's narrow target. Before Run:
 
-1. Keep the Class 3B laser keyed off. Leave the PVA/Ledex supply unplugged
-   and the Enable clip off. The file commands `mag=0`.
+1. Keep the Class 3B laser keyed off. Leave the Bürkert/Ledex 12 V supply unplugged.
+   The file commands `mag=0`.
 2. Stop the manual-reward and standalone rest-pad test VIs. Prime the water line
    until it is bubble-free.
 3. Position the base so both live signals are inside the expert home box:

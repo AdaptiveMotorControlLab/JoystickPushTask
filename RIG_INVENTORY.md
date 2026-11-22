@@ -349,8 +349,8 @@ Digital port 0:
 | 17       | P0.1         | Adafruit success buzzer positive         |
 | 15       | D GND        | Adafruit success and go-cue buzzer returns |
 | 49       | P0.2         | Go-cue buzzer positive (1 kΩ in series)  |
-| 22       | AO 0         | PVA 1.6 command input `H` (Ledex)        |
-| 55       | AO GND       | PVA 1.6 command input `G`                |
+| 22       | AO 0         | Bürkert 8605 `SP+` (Ledex command)       |
+| 55       | AO GND       | Bürkert 8605 `SP-`                       |
 | 14       | +5 V         | red regulator module `IN+`               |
 | 50       | D GND        | red regulator module `IN−`               |
 | 42       | PFI 3 / P1.3 | 635 nm 200 mW laser control              |
@@ -364,16 +364,17 @@ Digital port 0:
 - 37 (PFI 8) and 40 (PFI 13) — not in the occupied list
 - AI10 terminal 31 remains unused because AI2 uses RSE, not differential
 - Remaining unused P0 lines: P0.3–P0.7 (P0.2 is the go cue since 29 Oct 2026; AO0 terminal 22 is the
-  PVA command since 7 Oct 2026)
+  Bürkert `SP+` since 22 Nov 2026; it was the PVA command from 7 Oct until then)
 
 
 
 ### Analog-output split and current physical state
 
 AO1 terminal 21 is now physically wired to the Actuonix command input. AO0 terminal 22 is wired
-to the PVA 1.6 command input `H` (terminal 55 AO GND to `G`) since 7 Oct 2026; the Ledex is
-bench-commissioned (11 Oct) and mounted with its plunger linked to the joystick shaft (1 Nov),
-but not yet force-calibrated. The old `Magnets_Dev1` task still
+to the Bürkert 8605 `SP+` (terminal 55 AO GND to `SP-`) since 22 Nov 2026. The Ledex is
+mounted with its plunger linked to the joystick shaft. The 22 Nov current check and a
+user-reported pull are in `docs/PROJECT_PLAN.md`. The holder fasteners are not yet locked,
+and the force is not calibrated. The old `Magnets_Dev1` task still
 contains both channels but is not used by the working push VI; `MagnetPush_Dev1` owns AO0 and
 `LickSpout_Dev1` owns AO1.
 
@@ -387,9 +388,10 @@ Consequences:
   11 Oct 2026 (current vs AO0 in `calibration/README.md`); mounted **axially** on the home side
   (opposing the push) in the adjustable holder on 1 Nov 2026, with the plunger linked to the joystick
   shaft (the steel-washer target of the original plan was rejected; see `docs/PROJECT_PLAN.md`).
-  Coil driver: Hydraulik-Kompetenz **PVA 1.6 0–10 V** (not the 4–20 mA variant), a current-regulated
-  PWM amplifier. AO0 is the 0–10 V command, and coil power comes from the reserved 12 V supply through
-  the 1 A fuse, never from the DAQ pin. A Bürkert Type 8605 (`316532`) driver was the planned fallback.
+  Coil driver since 22 Nov 2026: Bürkert Type 8605 DIN-rail (`316532`, 200–1000 mA), a current-regulated
+  PWM amplifier. AO0 is the 0–10 V command (`SP+` / `SP-`), and coil power comes from the reserved 12 V supply through
+  the 1 A fuse onto `+24V` / `GND`, never from the DAQ pin. The coil is on `V+` / `V-`. There is no Enable input.
+  The Hydraulik-Kompetenz PVA 1.6 is the unwired spare.
   Force-calibrate on the bench; do not assume the paper 2.2 V / 100 ms pulse transfers.
   Keep `mag = 0` until the unperturbed task is stable.
 - `Magnets_Dev1` must no longer reserve AO1. Target split: one-channel on-demand magnet task on AO0
@@ -463,7 +465,7 @@ add a small transistor/MOSFET driver if the tone is weak or the line is loaded.
 - [x] Confirmed 12/08/26: no perturbation magnet then on training rig; magnet existed on mesoscope rig only
 - [x] Ledex `195224-230` (Swiss/EU equivalent of McMaster `69905K25`) on the training rig; holder STEP model added 03/09/26
 - [x] Hydraulik-Kompetenz PVA 1.6 0–10 V as the Ledex coil driver (not the 4–20 mA variant)
-- [x] PVA driver installed (1 A fuse in the 12 V lead) and AO0 terminal 22 wired; coil current vs AO0 measured 11/10/26
+- [x] PVA driver installed (1 A fuse in the 12 V lead) and AO0 terminal 22 wired; coil current vs AO0 measured 11/10/26. Replaced 22/11/26 by the Bürkert 8605 `316532`; PVA unwired, fuse stays in the 12 V lead
 - [x] Adjustable Ledex holder (slotted base, upright, carriage), gauges and plunger-link parts generated 15/10/26 (`mechanical/ledex-holder-adjustable/`); the washer target is rejected
 - [x] Ledex body and plunger modelled from the datasheet drawing (factory 2.5/2.6 mm cross hole 4.76 mm from the tip, nothing to drill); constrainer window revision for the link (16 mm window, now in `archive/joystick-1d-axis-constrainer/`)
 - [ ] Caliper-check the plunger (slot width, cross hole, seated protrusion, length) and the M14 nut
@@ -497,10 +499,10 @@ add a small transistor/MOSFET driver if the tone is weak or the line is loaded.
 | Adafruit #1536 buzzer (success cue) | `Dev1/port0/line1` | `+` → 17 (P0.1), `−` → 15 (D GND)                                                           | installed; NI-MAX and 50 ms LabVIEW success-cue tests passed                                            |
 | Adafruit #1536 buzzer (go cue) | `Dev1/port0/line2` | `+` → 49 (P0.2) through 1 kΩ, `−` → 15 (D GND) | installed 29/10/26, task `GoCue_Dev1`; burst 1 ms on / 1 ms off × 50 from the go-cue loop (EVENTS code 7); user-reported bench test passed, actual burst length unmeasured. Never cover its hole (it stops oscillating) |
 | Actuonix lick spout   | `Dev1/ao1`         | signal → 21, reference → AO GND (54), motor power from separate 12 V PSU with shared ground | installed; `LickSpout_Dev1` and full extend/water/retract sequence passed across three spaced trials    |
-| Axial magnet Ledex `195224-230` | `Dev1/ao0` | command → 22, AO GND shared with drive electronics; coil power **not** from the DAQ pin | PVA 1.6 0–10 V driver wired (22 → `H`, 55 → `G`, coil on `C`/`A`, Enable `J` on a removable lead); bench-commissioned 11/10/26, 10 V gives 0.31 A at minimum Imax. Mounted axially 01/11/26 with the plunger linked to the shaft; not force-calibrated, keep `mag = 0` |
+| Axial magnet Ledex `195224-230` | `Dev1/ao0` | command → 22, AO GND → 55; coil power **not** from the DAQ pin | Bürkert 8605 `316532` since 22/11/26 (22 → `SP+`, 55 → `SP-`, fused 12 V+ → `+24V`, 12 V− → `GND`, coil on `V+`/`V-`). Display current 1 / 5 / 10 V = 138.8 / 175 / 220 mA; 4.5 V across the coil at 10 V. Holder fasteners not locked. Not force-calibrated, keep `mag = 0` |
 
 
-`ao0` (terminal 22) belongs to the Ledex; keep the PVA Enable open unless a test needs the coil.
+`ao0` (terminal 22) belongs to the Ledex. The Bürkert has no Enable: unplug the Goobay before starting or stopping the AO task, and plug it in only while `ao0` is 0 V.
 
 ### Buzzer installation — 06/08/26
 

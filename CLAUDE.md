@@ -25,7 +25,7 @@ Head-fixed mouse 1D forelimb object-push task (LabVIEW + NI-DAQ rig, forked from
 ## Safety rules (always)
 - Class 3B 635 nm laser on `PFI3` / terminal 42: keep keyed OFF. Never toggle PFI3 blind. Do not touch the laser pulse nodes in the magnet loop.
 - Never power the Ledex coil from AO0 (AO0 is only the 0–10 V command; PCIe-6321 AO limit ±5 mA).
-- The 1 A inline fuse stays in the 12 V positive lead of the PVA/Ledex supply. The magnet's reserved 12 V Goobay supply is for nothing else.
+- The 1 A inline fuse stays in the 12 V positive lead of the Bürkert/Ledex supply. The Bürkert has no Enable pin: unplug that supply before starting or stopping AO0. The magnet's reserved 12 V Goobay supply is for nothing else.
 - Normal Stop only; toolbar Abort is emergency-only (skips cleanup frames and the auto timing file).
 - Never press an animal's paw onto the pad. Keep `mag = 0` in every parameter file until the unperturbed task is stable and the LabVIEW magnet safety work is done.
 - Never hand-edit `.vi` binaries or internal names. Never Git-merge independently edited `.vi` files; the repo copy is the canonical hierarchy.
