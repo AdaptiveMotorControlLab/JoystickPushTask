@@ -11,11 +11,13 @@ joystick-1d-axis-constrainer, joystick-handle-cube):
 - Holder: base 86 x 31.8 x 5 mm (long side along Y), corner posts, top frame z 20.41-25.41 with a 25.3 mm hole.
 - Component: body 25.3 mm dia x 11.53 mm drops through the hole, flange (29.75 mm) rests on the frame -> body
   bottom at Z 13.88; stub top at component z 29.3.
-- Shaft: its 5 mm x 2.7 mm bottom bore holds a glued screw head; the screw goes into the stub and the cone sits
-  directly on the stub top -> shaft base at Z 43.18; cone r 4 -> 1.5 over 12 mm; 89 mm long.
-- Cube handle: narrow 11.5 x 11.5 x 15.1 mm cube (5 Nov revision, on the rig), front hole (nearest the push face),
-  push face 2.05 mm from the shaft axis, contact at mid-height, shaft z 94.0 (cube z 86.45-101.55). The 10 mm cube
-  used until 15 Nov sat at z 87.4-97.4 (contact 92.4).
+- Shaft (26 Nov 2026): 80 mm metal joystick (1.6 g, non-magnetic; mechanical/joystick/make_joystick_metal.py): base
+  6.35 mm x 8 mm, 2.5 mm transition, 2.74 mm arm, rounded tip. Screwed onto the stub it stands 1 mm higher than the
+  printed 89 mm PLA shaft did (cone on the stub top, base Z 43.18; archived), so the shaft base is at Z 44.18.
+- Cube handle: narrow 11.5 x 11.5 x 27 mm cube (26 Nov revision for the metal joystick, not printed yet), front hole
+  (nearest the push face), push face 2.05 mm from the shaft axis; cube shaft z 73.55-100.55 (world 117.73-144.73, top
+  where the 15.1 mm cube's was). The push is taken at world Z 137.18 (shaft z 93.0), where the paw met the 15.1 mm
+  cube (its mid-height), not at the tall cube's mid-height, so the lever ratios do not move with the cube height.
 - Constrainer: lower 10 mm is a socket (inner 32 mm) over the frame -> spans Z 15.41-71.41; walls 6 mm above the
   socket (inner +-13); top plate Z 68.41-71.41 with the 4 mm slot from X -2 to 17; home wall has an arch 16 mm wide
   (straight to Z 55.41, radius 8, top Z 63.41), cut square to Z 68.41 in the window revision.
@@ -43,18 +45,23 @@ COMP_BODY_H, COMP_BODY_D, COMP_FLANGE_D, COMP_TOP = 11.53, 25.3, 29.75, 29.3
 COMP_Z0 = HOLDER_TOP - COMP_BODY_H   # body bottom above the breadboard
 
 # ------------------------------------------------------------------ shaft and cube (lever coordinates)
-SHAFT_BASE = COMP_Z0 + COMP_TOP                 # cone seated on the stub top (screw in the bore)
-SHAFT_LEN = 89.0
-SHAFT_R = 1.5
-SHAFT_CONE = ((0.0, 4.0), (12.0, 1.5))   # (z, r) on the shaft
-CUBE_STL = "joystick-handle-cube/joystick_handle_cube_11p5_h15p1_d3p3_dp4p2.stl"   # 11.5 x 11.5 x 15.1 mm, on the rig
-CUBE_H, CUBE_HOLE_D, CUBE_HOLE_DEPTH = 15.1, 3.3, 4.2   # height; ball-ended hole diameter and depth to the tip apex
+SHAFT_LIFT = 1.0                                # metal joystick on its screw: 1 mm above the stub top (user, 26 Nov)
+SHAFT_BASE = COMP_Z0 + COMP_TOP + SHAFT_LIFT    # Z 44.18 (the printed shaft's cone sat on the stub top, Z 43.18)
+SHAFT_STL = "joystick/joystick_metal_80mm.stl"
+SHAFT_LEN = 80.0
+SHAFT_R = 2.74 / 2                              # arm radius (at the constrainer slot, the collar and the cube)
+SHAFT_BASE_R, SHAFT_ARM_Z = 6.35 / 2, 10.5      # base radius; the arm is straight above the 2.5 mm transition
+SHAFT_G = 1.6                                   # measured mass (aluminium, ~2.3 g/cm^3 over the solid model)
+SHAFT_E_MPA = 69e3                              # aluminium Young's modulus (PLA ~3.5e3)
+CUBE_STL = "joystick-handle-cube/joystick_handle_cube_11p5_h27_d3p1_dp8.stl"   # 11.5 x 11.5 x 27 mm, not printed yet
+CUBE_H, CUBE_HOLE_D, CUBE_HOLE_DEPTH = 27.0, 3.1, 8.0   # height; ball-ended hole diameter and depth to the tip apex
 CUBE_STL_Z0 = -1.5                             # cube bottom face in its STL frame (make_handle_cube.py)
 # Shaft z of the cube STL origin: the shaft end sits level with the centre of the hole's ball end (the same rule gave
 # 88.9 for the 10 mm cube, 3.2 x 3.2 mm holes). Not measured on the rig; printed holes come out slightly small.
 CUBE_MOUNT = SHAFT_LEN - (CUBE_STL_Z0 + CUBE_HOLE_DEPTH - CUBE_HOLE_D / 2)
 CUBE_Z = (CUBE_MOUNT + CUBE_STL_Z0, CUBE_MOUNT + CUBE_STL_Z0 + CUBE_H)
-HANDLE_Z = sum(CUBE_Z) / 2                     # push taken at the cube's mid-height
+HANDLE_WORLD_Z = 137.18                        # paw contact: the 15.1 mm cube's mid-height on the printed shaft
+HANDLE_Z = round(HANDLE_WORLD_Z - SHAFT_BASE, 3)   # push taken here (shaft z 93.0), inside the cube's push face
 HOLES = (("hole y 0.55", 2.05), ("hole y 4.25", 5.75), ("hole y 7.95", 9.45))  # (name, push-face offset mm)
 CUBE_HOLE = 0                                  # shaft in the front hole (nearest the push face, the mouse side)
 CUBE_HOLE_Y = float(HOLES[CUBE_HOLE][0].split()[-1])   # that hole's y in the cube STL (STL y runs along the push axis)
@@ -87,7 +94,7 @@ ARCH_TOP = WINDOW_TOP
 
 # ------------------------------------------------------------------ washers (target option)
 WASHER_RI, WASHER_RO, WASHER_T, N_WASHERS = 1.6, 4.5, 0.8, 10
-WASHER_SEAT = 11.5                            # shaft z where the cone radius equals WASHER_RI
+WASHER_SEAT = None                            # shaft z where the shaft radius equals WASHER_RI (set below the profile)
 
 # ------------------------------------------------------------------ Ledex 195224-230 (ledex_geometry.py)
 HOLDER_H_RANGE = (38.0, 78.0)                 # adjustable Ledex holder: axis height above the breadboard
@@ -101,10 +108,10 @@ LINK = 14.0                                   # pin-to-pin link length
 PIN_FROM_TIP = LEDEX["hole_from_tip"]         # the plunger's own cross hole
 PIN_D = 2.5                                   # pin through the plunger cross hole and the collar clevis
 COLLAR_H = 6.0
-LINK_Z_MIN = SHAFT_CONE[1][0] + COLLAR_H / 2  # collar (pin at its mid-height) on the straight 3 mm part of the shaft
+LINK_Z_MIN = SHAFT_ARM_Z + COLLAR_H / 2       # collar (pin at its mid-height) on the straight 2.74 mm arm
 LINK_Z_MAX = min(WINDOW_TOP - LEDEX["plunger_r"],                  # plunger under the window top
                  WINDOW_TOP - COLLAR_H / 2) - CLEARANCE - SHAFT_BASE  # collar under the cavity ceiling
-LINK_Z_REC = 17.5                             # recommended link height (shaft z): middle of the allowed range
+LINK_Z_REC = 16.5                             # recommended link height (shaft z): Ledex axis Z 60.68, as on the rig
 
 
 def world_z(z_shaft):
@@ -146,9 +153,39 @@ def max_push(d_p):
     return float(push_for_tilt(th, d_p))
 
 
+def _shaft_profile():
+    """(z, r) outline of the metal joystick from its generator (base, transition arc, arm, tip)."""
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("make_joystick_metal",
+                                                  os.path.join(CAD, "joystick", "make_joystick_metal.py"))
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return tuple((z, r) for r, z in mod.profile())
+
+
+SHAFT_PROFILE = _shaft_profile()
+
+
 def shaft_radius(z):
-    (z0, r0), (z1, r1) = SHAFT_CONE
-    return np.interp(z, [z0, z1, SHAFT_LEN], [r0, r1, r1])
+    zz, rr = np.array(SHAFT_PROFILE).T
+    return np.interp(z, zz, rr, left=0.0, right=0.0)
+
+
+def _washer_seat():
+    """Lowest shaft z on the transition where the radius has fallen to the washer hole radius."""
+    zz = np.linspace(SHAFT_ARM_Z - 2.5, SHAFT_ARM_Z, 2001)
+    return float(zz[np.argmax(shaft_radius(zz) <= WASHER_RI)])
+
+
+WASHER_SEAT = round(_washer_seat(), 2)
+
+
+def arm_deflection_mm(force_gf, z_hold=LINK_Z_REC, z_push=HANDLE_Z, E_mpa=SHAFT_E_MPA, d=2 * SHAFT_R):
+    """Bending of the arm at the cube when it is held at z_hold (the collar) and pushed at z_push: a cantilever of
+    a round rod (the cube itself taken as rigid)."""
+    L = z_push - z_hold
+    I = np.pi * d ** 4 / 64
+    return force_gf * 9.81e-3 * L ** 3 / (3 * E_mpa * I)
 
 
 def arch_clear(z_axis, r):
@@ -181,7 +218,7 @@ PARTS = {
     "component": ("TS-1D1S00A-1294_stripped/TS-1D1S00A-1294_stripped.stl", lambda t: _swap(t, dz=COMP_Z0), False),
     "constrainer": ("joystick-1d-axis-constrainer/" + CON_WINDOW_FILE + ".stl",
                     lambda t: _swap(t, dz=CON_Z0), False),
-    "shaft": ("joystick/joystick_89mm.stl", lambda t: t + np.array([0.0, 0.0, SHAFT_BASE]), True),
+    "shaft": (SHAFT_STL, lambda t: t + np.array([0.0, 0.0, SHAFT_BASE]), True),
     "cube": (CUBE_STL,
              lambda t: _swap(t, dx=-CUBE_HOLE_Y, dz=CUBE_MOUNT + SHAFT_BASE), True),
 }
@@ -226,12 +263,18 @@ def stackup():
         ("pivot (mid-body; tested component z 2-10)", SHAFT_BASE - d, "world Z"),
         ("shaft base", SHAFT_BASE, "world Z"),
         ("constrainer bottom (socket ledge rests on the frame top)", CON_Z0, "world Z"),
-        ("washer tower (10 x M3 on the cone)", world_z(WASHER_SEAT), "world Z, to %.2f" % world_z(WASHER_SEAT + 8)),
+        ("washer tower (10 x M3 on the base transition)", world_z(WASHER_SEAT), "world Z, to %.2f" % world_z(WASHER_SEAT + 8)),
         ("window top (home wall opening)", WINDOW_TOP, "world Z"),
         ("constrainer slot plate", CON_TOP[0], "world Z, to %.2f" % CON_TOP[1]),
         ("cube push contact", world_z(HANDLE_Z), "world Z"),
         ("pivot depth below the shaft base", d, "mm (%.2f-%.2f)" % (PIVOT_DEPTHS[0], PIVOT_DEPTHS[2])),
+        ("cube (bottom to top)", world_z(CUBE_Z[0]), "world Z, to %.2f" % world_z(CUBE_Z[1])),
+        ("shaft tip", world_z(SHAFT_LEN), "world Z"),
+        ("plunger-link pin (recommended)", world_z(LINK_Z_REC), "world Z (Ledex axis)"),
         ("home stop at the cube (vs vertical shaft)", stop_push(d), "mm push"),
+        ("lateral play in the slot", SLOT_W - 2 * SHAFT_R, "mm"),
+        ("arm bending at the cube, 40 gf, held at the collar", arm_deflection_mm(40.0), "mm (old PLA 3 mm shaft %.1f)"
+         % arm_deflection_mm(40.0, z_hold=17.5, z_push=94.0, E_mpa=3.5e3, d=3.0)),
         ("slot limit at the cube", max_push(d), "mm push"),
         ("tilt for a 15 mm push", np.degrees(tilt_for_push(15.0, d)), "deg"),
     ]

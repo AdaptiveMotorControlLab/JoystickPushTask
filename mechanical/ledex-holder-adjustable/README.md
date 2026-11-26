@@ -10,12 +10,12 @@ moving link parts over the whole push (`python make_ledex_holder.py check` rerun
 
 | Part | Files | Role |
 | --- | --- | --- |
-| Base | `ledex_holder_base.step/.stl` | 48 × 48 × 10 mm. Two 7 mm slots along the push axis (Y ±12.6 mm) for M6 cap screws into the breadboard, heads in 11.5 × 6.5 mm channels; 33 mm of distance travel; fits 25 mm and 1 inch hole grids. Two M4 hex-nut pockets from below. |
+| Base | `ledex_holder_base.step/.stl` | 84 × 48 × 10 mm (X −76 to +8 from the body face). Two 76 mm long, 7 mm wide slots along the push axis (Y ±12.6 mm) for M6 cap screws into the breadboard, heads in 11.5 × 6.5 mm channels; 69 mm of distance travel; fits 25 mm and 1 inch hole grids. Two M4 hex-nut pockets from below (X −25 and −1). Lengthened 75 % at the rear on 23 Nov 2026 (was 48 mm with 33 mm travel; front end and nut pockets unchanged). |
 | Upright | `ledex_holder_upright.step/.stl` | 6 mm foot with two lateral M4 slots (±12.75 mm) onto the base nuts, a 5 mm wall (top Z 98) with two long vertical M3 slots (Z 23.5-92.5, each takes an upper and a lower carriage screw), two 50 mm ribs, and a height scale (tick every 1 mm, longer at 5 and 10 mm) for Ledex axis heights 38-78 mm above the breadboard. |
 | Carriage | `ledex_holder_carriage.step/.stl` | 5 mm boss plate (14.8 mm hole for the M14 boss, nut on the joystick side), 40 mm tall side flange with four M3 holes (two above and two below the case, 13 mm apart along X, 29 mm apart vertically) and captive M3 nut pockets on its inner face, a cradle under the case, and an index notch on the flange's rear edge at the axis height. |
-| Link collar | `link_collar.step/.stl` | Ring for the 3 mm shaft (Ø9 × 6 mm, 3.7 mm bore so it slides down), a fork on the home side (2.6 mm gap, 2.9 mm pin hole 6 mm from the shaft axis), and one M2 set screw on the side (+Y) in a 1.8 mm pilot hole. |
+| Link collar | `link_collar.step/.stl` | Ring for the 2.74 mm arm of the metal joystick (Ø9 × 6 mm, 3.45 mm bore so it slides down; 3.7 mm for the printed 3 mm shaft until 26 Nov), a fork on the home side (2.6 mm gap, 2.9 mm pin hole 6 mm from the shaft axis), and one M2 set screw on the side (+Y) in a 1.8 mm pilot hole. |
 | Link bar | `link_bar.step/.stl` | 1.8 × 5 mm bar, 2.9 mm holes 14 mm apart, rounded ends (R 2.5); goes into the plunger's 2.5 mm tip slot and the collar's fork. |
-| Fit test | `fit_test.step/.stl` | 76 × 22 × 4 mm strip: shaft holes 3.4-3.9, pin holes 2.7-3.1, fork slots 2.2-2.8 (comb on one edge), bar tabs 1.6 / 1.8 / 2.0 mm thick; sizes grow away from the cut corner. |
+| Fit test | `fit_test.step/.stl` | 86 × 22 × 4 mm strip: shaft holes 2.8-3.6 (for the metal joystick's 2.74 mm arm: the cube hole and the collar bore), pin holes 2.7-3.1, fork slots 2.2-2.8 (comb on one edge), bar tabs 1.6 / 1.8 / 2.0 mm thick; sizes grow away from the cut corner. |
 
 The Ledex itself is modelled from its datasheet drawing in [`../ledex-195224-model/`](../ledex-195224-model/)
 (reference only, not for printing); the checks and the rig explorer use it.
@@ -23,20 +23,22 @@ The Ledex itself is modelled from its datasheet drawing in [`../ledex-195224-mod
 ## Print fit
 
 Holes and slots carry FDM allowances (the `FIT` block at the top of `make_ledex_holder.py`). The cube's
-3.4 mm holes only just pass the 3.0 mm shaft tip, so small holes print ~0.3-0.4 mm undersize here:
-collar bore 3.7, pin holes 2.9 (2.5 mm pins), bar 1.8 mm (plunger slot 2.5 ± 0.3), fork gap 2.6, M14
-boss hole 14.8, M3 holes 3.6, M4 holes 4.5, M3 / M4 nut pockets 5.9 / 7.5 across flats, M2 pilot 1.8.
-**Print `fit_test` first** with the same printer and settings: find the shaft hole that slides freely
-down the shaft, the pin hole that turns freely on a pin, and the bar tab that slides into the plunger's
-slot and into the fork slots; if they differ from the values above, change `FIT` and rerun.
+3.4 mm holes only just passed the printed 3.0 mm shaft tip, so small holes print ~0.3-0.4 mm undersize
+here: collar bore 3.45 (2.74 mm metal arm), pin holes 2.9 (2.5 mm pins), bar 1.8 mm (plunger slot
+2.5 ± 0.3), fork gap 2.6, M14 boss hole 14.8, M3 holes 3.6, M4 holes 4.5, M3 / M4 nut pockets 5.9 / 7.5
+across flats, M2 pilot 1.8. **Print `fit_test` first** with the same printer and settings: find the
+shaft hole that slides freely down the metal arm (collar bore) and the one that is a snug push fit on
+it (the cube's hole, 3.1 in `make_handle_cube.py`), the pin hole that turns freely on a pin, and the bar
+tab that slides into the plunger's slot and into the fork slots; if they differ from the values above,
+change `FIT` (and the cube's hole) and rerun.
 
 ## Setting the two layouts
 
 The X positions below are the Ledex body face (the boss side) relative to the joystick axis at neutral,
 and Z is the Ledex axis above the breadboard.
 
-- **Plunger link (recommended):** link pin 17.5 mm above the shaft base, so the Ledex axis is at Z 60.7
-  (scale tick 60 plus 0.7). Hold the handle at neutral, push the plunger in until its tip is 17.29 mm
+- **Plunger link (recommended):** link pin 16.5 mm above the metal joystick's base bottom (17.5 mm above
+  the printed shaft's base), so the Ledex axis is at Z 60.7 (scale tick 60 plus 0.7) either way. Hold the handle at neutral, push the plunger in until its tip is 17.29 mm
   beyond the boss end (seated 14.29 mm + 3 mm stroke, measure with calipers), and lock the base slots.
   That puts the body face at X −42.05.
   The link uses the plunger's own cross hole (2.5/2.6 mm, 4.76 mm from the tip, through both cheeks of
@@ -44,16 +46,16 @@ and Z is the Ledex axis above the breadboard.
   (the plunger is round and can turn in its bore, so the leads can point any way). Pins: 2.5 mm brass or
   A2 stainless dowels, or M2.5 A2 screws with lock nuts, 10 mm long (the plunger pin must stay inside the
   constrainer window); not plain steel next to the plunger tip.
-- **Washer target:** tower centre on the axis, so Z 58.7. Gap 1 mm at neutral (1 mm gap, e.g. a 1 mm shim
-  between the tip and the washers), which puts the face at X −29.3. The nut front is then 1.8 mm from the
-  constrainer wall.
+- **Washer target:** tower centre on the axis, so Z 57.6 (the washers sit on the metal joystick's base
+  transition). Gap 1 mm at neutral (1 mm gap, e.g. a 1 mm shim between the tip and the washers), which puts
+  the face at X −29.3. The nut front is then 1.8 mm from the constrainer wall.
 
-Clearances from the last run, with the constrainer's window revision: link layout ≥ 16 mm for the
-holder parts (nut front X −33.5 against the constrainer wall at −19); washer layout carriage 5.3,
-upright 4.3 and base 5.4 mm. Moving link parts from the home stop to a 15 mm push: link end to shaft
-2.1 mm, pin ends to the constrainer 3.0 mm, collar to the constrainer 3.1 mm, plunger to the
-constrainer 3.8 mm, plunger tip to collar > 5 mm; the bar has 0.35 mm play each side in the plunger's
-slot and 0.4 mm in the fork.
+Clearances from the last run (26 Nov 2026, metal joystick, wide-window constrainer): link layout ≥ 16 mm
+for the holder parts (nut front X −33.5 against the constrainer wall at −19); washer layout carriage 5.3,
+upright 4.3 and base 5.4 mm. Moving link parts from the home stop (−1.47 mm) to a 15 mm push: link end to
+shaft 2.1 mm, collar to the constrainer 3.2 mm, plunger to the constrainer 3.9 mm, link to the
+constrainer 4.8 mm, pins and plunger tip to the collar > 5 mm; the bar has 0.35 mm play each side in the
+plunger's slot and 0.4 mm in the fork.
 
 ## Assembly and printing
 
@@ -64,8 +66,9 @@ slot and 0.4 mm in the fork.
 - Carriage height: drop the four M3 nuts into the pockets on the carriage's inner face (beside the
   case, above and below it), put the screws through the upright's slots from the outside and tighten
   them from outside with a hex key; the nuts stay reachable from the Ledex side as well.
-- Collar: slide it down the shaft before the cube goes on, set it with the fork's pin 17.5 mm above the
-  shaft base and the fork facing the Ledex, then tighten the M2 set screw against the shaft.
+- Collar: slide it down the shaft before the cube goes on, set it with the fork's pin 16.5 mm above the
+  metal joystick's base bottom (Z 60.7 above the breadboard) and the fork facing the Ledex, then tighten
+  the M2 set screw against the arm.
 - The link needs a constrainer with an open home-wall window: the wide-window revision
   ([`../joystick-1d-axis-constrainer/`](../joystick-1d-axis-constrainer/), on the rig now) or the 16 mm
   window revision (on the rig from 1 Nov until the wide window replaced it, now in `archive/`); with the
@@ -79,5 +82,7 @@ slot and 0.4 mm in the fork.
   constrainer over the full push before powering the Ledex.
 - Status: base, upright, carriage, link collar and link bar printed and mounted on the rig on 1 Nov 2026
   with the 16 mm window constrainer; Ledex-off hand check passed (full return to home, no binding or
-  collisions). Not yet done: powered direction and release check (Checkpoint 5 in `MAGNET_COMMISSIONING.md`)
+  collisions). The 84 mm base (23 Nov) is not printed yet; the rig still has the 48 mm one. The 3.45 mm
+  collar and the new `fit_test` (26 Nov, for the metal joystick) are not printed yet; the rig still has the
+  3.7 mm collar on the printed shaft. Not yet done: powered direction and release check (Checkpoint 5 in `MAGNET_COMMISSIONING.md`)
   and force at the cube with a gram scale.

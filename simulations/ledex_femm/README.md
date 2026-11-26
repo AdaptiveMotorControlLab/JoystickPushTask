@@ -15,7 +15,7 @@ measurements.** Check them with one scale measurement once the printed holder an
 
 Outcome: on the measured rig (15 Oct, section "Washer target vs plunger link") the washer target gives
 under 1 gf at the handle at 10 V, so the chosen design links the plunger itself to the joystick shaft
-(section "Plunger link"; ~2-125 gf at neutral over the command range, ~53× the washers).
+(section "Plunger link"; ~2-124 gf at neutral over the command range, ~55× the washers).
 
 ![field maps](figures/magnetic_fields/overview_magnetic_fields.png)
 
@@ -145,20 +145,30 @@ shaft base.
 | holder base top / frame top (component flange seat) | 5.00 / 25.41 |
 | component body bottom | 13.88 |
 | pivot (mid-body, assumed) | 19.64 |
-| shaft base (cone seated on the component's stub) | 43.18 |
+| shaft base (metal joystick on its screw, 1 mm above the component's stub; 43.18 for the printed shaft) | 44.18 |
 | constrainer (socket ledge on the frame top) | 15.41-71.41 |
-| washer tower (10 × M3 on the shaft cone) | 54.68-62.68 |
+| washer tower (10 × M3 on the joystick's base transition) | 53.61-61.61 |
 | window in the constrainer's home wall (Y ±13, from the frame top Z 25.41; square top; the original arch top was 63.41) | 68.41 |
 | constrainer slot plate | 68.41-71.41 |
-| cube push contact (15.1 mm cube, mid-height; 135.58 with the 10 mm cube used before 15 Nov) | 137.18 |
+| shaft tip (inside the cube) | 124.18 |
+| cube (27 mm, for the metal joystick) | 117.73-144.73 |
+| cube push contact (kept where the paw met the 15.1 mm cube, its mid-height) | 137.18 |
 
-- Shaft seat: a small screw has its head glued in the shaft's 5 mm × 2.7 mm bottom bore and goes into
-  the component's stub, so the shaft's cone sits directly on the stub top (component z 29.3).
-- Pivot: not published; taken at the middle of the component body, **23.5 mm below the shaft base**,
-  with 19.3 and 27.3 mm (body z 10 and 2) as the bounds in every figure.
-- The constrainer slot runs from Y −2 to 17 (4 mm wide). Its home end stops the shaft at **−1.15 mm at
-  the cube** (home side of the vertical, i.e. of the spring's neutral); its far end allows 35.9 mm. A
-  15 mm push tilts the shaft 7.4°.
+- Shaft (26 Nov 2026): the 80 mm metal joystick (`mechanical/joystick/make_joystick_metal.py`: 1.6 g,
+  non-magnetic, base Ø6.35 × 8 mm, 2.5 mm transition, Ø2.74 mm arm, rounded tip) replaced the printed
+  89 mm PLA shaft, which bent at low force with the Ledex link holding it at the collar. Screwed onto the
+  stub it stands 1 mm higher than the printed shaft did (`SHAFT_LIFT`; that shaft's cone sat on the stub
+  top, component z 29.3). Arm bending at the cube, 40 gf, held at the collar: ~0.3 mm (aluminium; the
+  printed Ø3 mm shaft ~4 mm). Not printed or fitted yet: the 27 mm cube and the 3.45 mm collar.
+- Cube: the 27 mm cube puts its top where the 15.1 mm cube's was and grips the tip in a Ø3.1 × 8 mm
+  hole. The push is taken at world Z 137.18 (shaft z 93.0), where the paw met the old cube, not at the
+  tall cube's mid-height, so the lever ratios did not change with the cube.
+- Pivot: not published; taken at the middle of the component body, **24.5 mm below the shaft base**
+  (23.5 with the printed shaft), with 20.3 and 28.3 mm (body z 10 and 2) as the bounds in every figure.
+- The constrainer slot runs from Y −2 to 17 (4 mm wide; 1.26 mm lateral play around the 2.74 mm arm).
+  Its home end stops the shaft at **−1.47 mm at the cube** (home side of the vertical, i.e. of the
+  spring's neutral; −1.15 with the 3 mm printed shaft); its far end allows 36.6 mm. A 15 mm push tilts
+  the shaft 7.3°.
 - Constrainer: the model uses the wide-window revision
   (`mechanical/joystick-1d-axis-constrainer/*_ledex_wide_window.step`): the home wall is open over
   the full 26 mm cavity width from the frame top (Z 25.41) up to the cavity ceiling, so the plunger and the
@@ -186,28 +196,31 @@ handle into tower motion, gap and resistance (`results/lever/lever_table.csv`,
 `figures/plots/lever_target_motion.png`, `figures/plots/lever_force_vs_push.png`).
 
 - Base: APEM TS-1D1S00A-1294 Hall thumbstick (Mathis 2017, Digi-Key 679-2501-ND), castle cap removed,
-  printed shaft screwed onto the lever stub. Heights from the measured component and holder
-  (section above); pivot 23.5 mm below the shaft base (19.3-27.3).
-- Ten M3 washers seat on the cone at 11.5-19.5 mm above the shaft base; the cube handle spans
-  87.4-97.4 mm (push taken at 92.4 mm). The three cube holes change the result by < 0.02 mm; since 15 Nov `rig_geometry.py` uses the 15.1 mm cube on the rig (`CUBE_STL`, contact at shaft z 94.0); the figures and tables on this page still come from the 10 mm cube (contact 92.4, lever ratios ~1-2 % different) until they are rerun. The cube sits in the front hole (`CUBE_HOLE` in `rig_geometry.py`, push face 2.05 mm from the shaft axis), which changed the forces by < 1 %.
+  metal joystick screwed onto the lever stub. Heights from the measured component and holder
+  (section above); pivot 24.5 mm below the shaft base (20.3-28.3).
+- Ten M3 washers would seat on the joystick's base transition at 9.4-17.4 mm above the shaft base; the
+  cube handle spans 73.55-100.55 mm (push taken at 93.0 mm, world Z 137.18). The three cube holes change
+  the result by < 0.02 mm. The cube sits in the front hole (`CUBE_HOLE` in `rig_geometry.py`, push face
+  2.05 mm from the shaft axis), which changed the forces by < 1 %. All figures and tables on this page
+  were rerun on 26 Nov 2026 with the metal joystick and the 27 mm cube.
 - The tower moves about a third of the push (rigid rotation, not small-angle):
 
 | push at the cube | 1 mm | 2 mm | 5 mm | 10 mm | 15 mm |
 | --- | --- | --- | --- | --- | --- |
-| tower moves (pivot 19.3 / 23.5 / 27.3 mm) | 0.31 / 0.34 / 0.36 | 0.62 / 0.67 / 0.72 | 1.6 / 1.7 / 1.8 | 3.1 / 3.4 / 3.6 | 4.7 / 5.1 / 5.4 mm |
-| tilt (pivot 23.5 mm) | 0.5° | 1.0° | 2.5° | 4.9° | 7.4° |
+| tower moves (pivot 20.3 / 24.5 / 28.3 mm) | 0.30 / 0.32 / 0.34 | 0.60 / 0.65 / 0.69 | 1.5 / 1.6 / 1.7 | 3.0 / 3.2 / 3.5 | 4.5 / 4.9 / 5.2 mm |
+| tilt (pivot 24.5 mm) | 0.5° | 1.0° | 2.4° | 4.9° | 7.3° |
 
-- Resistance at the handle = tower pull × (tower height / handle height above the pivot) ≈ 0.34 of the
-  tower pull. With the tower centred on the axis and a 1 mm gap at neutral, 10 V gives 0.61 gf at 1 mm
+- Resistance at the handle = tower pull × (tower height / handle height above the pivot) ≈ 0.32 of the
+  tower pull. With the tower centred on the axis and a 1 mm gap at neutral, 10 V gives 0.56 gf at 1 mm
   push, 0.26 at 5 mm and 0.06 at 15 mm. The stock thumbstick spring is far stiffer (Mathis 2017: about
   4 N), and Mathis replaced it to bring the force down to 0.1-0.2 N (10-20 g); even against that the
   washer target adds only a few percent. This is why the plunger link below was chosen instead.
-- Assumptions: rigid shaft, no play in the stub or the 1D constrainer, push = forward travel of the
+- Assumptions: rigid shaft (the metal arm bends ~0.3 mm at the cube under 40 gf), no play in the stub or the 1D constrainer, push = forward travel of the
   cube face at mid-height, coil current constant. The tower tilt (up to ~8°) and its ~0.1 mm drop are
   not in the force model.
 - Rig check that replaces the pivot guess: push the cube 10 mm against a ruler and measure how far
   the shaft moves at the washer height (calipers). With ratio r = tower move / push, the pivot depth
-  is (92.4 r − 15.5) / (1 − r) mm. Also note: the lever geometry gives ~4.9° for a 10 mm push, i.e.
+  is (93.0 r − z) / (1 − r) mm, z the measuring height above the shaft base (the joystick's base bottom). Also note: the lever geometry gives ~4.9° for a 10 mm push, i.e.
   ~0.49 V if the 0-5 V output spans the full 50° travel, against the provisional 0.30 V eyeball
   reading in `calibration/joystick-volts-mm.md`; the ruler check settles both.
 
@@ -225,53 +238,56 @@ the plunger out of the coil and the coil pulls it back, so the resistance oppose
   scaled at each stroke so that the 0.5734 A curve matches the datasheet 100 % duty curve (the FEMM model
   reads up to 1.9× high at long stroke). The same scale is used at all currents.
 - Kinematics: rigid shaft rotating about the pivot; the plunger pin stays on the Ledex axis. The handle
-  force is the plunger pull × 0.354 (link height over the cube height above the pivot).
+  force is the plunger pull × 0.349 at neutral, 0.355 at 15 mm (link height over the cube height above the pivot).
 - Plunger end (datasheet drawing F34, model in `mechanical/ledex-195224-model/`): the pull end
   has a 2.5 × 9.5 mm slot across its diameter and a factory 2.5/2.6 mm cross hole through both cheeks
   4.76 mm from the tip; the link bar (1.8 × 5 mm) goes in the slot and the pin through that hole, so
   nothing is drilled. The slot is turned vertical (pin along Y).
-- Link height: the collar (6 mm) must sit on the straight 3 mm part of the shaft (pin at shaft z ≥ 15)
-  and the plunger must pass 1 mm under the window top (z ≤ 20.3). Height barely matters for force
-  (10 V, s0 3 mm: z 15 / 17.5 / 20.3 give 37 / 40 / 42 gf at neutral and 11.2-11.4 gf at 15 mm).
-  **Recommended: link at shaft z 17.5, the middle of the range (Ledex axis Z 60.7), home stroke s0 = 3 mm
-  at neutral (body face X −42.05)**; never 0:
-  seated, the plunger holds with 12.8 N. A 15 mm push takes the stroke from 3.0 to 8.35 mm; the link tilts
+- Link height: the collar (6 mm) must sit on the straight 2.74 mm arm above the base transition (pin at
+  shaft z ≥ 13.5) and the plunger must pass 1 mm under the window top (z ≤ 19.3). Height barely matters
+  for force (10 V, s0 3 mm: z 13.5 / 16.4 / 19.3 give 37 / 39 / 42 gf at neutral and 11.2-11.4 gf at 15 mm).
+  **Recommended: link at shaft z 16.5 (Ledex axis Z 60.7, the same height as with the printed shaft, where
+  it was z 17.5), home stroke s0 = 3 mm at neutral (body face X −42.05)**; never 0:
+  seated, the plunger holds with 12.8 N. A 15 mm push takes the stroke from 3.0 to 8.29 mm; the link tilts
   by at most 1.8°.
-- Magnet resistance at the cube handle (gf, pivot 23.5 mm; a pivot at 19.3 / 27.3 mm gives −7 / +6 % at
-  neutral and ±1 % at 15 mm, the shading in `handle_force_vs_push.png`):
+- Magnet resistance at the cube handle (gf, pivot 24.5 mm; a pivot at 20.3 / 28.3 mm gives −7 / +6 % at
+  neutral and ±1 % at 15 mm, the shading in `handle_force_vs_push.png`). Rerun 26 Nov with the metal
+  joystick: within 1.5 % of the printed-shaft values (same contact and link heights, pivot 1 mm deeper):
 
 | push at the cube | 0 mm | 1 mm | 2 mm | 5 mm | 10 mm | 15 mm |
 | --- | --- | --- | --- | --- | --- | --- |
 | 1 V (0.074 A) | 2.3 | 2.0 | 1.8 | 1.3 | 0.88 | 0.64 |
-| 2 V (0.106 A) | 4.7 | 4.1 | 3.7 | 2.7 | 1.8 | 1.3 |
-| 5 V (0.180 A) | 13 | 12 | 11 | 7.8 | 5.2 | 3.8 |
-| 10 V (0.310 A) | 40 | 35 | 31 | 23 | 15 | 11 |
-| 0.58 A (Imax raised) | 125 | 113 | 102 | 77 | 53 | 39 |
+| 2 V (0.106 A) | 4.7 | 4.1 | 3.6 | 2.7 | 1.8 | 1.3 |
+| 5 V (0.180 A) | 13 | 12 | 10 | 7.7 | 5.2 | 3.8 |
+| 10 V (0.310 A) | 39 | 35 | 31 | 23 | 15 | 11 |
+| 0.58 A (Imax raised) | 124 | 111 | 101 | 76 | 53 | 39 |
 
   The command range spans ~1-125 gf, so graded random forces are possible without new hardware. A
   smaller home stroke gives more at neutral but the force then falls off faster with the push
-  (`design_space.png`, 10 V, link z 17.5: s0 1.5 mm 76 → 15 gf over 15 mm, 3 mm 40 → 11, 5 mm 22 → 8.4).
+  (`design_space.png`, 10 V, link z 16.5: s0 1.5 mm 75 → 15 gf over 15 mm, 3 mm 39 → 11, 5 mm 21 → 8.4).
   The deeper measured pivot and the higher link raise the forces by ~40 % over the 12 Oct estimate.
-- **Home stop.** The constrainer slot's home end stops the shaft 1.15 mm (at the cube) on the home side of
-  the vertical, the spring's neutral. Whenever the magnet's pull at home beats the plunger
-  friction (at 10 V: 40 gf against ~1-3 gf) it pulls the handle back onto that stop, so the home position
-  moves by 1.15 mm (~0.06 V on `ai1`) when the magnet is on. Fix before relying on it: move the stop to the
-  neutral or just past it (slot end at Y −1.5 instead of −2, or a 0.5 mm shim at the slot end), or set
-  the home window and record the magnet state per trial. `spring_return.png` shows both cases.
+- **Home stop.** The constrainer slot's home end stops the 2.74 mm arm 1.47 mm (at the cube) on the home
+  side of the vertical, the spring's neutral (1.15 mm with the 3 mm printed shaft). Whenever the magnet's
+  pull at home beats the plunger friction (at 10 V: 39 gf against ~1-3 gf) it pulls the handle back onto
+  that stop, so the home position moves by 1.47 mm (~0.04 V on `ai1` at the 3 Nov 0.0295 V/mm, to be
+  recalibrated) when the magnet is on. Fix before relying on it: move the stop to the neutral or just past
+  it (slot end at Y −1.4 instead of −2, or a 0.6 mm shim at the slot end), or set the home window and
+  record the magnet state per trial. `spring_return.png` shows both cases.
 - Spring (handle-equivalent force at the cube, as a scale pressed by the cube reads it): the fitted spring
   has no preload, so it is k × push (zero at neutral); its strength k is what can be changed. Friction is the
   plunger weight (20.1 g) on its nylon bearing × mu (0.15-0.4) plus 0.5 gf for the pins: 1.2 / 2.3 / 3.0 gf at
   the handle for mu 0.15 / 0.3 / 0.4. The thumbstick's own friction is part of the measured spring curve.
 - Return after release from 15 mm (`spring_return.png`, `spring_requirement.csv`; effective mass at the cube
-  4.2 g, solid PLA, plus the plunger). Friction leaves a dead band around neutral where k × push < friction,
-  so the handle stops short of home when k is low: at mu 0.3, 0.20 gf/mm stops at +8.4 mm (never home),
-  0.50 gf/mm reaches neutral in ~60 ms, 0.67 gf/mm (Mathis-like slope) in ~48 ms. With 10 V on, the magnet
-  speeds the return (~27 ms) and holds the handle on the stop. The viewer's default k of 0.2 gf/mm is
+  6.5 g: cube 3.5 (27 mm, solid PLA), plunger and bar 2.5, metal joystick 0.4, collar 0.07; 5.1 g with the
+  printed shaft and 15.1 mm cube, 4.2 g with the 10 mm cube). Friction leaves a dead band around neutral where k × push < friction,
+  so the handle stops short of home when k is low: at mu 0.3, 0.20 gf/mm stops at +8.1 mm (never home),
+  0.50 gf/mm reaches neutral in ~74 ms, 0.67 gf/mm (Mathis-like slope) in ~59 ms. With 10 V on, the magnet
+  speeds the return (~34 ms) and holds the handle on the stop. The viewer's default k of 0.2 gf/mm is
   therefore too weak to return the handle with the plunger linked; measure the real k (bench check 1).
 - Assumptions to confirm on the rig: pivot depth, collar pin 6 mm off axis, the plunger's cross hole at
   4.76 mm from the tip (datasheet ± 0.30), rigid link with free pins, no residual magnetism
-  at 0 V, coil current constant during a push. Not modelled: the link's weight and the extra friction of
-  the side load (the link stays within 1.8°, so the side load is < 4 % of the pull).
+  at 0 V, coil current constant during a push. Not modelled: the arm's bending (~0.3 mm at the cube under
+  40 gf), the link's weight and the extra friction of the side load (the link stays within 1.8°, so the side load is < 4 % of the pull).
 - Bench checks before relying on these numbers:
   1. Spring curve: press a gram scale with the cube at 0 / 5 / 10 / 15 mm, with and without the plunger
      linked, Ledex off. The difference is the friction; fit k from the slope; k × 15 mm must clearly exceed it.
@@ -296,32 +312,32 @@ Washer pull comes from a new 3D sweep with the tower centre moved along its own 
 (`sweep3d.py offset`, 7 gaps × 6 offsets at 0.31 A, scaled to other currents by the centred sweep).
 
 - The tower is 8 mm tall, so offsets up to ~4 mm cost little (10 V, 1 mm gap: 2.2 / 2.1 / 1.9 / 1.3 /
-  0.59 / 0.14 g at 0 / 2 / 4 / 6 / 8 / 11 mm offset). The tower centre is at Z 58.7, inside the window range.
-- Recommended layouts (stars in `design_maps.png`): washers at Z 58.7, face X −29.3 (1 mm gap at
-  neutral, 0.6 mm at the home stop); link at Z 60.7, face X −42.05 (link z 17.5, 3 mm home stroke).
+  0.59 / 0.14 g at 0 / 2 / 4 / 6 / 8 / 11 mm offset). The tower centre is at Z 57.6, inside the window range.
+- Recommended layouts (stars in `design_maps.png`): washers at Z 57.6, face X −29.3 (1 mm gap at
+  neutral, 0.5 mm at the home stop); link at Z 60.7, face X −42.05 (link z 16.5, 3 mm home stroke).
 
 | push at the cube | 0 mm | 1 mm | 2 mm | 5 mm | 10 mm | 15 mm |
 | --- | --- | --- | --- | --- | --- | --- |
-| washers, 1 V | 0.048 | 0.037 | 0.029 | 0.017 | 0.007 | 0.004 |
-| washers, 10 V | 0.75 | 0.58 | 0.46 | 0.26 | 0.12 | 0.060 |
-| washers, 0.58 A | 1.4 | 1.1 | 0.86 | 0.49 | 0.22 | 0.11 |
+| washers, 1 V | 0.046 | 0.035 | 0.029 | 0.017 | 0.008 | 0.004 |
+| washers, 10 V | 0.72 | 0.56 | 0.45 | 0.26 | 0.12 | 0.062 |
+| washers, 0.58 A | 1.3 | 1.0 | 0.84 | 0.48 | 0.22 | 0.12 |
 | link, 1 V | 2.3 | 2.0 | 1.8 | 1.3 | 0.88 | 0.64 |
-| link, 10 V | 40 | 35 | 31 | 23 | 15 | 11 |
-| link, 0.58 A | 125 | 113 | 102 | 77 | 53 | 39 |
+| link, 10 V | 39 | 35 | 31 | 23 | 15 | 11 |
+| link, 0.58 A | 124 | 111 | 101 | 76 | 53 | 39 |
 
-Resistance at the cube (gf, pivot 23.5 mm; 19.3 / 27.3 mm: washers −7 / +6 %, link −7 / +6 % at neutral).
+Resistance at the cube (gf, metal joystick, pivot 24.5 mm; 20.3 / 28.3 mm: washers −8 / +7 %, link −7 / +6 % at neutral).
 
-- **The plunger link wins by ~53× at neutral and ~190× at 15 mm.** The strongest feasible washer
-  layout (gap 0.7 mm, face X −29.0, Z 58.5) still gives only 1.06 gf at 10 V; the washer force also falls ~12×
+- **The plunger link wins by ~55× at neutral and ~180× at 15 mm.** The strongest feasible washer
+  layout (gap 0.8 mm, face X −29.1, Z 57.6) still gives only 0.90 gf at 10 V; the washer force also falls ~12×
   over a 15 mm push against ~3.5× for the link. Use the plunger link; the washer target stays rejected.
-- The strongest feasible link layout on the design grid (face X −40.5, Z 62.0: link z 18.8, home
-  stroke 1.45 mm) gives 80 gf at 10 V at neutral but falls to 22 gf at 10 mm; 3 mm keeps a margin from
+- The strongest feasible link layout on the design grid (face X −40.4, Z 62.0: link z 17.8, home
+  stroke 1.35 mm) gives 82 gf at 10 V at neutral but falls to 22 gf at 10 mm; 3 mm keeps a margin from
   the 0.75 mm datasheet limit and a flatter curve.
 - Holder: `mechanical/ledex-holder-adjustable/` (slotted base along X, lateral slots, long
   vertical slots with a 1 mm scale, link collar and bar, fit test). Both layouts
   clear the joystick holder, component and constrainer (link ≥ 16 mm, washers ≥ 4.3 mm). Moving link
-  parts, home stop to 15 mm: link end to shaft 2.1 mm, pin, collar and plunger to the constrainer ≥ 3 mm,
-  plunger tip to collar > 5 mm; the bar sits in the collar's fork and the plunger's tip slot with
+  parts, home stop to 15 mm (metal joystick): link end to shaft 2.1 mm, collar and plunger to the
+  constrainer ≥ 3.2 mm, pins and plunger tip to the collar > 5 mm; the bar sits in the collar's fork and the plunger's tip slot with
   0.35-0.4 mm play each side.
 
 ![options](figures/rig/options_force_vs_push.png)

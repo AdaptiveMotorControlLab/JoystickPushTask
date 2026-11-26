@@ -7,7 +7,9 @@ Do not trim the red joystick regulator.
 
 Mount at the time: cube on the shaft, Ledex holder, 16 mm window constrainer and plunger link fitted (1 Nov).
 The rig has since received the 15.1 mm cube (higher contact point) and the wide-window constrainer, so
-re-measure this scale on the current mount before relying on mm values.
+re-measure this scale on the current mount before relying on mm values. The metal joystick and 27 mm cube
+(designed 26 Nov, not fitted yet) keep the cube top and push height but need a new measurement (and a new
+home voltage) once fitted.
 At home the cube is **2 mm** from the rest platform (the rest pad sits on the same platform).
 Displacement is forward from home, at the cube.
 

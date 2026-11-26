@@ -7,7 +7,7 @@ simulations/ledex_femm/rig_geometry.py. Frames (mm; X along the push, +X toward 
 - carriage: X from the Ledex body face (the M14 boss side), Y lateral, Z from the Ledex axis.
 - upright, base: X from the Ledex body face, Z from the breadboard top.
 - collar, link: their own frames (see README).
-Adjustments: distance (X) by the base's two M6 slots along X (33 mm travel, works on 25 mm and 1 inch grids);
+Adjustments: distance (X) by the base's two M6 slots along X (69 mm travel, works on 25 mm and 1 inch grids);
 lateral (Y) by the upright's two M4 slots on the base (+-12.75 mm); height (Z) by the carriage's four M3 screws
 (above and below the case, captive nuts in the carriage) in the upright's two long vertical slots (Ledex axis
 38-78 mm above the breadboard, tick every 1 mm). Holes and slots carry the print allowances in FIT.
@@ -24,9 +24,9 @@ sys.path.insert(0, os.path.join(HERE, "..", "..", "simulations", "ledex_femm"))
 import rig_geometry as rg  # noqa: E402
 
 LX = rg.LEDEX
-# Print fit (FDM, mm diameters unless noted). The cube's 3.4 mm holes only just pass the 3.0 mm shaft tip, so small
-# holes print ~0.3-0.4 mm undersize; these allowances assume that. Print fit_test.stl first and adjust here.
-FIT = dict(shaft_bore=3.7,    # collar on the 3 mm shaft: slides down, the M2 set screw takes up the play
+# Print fit (FDM, mm diameters unless noted). The cube's 3.4 mm holes only just passed the printed 3.0 mm shaft tip, so
+# small holes print ~0.3-0.4 mm undersize; these allowances assume that. Print fit_test.stl first and adjust here.
+FIT = dict(shaft_bore=3.45,   # collar on the 2.74 mm metal arm: slides down, the M2 set screw takes up the play
            pin_hole=2.9,      # printed holes for the 2.5 mm pins (free to turn)
            bar_t=1.8,         # link bar thickness; the plunger's tip slot is 2.5 +-0.3 mm
            fork_gap=2.6,      # collar fork around the bar
@@ -47,9 +47,9 @@ SCREW_X = (-4.0, -17.0)       # carriage screws (X from the face), clear of the 
 SCREW_DZ = 14.5               # screw rows above and below the axis, beside the case: reachable with the Ledex fitted
 H_RANGE = rg.HOLDER_H_RANGE   # Ledex axis height above the breadboard (carriage clears the upright's foot)
 BASE_T, FOOT_T = 10.0, 6.0
-BASE_X, BASE_Y = (-40.0, 8.0), (-24.0, 24.0)
+BASE_X, BASE_Y = (-76.0, 8.0), (-24.0, 24.0)   # 84 mm long: lengthened 75 % at the rear (front end unchanged)
 M6_SLOT_Y = 12.6              # two slots along X at Y +-12.6 (25 mm and 1 inch grids both fit in 7 mm slots)
-M6_SLOT_X = (-36.0, 4.0)
+M6_SLOT_X = (-72.0, 4.0)      # 76 mm slots, 69 mm travel
 NUT_X = (-25.0, -1.0)         # M4 nut pockets in the base (Y = 0), under the upright's lateral slots
 FOOT_Y = (-22.0, 30.0)
 LAT_SLOT = 12.75              # lateral travel either way
@@ -189,7 +189,7 @@ def cone_solid(x_base, length, r_base, r_apex):
 
 
 def collar():
-    """Ring on the 3 mm shaft with a fork on the -X (home) side, pin ATTACH_R off the axis along Y, held by one
+    """Ring on the 2.74 mm arm of the metal joystick with a fork on the -X (home) side, pin ATTACH_R off the axis along Y, held by one
     M2 set screw on +Y (on +X anything sticking out hits the constrainer's far wall near a 15 mm push)."""
     h = COLLAR_H / 2
     r_ax = rg.ATTACH_R
@@ -213,18 +213,19 @@ def link():
 
 
 def fit_test():
-    """Strip printed flat: shaft holes 3.4-3.9, pin holes 2.7-3.1, fork slots 2.2-2.8 (edge comb), bar tabs
-    1.6/1.8/2.0 thick; sizes grow left to right (+X), the cut corner marks the small end."""
-    t = 4.0
-    s = box(0, 64, 0, 22, 0, t)
-    for i, d in enumerate(np.arange(3.4, 3.95, 0.1)):
-        s = s - cyl((5 + 9 * i, 5, -1), (0, 0, 1), d / 2, t + 2)
+    """Strip printed flat: shaft holes 2.8-3.6 (the cube hole should be a snug push on the 2.74 mm arm, ~3.1; the
+    collar bore should slide, ~3.45), pin holes 2.7-3.1, fork slots 2.2-2.8 (edge comb), bar tabs 1.6/1.8/2.0 thick;
+    sizes grow left to right (+X), the cut corner marks the small end."""
+    t, L = 4.0, 74.0
+    s = box(0, L, 0, 22, 0, t)
+    for i, d in enumerate(np.arange(2.8, 3.65, 0.1)):
+        s = s - cyl((5 + 8 * i, 5, -1), (0, 0, 1), d / 2, t + 2)
     for i, d in enumerate(np.arange(2.7, 3.15, 0.1)):
         s = s - cyl((5 + 9 * i, 12, -1), (0, 0, 1), d / 2, t + 2)
     for i, w in enumerate(np.arange(2.2, 2.85, 0.1)):
         s = s - box(5 + 9 * i - w / 2, 5 + 9 * i + w / 2, 16, 23, -1, t + 1)
     for j, bt in enumerate((1.6, 1.8, 2.0)):
-        s = s + box(63, 76, 1 + 7 * j, 6 + 7 * j, 0, bt)
+        s = s + box(L - 1, L + 12, 1 + 7 * j, 6 + 7 * j, 0, bt)
     return s - box(-1, 3, -1, 3, -1, t + 1).Rotate(Axis(Pnt(0, 0, 0), Z), 45)
 
 

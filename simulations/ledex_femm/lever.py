@@ -4,11 +4,11 @@
 
 Geometry (x = push direction, z = up along the shaft at rest, origin at the shaft base) comes from
 rig_geometry.py (measured joystick component, holder and printed parts):
-- The pivot is inside the component body and not modelled: mid-body is 23.5 mm below the shaft base,
-  component z 2-10 gives 19.3-27.3 mm (PIVOT_DEPTHS).
-- Shaft: cone r 4 -> 1.5 mm over z 0-12, tip at z 89. M3 washers (ID 3.2) seat where the cone radius is 1.6 mm
-  (z 11.5); ten 0.8 mm washers span z 11.5-19.5.
-- Cube handle: push face 2.05 / 5.75 / 9.45 mm from the shaft axis (three holes), contact at z 92.4.
+- The pivot is inside the component body and not modelled: mid-body is 24.5 mm below the shaft base of the
+  metal joystick, component z 2-10 gives 20.3-28.3 mm (PIVOT_DEPTHS).
+- Shaft: 80 mm metal joystick, 6.35 mm base, 2.74 mm arm (rig_geometry.SHAFT_PROFILE). M3 washers (ID 3.2) seat
+  where the base transition's radius is 1.6 mm (z 9.4); ten 0.8 mm washers span z 9.4-17.4.
+- Cube handle: push face 2.05 / 5.75 / 9.45 mm from the shaft axis (three holes), contact at z 93.0 (world 137.18).
 - The Ledex sits on the mouse side, axis horizontal at the tower centre, tip facing the washer rims (OD 9 mm),
   so a forward push opens the gap and the pull opposes the push. rig_forces.py covers other Ledex heights.
 Force on the tower comes from the 3D model (results/fea3d, best fit, 10 washers, plunger seated), interpolated
@@ -26,7 +26,7 @@ from plot_results import HERE, RES, current_label, load3d, save
 from rig_geometry import (FACE, HANDLE_Z, HOLES, PIVOT_DEPTH, PIVOT_DEPTHS, WASHER_RO, WASHER_SEAT, WASHER_T, N_WASHERS,
                           rotate, tilt_for_push)
 
-TOWER = (WASHER_SEAT, WASHER_SEAT + N_WASHERS * WASHER_T)   # ten M3 washers on the cone (z, mm)
+TOWER = (WASHER_SEAT, WASHER_SEAT + N_WASHERS * WASHER_T)   # ten M3 washers on the base transition (z, mm)
 TOWER_Z = sum(TOWER) / 2
 HOME_GAPS = (1.0, 2.0)
 CURRENTS = (0.074, 0.106, 0.180, 0.310, 0.580)

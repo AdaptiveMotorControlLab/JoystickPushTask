@@ -3,13 +3,18 @@ holder base top,5.00,world Z
 holder frame top (component flange seat),25.41,world Z
 component body bottom,13.88,world Z
 pivot (mid-body; tested component z 2-10),19.64,world Z
-shaft base,43.18,world Z
+shaft base,44.18,world Z
 constrainer bottom (socket ledge rests on the frame top),15.41,world Z
-washer tower (10 x M3 on the cone),54.68,"world Z, to 62.68"
+washer tower (10 x M3 on the base transition),53.61,"world Z, to 61.61"
 window top (home wall opening),68.41,world Z
 constrainer slot plate,68.41,"world Z, to 71.41"
 cube push contact,137.18,world Z
-pivot depth below the shaft base,23.54,mm (19.30-27.30)
-home stop at the cube (vs vertical shaft),-1.17,mm push
-slot limit at the cube,36.34,mm push
+pivot depth below the shaft base,24.54,mm (20.30-28.30)
+cube (bottom to top),117.73,"world Z, to 144.73"
+shaft tip,124.18,world Z
+plunger-link pin (recommended),60.68,world Z (Ledex axis)
+home stop at the cube (vs vertical shaft),-1.47,mm push
+lateral play in the slot,1.26,mm
+"arm bending at the cube, 40 gf, held at the collar",0.31,mm (old PLA 3 mm shaft 4.2)
+slot limit at the cube,36.65,mm push
 tilt for a 15 mm push,7.32,deg

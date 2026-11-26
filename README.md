@@ -64,7 +64,9 @@ Built but not yet bench-tested: the joystick-only session mode (column 30). Open
 successes, occasional acquisition stalls, missed magnet-loop occurrences) are tracked in the project plan.
 
 Mechanics: printed 89 mm joystick shaft with a narrow rounded-cube handle (15.1 mm revision), wide-window
-1D-axis constrainer, adjustable Ledex holder and plunger link, all on the rig. CAD and print status in
+1D-axis constrainer, adjustable Ledex holder and plunger link, all on the rig. The printed shaft bends under
+load and is being replaced by an 80 mm metal joystick with a 27 mm cube and a resized link collar (designed
+26 Nov 2026, not printed or fitted yet). CAD and print status in
 [`mechanical/README.md`](mechanical/README.md); superseded parts in [`archive/`](archive/).
 
 ## Hardware

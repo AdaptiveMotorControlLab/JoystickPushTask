@@ -6,13 +6,13 @@
 Geometry from rig_geometry.py (measured component, holder and constrainer; lever coordinates: x = push direction,
 z up the shaft from the shaft base, pivot at z = -d_p):
 - The Ledex stands on the breadboard on the home (mouse) side, axis horizontal at shaft height z_a. A collar on
-  the 3 mm part of the shaft carries a pin ATTACH_R from the axis; a rigid link (LINK, pins at both ends) joins it
+  the 2.74 mm arm of the metal joystick carries a pin ATTACH_R from the axis; a rigid link (LINK, pins at both ends) joins it
   to the plunger's pull end, which runs through the arch in the constrainer's home wall. A forward push draws
-  the plunger out; the coil pulls it back in. Link heights: shaft z 12 (end of the cone) to ~18 (plunger 1 mm under
-  the arch top).
+  the plunger out; the coil pulls it back in. Link heights: shaft z 13.5 (collar just above the base transition) to
+  ~19.3 (plunger 1 mm under the window top).
 - Push u is measured at the cube from the vertical shaft (the spring's neutral). s0 is the stroke at u = 0 (never
-  0: seated, the plunger holds 12.8 N). The constrainer slot's home end stops the shaft at u_stop (-1.1 mm with the
-  current constrainer, rig_geometry.stop_push): the magnet pulls the handle back onto it whenever its pull at home
+  0: seated, the plunger holds 12.8 N). The constrainer slot's home end stops the shaft at u_stop (-1.5 mm with the
+  current constrainer and the 2.74 mm arm, rig_geometry.stop_push): the magnet pulls the handle back onto it whenever its pull at home
   beats the plunger friction (the spring has no preload: its force is zero at neutral).
 Plunger pull: FEMM (results/femm/femm_plunger_force_vs_stroke.csv, no target, from `femm_run.py plunger`) scaled
 at each stroke by datasheet / FEMM at 0.5734 A (the 100 % duty curve); FEMM reads up to 1.9x high at long stroke.
@@ -45,7 +45,7 @@ ATTACH_Z = (rg.LINK_Z_MIN, round((rg.LINK_Z_MIN + rg.LINK_Z_MAX) / 2, 1), round(
 HOME_STROKES = (1.5, 2.0, 3.0, 4.0, 5.0)
 REC = dict(z_a=rg.LINK_Z_REC, s0=3.0, d_p=PIVOT_DEPTH)
 PLA = 1.24e-3                    # g / mm^3 (solid print; scale by the infill if printed hollow)
-RESTITUTION = 0.3                # bounce at the home stop (PLA on PLA)
+RESTITUTION = 0.3                # bounce at the home stop (metal arm on the PLA slot end; not measured)
 K_SPRINGS = (0.2, 0.5, 10.0 / 15)   # spring rates tried, gf/mm at the cube
 TABLE_PUSHES = (0.0, 1.0, 2.0, 5.0, 10.0, 15.0)
 PUSH = np.linspace(0, 15, 151)
@@ -118,16 +118,18 @@ def stl_tetra(path):
 
 
 def inertia_about_pivot(d_p, z_a=REC["z_a"]):
-    """Moment of inertia (g mm^2) of the parts turning with the shaft about the pivot axis (solid PLA): printed shaft,
-    cube and link collar (collar at shaft z z_a)."""
+    """Moment of inertia (g mm^2) of the parts turning with the shaft about the pivot axis: the metal joystick (its
+    measured mass spread over its solid model), and the cube and link collar (solid PLA; collar at shaft z z_a)."""
     total = 0.0
-    parts = [("joystick/joystick_89mm.stl", lambda c: (c[:, 0], c[:, 2])),
-             (CUBE_STL, lambda c: (c[:, 1] - CUBE_HOLE_Y, c[:, 2] + rg.CUBE_MOUNT)),
-             ("ledex-holder-adjustable/link_collar.stl", lambda c: (c[:, 0], c[:, 2] + z_a))]
-    for rel, xz in parts:
+    parts = [(rg.SHAFT_STL, lambda c: (c[:, 0], c[:, 2]), None),
+             (CUBE_STL, lambda c: (c[:, 1] - CUBE_HOLE_Y, c[:, 2] + rg.CUBE_MOUNT), PLA),
+             ("ledex-holder-adjustable/link_collar.stl", lambda c: (c[:, 0], c[:, 2] + z_a), PLA)]
+    for rel, xz, rho in parts:
         vol, cen = stl_tetra(os.path.join(CAD, rel))
+        if rho is None:
+            rho = rg.SHAFT_G / abs(vol.sum())
         x, z = xz(cen)
-        total += np.sum(PLA * vol * (x ** 2 + (z + d_p) ** 2))
+        total += np.sum(rho * vol * (x ** 2 + (z + d_p) ** 2))
     return abs(total)
 
 
@@ -138,8 +140,9 @@ def link_bar_g():
 
 def effective_mass_g(d_p, z_a, s0, plunger=True):
     """Mass felt at the cube (g): inertia about the pivot / cube arm^2, plus the plunger and link bar, which translate
-    along the Ledex axis (ratio^2 of their mass). Not included: the thumbstick's internal lever, the steel pins and the
-    set screw (each under ~0.1 g at the cube). Solid PLA: a part printed with sparse infill is lighter."""
+    along the Ledex axis (ratio^2 of their mass). Not included: the thumbstick's internal lever, the steel pins, the
+    set screw and the joystick's mounting screw (each under ~0.1 g at the cube). Printed parts as solid PLA: a part
+    printed with sparse infill is lighter."""
     arm = HANDLE_Z + d_p
     m = inertia_about_pivot(d_p, z_a) / arm ** 2
     if plunger:
